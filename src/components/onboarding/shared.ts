@@ -1,4 +1,4 @@
-import { TEMPLATE_EVENTS, splitByWeights } from "../../../convex/lib/templates";
+import { SUGGESTED_CATEGORIES, TEMPLATE_EVENTS, defaultSlotsFor, splitByWeights } from "../../../convex/lib/templates";
 import type { CultureTemplate } from "../../../convex/lib/validators";
 import { addDaysIso, daysBetweenIso } from "../../lib/format";
 
@@ -38,4 +38,41 @@ export function rowsForTemplate(template: CultureTemplate, startDate: string, en
 export function rebalance(rows: FunctionRow[], total: number): FunctionRow[] {
   const shares = splitByWeights(total, rows.map((r) => Math.max(1, r.budget)));
   return rows.map((r, i) => ({ ...r, budget: shares[i] }));
+}
+
+/**
+ * One row per vendor the couple might need, prefilled from their tradition.
+ *
+ * "Booked" is the useful half: couples usually have a venue long before they have a
+ * planner, and without asking, PlusOne would research and email the venue they signed
+ * with a year ago while the budget bar claimed nothing was committed.
+ */
+export type NeedRow = {
+  key: string;
+  category: string;
+  title: string;
+  pct?: number;
+  eventNames?: string[];
+  /** "looking" is the default; "none" means they don't want this at all. */
+  state: "looking" | "booked" | "none";
+  /** What they have already spent on a booked one, when they know it. */
+  committed: number | "";
+};
+
+export function needsForTemplate(template: CultureTemplate): NeedRow[] {
+  return defaultSlotsFor(template).map((s, i) => ({
+    key: `tpl-${i}-${s.title}`,
+    category: s.category,
+    title: s.title,
+    pct: s.pct,
+    eventNames: s.eventNames,
+    state: "looking" as const,
+    committed: "" as const,
+  }));
+}
+
+/** The extras a couple can add on top of their tradition's list. */
+export function extraNeeds(existing: NeedRow[]): { category: string; title: string; hint: string }[] {
+  const taken = new Set(existing.map((n) => n.title.toLowerCase()));
+  return SUGGESTED_CATEGORIES.filter((c) => !taken.has(c.title.toLowerCase()));
 }

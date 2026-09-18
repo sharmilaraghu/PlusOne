@@ -44,7 +44,7 @@ export function OverviewPage() {
           <Link to="vendors" className="btn-primary">Find vendors</Link>
         </div>
 
-        <div className="mt-6 border-t border-line pt-5">
+        <div className="mt-6 border-t border-line pt-5" data-tour="budget">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
             <p className="text-sm text-muted">
               <span className="display text-[1.35rem] text-ink">{money(stats.committedTotal, wedding.currency)}</span> committed of{" "}
@@ -91,9 +91,10 @@ export function OverviewPage() {
           />
         ) : (
           <div className="grid gap-4">
-            {ordered.map((ev) => (
+            {ordered.map((ev, i) => (
               <DayCard
                 key={ev._id}
+                anchor={i === 0}
                 event={ev}
                 slots={(slots ?? []).filter((s) => s.eventIds.includes(ev._id) && !sharedIds.has(s._id))}
                 currency={wedding.currency}

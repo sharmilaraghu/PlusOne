@@ -37,15 +37,17 @@ if (!page.url().includes("/w/")) {
   await page.getByRole("link", { name: /plan our wedding|plan a wedding|start/i }).first().click().catch(() => {});
   await page.waitForTimeout(1200);
   const fill = async (label, value) => { const f = page.getByLabel(label).first(); if (await f.count()) await f.fill(value); };
-  const partners = page.getByLabel(/^partner$/i);
-  if (await partners.count()) { await partners.nth(0).fill("Anita"); await partners.nth(1).fill("Sam"); }
+  const mine = page.getByLabel(/your name/i).first();
+  if (await mine.count()) await mine.fill("Anita");
+  const theirs = page.getByLabel(/your partner/i).first();
+  if (await theirs.count()) await theirs.fill("Sam");
   await fill(/first day/i, "2027-02-12");
   await fill(/last day/i, "2027-02-15");
   await fill(/^city$/i, "Austin");
   await fill(/neighbourhood/i, "East Austin");
   await fill(/country/i, "United States");
   await shot("02-step1-couple");
-  for (const [name, waitFor] of [["03-step2-days", 900], ["04-step3-guests", 700], ["05-step4-budget", 700], ["06-step5-feel", 700]]) {
+  for (const [name, waitFor] of [["03-step2-days", 900], ["04-step3-guests", 700], ["05-step4-budget", 700], ["06-step5-needs", 700], ["07-step6-feel", 700]]) {
     await page.getByRole("button", { name: /^continue$/i }).first().click().catch(() => {});
     await page.waitForTimeout(waitFor);
     await shot(name);
@@ -57,13 +59,13 @@ if (!page.url().includes("/w/")) {
 
 const base = page.url().split("/w/")[1]?.split("/")[0];
 if (base) {
-  for (const [name, path] of [["07-overview", ""], ["08-vendors", "/vendors"], ["09-inbox", "/inbox"], ["10-people", "/members"]]) {
+  for (const [name, path] of [["08-overview", ""], ["09-vendors", "/vendors"], ["10-inbox", "/inbox"], ["11-people", "/members"]]) {
     await page.goto(`${url}/w/${base}${path}`, { waitUntil: "networkidle" });
     await shot(name);
   }
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto(`${url}/w/${base}`, { waitUntil: "networkidle" });
-  await shot("11-overview-mobile");
+  await shot("12-overview-mobile");
 }
 await browser.close();
 console.log(`\nAccount: ${email} / ${password}`);

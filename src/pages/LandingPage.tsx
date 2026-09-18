@@ -1,8 +1,7 @@
-import { useState } from "react";
 import { Link } from "react-router-dom";
 import { AppPreview } from "../components/landing/AppPreview";
 import { Icon } from "../components/landing/Icon";
-import { Tour, steps } from "../components/landing/Tour";
+import { steps } from "../components/landing/howItWorks";
 import "../landing.css";
 
 const days = [
@@ -13,8 +12,6 @@ const days = [
 ];
 
 export function LandingPage() {
-  const [tourOpen, setTourOpen] = useState(false);
-  const openTour = (e?: React.MouseEvent) => { e?.preventDefault(); setTourOpen(true); };
 
   return (
     <div className="lp">
@@ -26,7 +23,7 @@ export function LandingPage() {
           </Link>
           <nav aria-label="Main" className="hero__links">
             <a href="#how" className="hero__link hero__link--how">How it works</a>
-            <a href="#how" className="hero__link hero__link--tour" onClick={openTour}>Take the tour</a>
+            <a href="#how" className="hero__link hero__link--tour">How it works</a>
           </nav>
           <Link to="/signin" className="pill pill--outline hero__signin">Sign in</Link>
           <Link to="/signin" className="hero__signin-text">Sign in</Link>
@@ -44,7 +41,7 @@ export function LandingPage() {
             PlusOne finds your vendors, emails them from your own wedding inbox, reads every reply and keeps your budget honest.
           </p>
           <Link to="/signin?new=1" className="pill pill--wine hero__primary">Start planning</Link>
-          <a href="#how" className="pill pill--outline hero__secondary" onClick={openTour}>Take the 1-minute tour</a>
+          <a href="#how" className="pill pill--outline hero__secondary">See how it works</a>
           <span className="hero__band" aria-hidden="true" />
           <AppPreview />
         </main>
@@ -65,9 +62,6 @@ export function LandingPage() {
               </li>
             ))}
           </ol>
-          <div className="sec__cta">
-            <button type="button" className="pill pill--outline btn-lg" onClick={() => setTourOpen(true)}>Play the tour</button>
-          </div>
         </div>
       </section>
 
@@ -143,7 +137,7 @@ export function LandingPage() {
           <p className="sec__lede">Describe your wedding in about two minutes, then let PlusOne start the legwork.</p>
           <div className="closing__actions">
             <Link to="/signin?new=1" className="pill pill--wine btn-lg">Start planning</Link>
-            <button type="button" className="pill pill--outline btn-lg" onClick={() => setTourOpen(true)}>Take the tour</button>
+            <a href="#how" className="pill pill--outline btn-lg">How it works</a>
           </div>
         </div>
       </section>
@@ -155,7 +149,6 @@ export function LandingPage() {
         </div>
       </footer>
 
-      <Tour open={tourOpen} onClose={() => setTourOpen(false)} />
     </div>
   );
 }

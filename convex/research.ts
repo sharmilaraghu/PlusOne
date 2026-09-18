@@ -13,6 +13,9 @@ export const start = mutation({
     const slot = await ctx.db.get(args.slotId);
     if (!slot) throw new ConvexError("Slot not found.");
     const { userId, wedding } = await requireMember(ctx, slot.weddingId, "planner");
+    if (slot.status === "booked") {
+      throw new ConvexError(`${slot.title} is already booked. Un-book it first if you want to look again.`);
+    }
     const q = args.query.trim();
     if (q.length < 3) throw new ConvexError("Describe what you are looking for in a few words.");
     if (q.length > 300) throw new ConvexError("Keep the search under 300 characters.");

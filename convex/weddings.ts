@@ -139,6 +139,26 @@ export const create = mutation({
         }),
       ),
     ),
+    /**
+     * The vendors this couple actually needs, and which of them they have already
+     * booked. Omit to take the tradition's defaults, all of them unbooked. A booked
+     * need is never researched or emailed, and what they have already spent on it
+     * counts against the budget from the first screen.
+     */
+    needs: v.optional(
+      v.array(
+        v.object({
+          category: v.string(),
+          title: v.string(),
+          /** Share of the budget, as a percentage. Falls back to an even share. */
+          pct: v.optional(v.number()),
+          booked: v.boolean(),
+          committed: v.optional(v.number()),
+          /** Which functions this need serves, by name. Omitted means all of them. */
+          eventNames: v.optional(v.array(v.string())),
+        }),
+      ),
+    ),
   },
   returns: v.id("weddings"),
   handler: async (ctx, args): Promise<Id<"weddings">> => {
@@ -225,7 +245,18 @@ export const create = mutation({
 
     // Default vendor needs, with their budgets drawn from the functions they serve
     // so needs, functions and the wedding total all add up to the same number.
-    const templateSlots = defaultSlotsFor(args.template);
+    const chosen = args.needs && args.needs.length > 0 ? args.needs.slice(0, 40) : undefined;
+    const templateSlots: Array<{ category: string; title: string; pct: number; eventNames?: string[]; booked?: boolean; committed?: number }> =
+      chosen
+        ? chosen.map((n) => ({
+            category: n.category.trim().slice(0, 60) || "Other",
+            title: n.title.trim().slice(0, 80) || n.category.trim().slice(0, 80) || "A vendor",
+            pct: Number.isFinite(n.pct) && (n.pct ?? 0) > 0 ? (n.pct as number) : 100 / chosen.length,
+            eventNames: n.eventNames,
+            booked: n.booked,
+            committed: Number.isFinite(n.committed) && (n.committed ?? 0) > 0 ? n.committed : undefined,
+          }))
+        : defaultSlotsFor(args.template);
     const slotPlans = templateSlots.map((slot) => {
       const matchedIndexes = slot.eventNames
         ? eventNames.map((n, i) => (slot.eventNames!.includes(n) ? i : -1)).filter((i) => i >= 0)
@@ -245,7 +276,8 @@ export const create = mutation({
         category: slot.category,
         title: slot.title,
         budget,
-        status: "research",
+        // Something they have already booked is not something to go looking for.
+        status: slot.booked ? "booked" : "research",
       });
       await ctx.db.insert("budgetLines", {
         weddingId,
@@ -255,7 +287,9 @@ export const create = mutation({
         eventId: eventIndexes.length === 1 ? eventIds[eventIndexes[0]] : undefined,
         label: slot.title,
         planned: budget,
-        committed: 0,
+        // Money already spent is money already spent: the budget bar tells the truth
+        // from the first screen rather than pretending nothing is committed.
+        committed: slot.committed ?? 0,
         paid: 0,
       });
     }

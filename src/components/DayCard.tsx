@@ -20,12 +20,15 @@ export function DayCard({
   currency,
   canEdit,
   canRemove,
+  anchor = false,
 }: {
   event: Event;
   slots: FlatSlot[];
   currency: string;
   canEdit: boolean;
   canRemove: boolean;
+  /** Marks the first card so the walkthrough has something specific to point at. */
+  anchor?: boolean;
 }) {
   const tone = dayTone(event.order);
   const update = useMutation(api.events.update);
@@ -72,7 +75,7 @@ export function DayCard({
   }
 
   return (
-    <article className="card overflow-hidden">
+    <article className="card overflow-hidden" data-tour={anchor ? "days" : undefined}>
       <div className={`${tone.strip} border-b border-line px-6 py-4`}>
         {editing ? (
           <div className="grid gap-3">

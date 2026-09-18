@@ -172,8 +172,10 @@ export const remove = mutation({
     if (!slot) throw new ConvexError("That need is no longer part of your plan.");
     const { userId } = await requireMember(ctx, slot.weddingId, "planner");
 
-    if (slot.status === "booked") {
-      const booked = slot.bookedVendorId ? await ctx.db.get(slot.bookedVendorId) : null;
+    // Only a real booking blocks removal. A need the couple simply ticked as "already
+    // booked" when they signed up has no vendor behind it and can be dropped freely.
+    if (slot.status === "booked" && slot.bookedVendorId) {
+      const booked = await ctx.db.get(slot.bookedVendorId);
       throw new ConvexError(
         `${booked?.name ?? "A vendor"} is already booked for ${slot.title}. Un-book it first, then you can remove it.`,
       );

@@ -405,3 +405,59 @@ B, C, D and E first, about seven hours, because together they close all three co
 Much of the backend for phases 1 to 6 and 8 was written earlier. It is not yet verified, and it still contains the demo wedding. Following this plan means treating that code as a draft:
 - Each phase starts with the independent verification above.
 - Code that fails the check is fixed before its screens are rebuilt in the new design.
+
+## Revision 3, 18 September 2026: what Loverly does better, and an honest tour
+
+Reviewing loverly.com's four-step sign-up against ours. On substance ours is further
+ahead and deliberately so — it asks for the days, the guests per function, the budget
+split and the feel, because PlusOne cannot lay out a plan without them. Three things
+Loverly does better were taken.
+
+### Phase J: Looking or booked (done, 18 September 2026)
+
+Loverly's fourth step asks who you are hiring and lets you mark each one "Looking" or
+"Booked". PlusOne invented the list from the tradition and started every need at
+"research", so it would cheerfully go and email the venue a couple signed with a year
+ago, while the budget bar claimed nothing was committed.
+
+Onboarding now has a fifth step listing every need for the chosen tradition, each one
+Looking, Booked, or not wanted at all, with an optional "already spent" figure on the
+booked ones, plus the `SUGGESTED_CATEGORIES` chips for anything missing. A booked need
+is created `booked`, is refused by research, and its spend lands on its budget line from
+the first screen. A need nobody wants is never created. Because a self-declared booking
+has no vendor behind it, `slots.remove` now blocks only on a real booking, so a mis-tick
+can still be undone.
+
+**Verified** by creating a Chennai wedding with the venue and attire booked and the
+officiant dropped: 10 needs instead of 11, exactly those two `booked`, their spend on
+their budget lines, and functions, needs and lines still summing to the total. The
+budget warnings that this makes common on day one now name amounts in the couple's own
+currency instead of printing raw numbers.
+
+### Phase K: the photograph and the named steps (done, 18 September 2026)
+
+Onboarding is a split screen: a black-and-white editorial wedding photograph beside the
+form, changing as the steps go by (generated with the ElevenLabs image API, in
+`public/onboarding-*.jpg`). The anonymous progress bars are now named, numbered and
+clickable, the two identical "Partner" fields became "Your name" and "Your partner", and
+the page says plainly that none of it is final, with "We're still deciding" pencilling in
+a date a year out rather than blocking the couple.
+
+### Phase L: an honest tour (done, 18 September 2026)
+
+The landing page's five-slide modal was typed prose with invented examples, shown to
+someone who had never seen the app — and by this afternoon it was lying, still promising
+couples they would "read and approve every email before it is sent" hours after PlusOne
+started sending them itself.
+
+It is deleted. In its place, a walkthrough inside the app, shown once after the first
+wedding is built and replayable from "Show me around" in the sidebar. Each step finds a
+real element by its `data-tour` name, rings it, dims everything else, and explains that
+one thing; a step whose element is not on the page is skipped rather than shown against
+nothing. It cannot drift, because it points at the product rather than describing it.
+The landing page keeps a five-line "how it works" list, rewritten to match what PlusOne
+actually does now.
+
+**Verified** on the real overview: all five steps land on screen at 1512x950, the card
+flips above or beside its target rather than off the edge, the tour does not return after
+a reload, and "Show me around" brings it back.

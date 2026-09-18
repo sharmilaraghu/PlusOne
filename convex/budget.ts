@@ -4,6 +4,7 @@ import { internalMutation, mutation, query, type MutationCtx } from "./_generate
 import { requireMember } from "./lib/auth";
 import { budgetLineDoc } from "./lib/docs";
 import { slotStatus } from "./lib/validators";
+import { formatMoney } from "./lib/text";
 
 const OVER_COMMIT_RATIO = 1.15;
 
@@ -81,7 +82,10 @@ export const summary = query({
       }
       const overCommitted = line.planned > 0 && line.committed > line.planned * OVER_COMMIT_RATIO;
       if (overCommitted) {
-        warnings.push(`${line.label}: committed ${Math.round(line.committed)} is more than 15% over the planned ${Math.round(line.planned)}.`);
+        warnings.push(
+          `${line.label}: ${formatMoney(Math.round(line.committed), wedding.currency)} committed is more than 15% over the ` +
+            `${formatMoney(Math.round(line.planned), wedding.currency)} planned.`,
+        );
       }
       outLines.push({
         line,
@@ -94,7 +98,9 @@ export const summary = query({
     const committedTotal = lines.reduce((a, l) => a + l.committed, 0);
     const paidTotal = lines.reduce((a, l) => a + l.paid, 0);
     if (wedding.totalBudget > 0 && committedTotal > wedding.totalBudget) {
-      warnings.push(`Committed spend exceeds the total budget by ${Math.round(committedTotal - wedding.totalBudget)}.`);
+      warnings.push(
+        `Committed spend is ${formatMoney(Math.round(committedTotal - wedding.totalBudget), wedding.currency)} over your total budget.`,
+      );
     }
     return {
       currency: wedding.currency,

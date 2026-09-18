@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useQuery } from "convex/react";
 import { NavLink, Outlet, useParams, Link } from "react-router-dom";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -5,21 +6,31 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { longDate } from "../lib/format";
 import { Icon } from "./ui/Icon";
+import { Walkthrough, shouldOfferWalkthrough } from "./Walkthrough";
 
 const nav = [
   { to: "", label: "Overview", icon: "home" as const, end: true },
-  { to: "vendors", label: "Vendors", icon: "search" as const },
-  { to: "inbox", label: "Inbox", icon: "mail" as const },
+  { to: "vendors", label: "Vendors", icon: "search" as const, tour: "nav-vendors" },
+  { to: "inbox", label: "Inbox", icon: "mail" as const, tour: "nav-inbox" },
   { to: "guests", label: "Guests", icon: "guests" as const },
   { to: "assistant", label: "Assistant", icon: "heart" as const },
   { to: "members", label: "People", icon: "people" as const },
-  { to: "settings", label: "Settings", icon: "settings" as const },
+  { to: "settings", label: "Settings", icon: "settings" as const, tour: "nav-settings" },
 ];
 
 export function WeddingLayout() {
   const { weddingId } = useParams<{ weddingId: string }>();
   const data = useQuery(api.weddings.get, weddingId ? { weddingId: weddingId as Id<"weddings"> } : "skip");
   const { signOut } = useAuthActions();
+  const [walking, setWalking] = useState(false);
+
+  // Shown once, and only once the wedding is actually on screen: a tour that points at
+  // empty space explains nothing.
+  useEffect(() => {
+    if (!data || !shouldOfferWalkthrough()) return;
+    const t = setTimeout(() => setWalking(true), 900);
+    return () => clearTimeout(t);
+  }, [data]);
 
   if (data === undefined) {
     return <div className="grid min-h-screen place-items-center text-muted">Loading your wedding…</div>;
@@ -66,6 +77,7 @@ export function WeddingLayout() {
               key={n.to}
               to={n.to}
               end={n.end}
+              data-tour={"tour" in n ? n.tour : undefined}
               className={({ isActive }) =>
                 `flex items-center gap-2.5 whitespace-nowrap rounded-[10px] px-3 py-2.5 text-sm transition ${
                   isActive ? "bg-accent-soft font-medium text-accent" : "text-ink hover:bg-accent-soft/60"
@@ -84,7 +96,8 @@ export function WeddingLayout() {
 
         <div className="hidden px-5 pb-6 text-xs text-quiet md:block">
           <p>You are a <span className="font-medium text-ink">{role}</span></p>
-          <button onClick={() => void signOut()} className="mt-2 hover:text-accent">Sign out</button>
+          <button onClick={() => setWalking(true)} className="mt-2 block hover:text-accent">Show me around</button>
+          <button onClick={() => void signOut()} className="mt-1.5 hover:text-accent">Sign out</button>
         </div>
       </aside>
 
@@ -93,6 +106,8 @@ export function WeddingLayout() {
           <Outlet context={data} />
         </div>
       </main>
+
+      {walking && <Walkthrough onClose={() => setWalking(false)} />}
     </div>
   );
 }
