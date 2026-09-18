@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-18T20:05:00Z
+- **Last updated:** 2026-09-18T22:30:00Z
 
 ## Log
 
@@ -122,3 +122,60 @@ thread. Also researched what four other planning products actually do, marking e
 seen or claimed (`docs/COMPETITOR_FEATURES.md`).
 
 Known gap: `main` is still behind; the work described above sits on `feat/functionality`.
+
+### 2026-09-18 - 1425439
+Guests and the assistant were the last two screens that were promises rather than
+features: Guests called no guest API at all, and the assistant said it was "on its way".
+Guests now adds people, shows who is coming against who has not answered, and invites
+everyone with an address in one go (`src/pages/GuestsPage.tsx`). Proven end to end on the
+dev deployment: an invitation went out from the wedding inbox, a guest replied in plain
+words, the signed webhook routed it as a guest reply and the list updated itself with the
+dietary note. That round trip found a bug — the parser anchored on the party size a guest
+was invited for and recorded one attendee where the reply said two; it now counts the
+people the reply itself names (`convex/openai.ts`).
+
+The assistant answers from the couple's own plan and can start a vendor search or add a
+vendor need, with no way to send email by design (`convex/assistant.ts`,
+`src/pages/AssistantPage.tsx`). Asked to write to vendors it explains that outreach goes
+through the confirmation screen. Convex features: query, mutation, internal query, internal
+mutation, internal action, scheduled function.
+
+Also added an error boundary: a thrown authorization error used to unmount the app and
+leave a blank page, which is what following a stale link to someone else's wedding looked
+like (`src/components/ErrorBoundary.tsx`).
+
+### 2026-09-18 - 79cec4f, efa0203
+Forwarded contracts are now read. A PDF sent to the wedding inbox was being stored with a
+`contractChecks` row and nothing ever opened it; it is read as it lands, and every flag
+must quote the sentence it came from (`convex/openai.ts`, `convex/inbound.ts`). Tested with
+a real photography agreement: eight flags, correctly ranked, nothing invented — the
+non-refundable deposit, owing the full fee inside ninety days, and liability capped at a
+refund if the supplier cannot attend. They appear under "Documents you forwarded" in the
+Inbox.
+
+That test exposed a worse bug than the missing feature: a known guest who forwarded
+anything had it parsed as an RSVP, so forwarding a contract reset a guest's answer. An
+email carrying a document is now routed as a forward whoever sent it, and the parser
+answers "pending" when a message does not address attendance at all.
+
+### 2026-09-18 - 2f98cf4
+Ran the follow-up phase's own shortened-timer test and found two defects. A follow-up is
+sent as a reply to the vendor's last message, which belongs to whichever inbox held it; a
+wedding since given a different address cannot see it, so the reply failed and the thread
+escalated to needs-attention. It now falls back to a fresh email. The failed message then
+blocked every retry, because its idempotency key comes from a counter that only advances on
+success — a failed message with a matching key is now rewritten and queued again
+(`convex/agentmail.ts`, `convex/messages.ts`). Re-run: one follow-up, sent, counter at one,
+next nudge armed three days out, no duplicates across three ticks of the cron.
+
+### 2026-09-18 - 88ace1d, 61779aa
+Design pass on the two screens that open the product. The landing hero lost its duplicate
+navigation and gained a reel of wedding scenes drifting behind the headline, under a veil
+that is heaviest where the type sits; measured across four frames, the darkest five percent
+of the backdrop behind the lede still gives 5.5:1. The signed-in home dropped the print wall
+that was draining the colour out of the page, and each wedding's polaroid now carries the
+plan instead of linking to it — days to go, vendors booked of the total, committed against
+the budget, and one next step derived from where the needs actually are
+(`convex/weddings.ts`, `src/pages/HomePage.tsx`).
+
+All of the above is merged to `main` and deployed; the earlier gap is closed.
