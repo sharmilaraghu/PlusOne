@@ -38,3 +38,53 @@ Run on 18 September 2026 against the live Firecrawl API, six real vendor needs a
 2. Filter candidates before scraping, not after.
 3. Treat "contact form only" as a real state of the world, not a failure.
 4. Rank on evidence, and say in one line why each vendor is ranked where it is.
+
+---
+
+# Review lookup, measured on its own (18 September 2026)
+
+Phase 2b ranks vendors on what reviewers say, so the rating had to be checked before it
+could be trusted with that weight. `scripts/eval-reviews.mjs` runs the review lookup
+alone over the same 16 vendors the pipeline eval found, then checks every number by
+hand: it re-reads the page the rating claims to come from and looks for the figure in
+the text. Raw results in `docs/research/reviews-eval.json`.
+
+Three strategies were run against each other.
+
+| | A: shipping before today | B: wider directories + an unrestricted search | C: B, but best-of |
+|---|---|---|---|
+| Vendors with a rating | 44% (7 of 16) | **69% (11 of 16)** | 56% (9 of 16) |
+| Ratings with a source link | 100% | 100% | 100% |
+| Ratings actually found on that source page | **100%** | **100%** | **100%** |
+| Review counts found on that source page | 100% | 100% | 100% |
+| Ratings that are not wedding reviews | 0 | **1** | 0 |
+| Median time per vendor | 4.5s | 10.0s | 7.3s |
+
+**B looked best and was worst.** It found a rating for Portland Parks & Recreation —
+4.0 out of 5 on Indeed, which is its *staff* rating, not its wedding reviews. It also
+traded good evidence for thin evidence twice, taking Union Pine at 5.0 from 2 reviews on
+Zola over 4.7 from 19 on WeddingWire, and Lakeside Gardens at 28 reviews over 58. First
+hit wins is the wrong rule when the hits differ in quality.
+
+**C is what ships.** Same three searches, but every result is read before one is chosen:
+
+1. A rating is worth the reviews behind it, so the listing with the most reviews wins;
+   between equals, the more specific search wins.
+2. A rating from a page rating them as an *employer* is refused outright — Indeed,
+   Glassdoor, LinkedIn and the rest — as are encyclopedia and social pages.
+3. A vendor's own website can never be the source of its own rating.
+4. A listing showing stars with zero reviews behind them is not a rating.
+5. The search stops as soon as a listing with 10 or more reviews is in hand, so the
+   extra coverage costs about 3 seconds a vendor, not 6.
+
+Confirmed on the deployed action, not just in the script: Union Pine now returns 4.7/5
+from 19 WeddingWire reviews, April Mae Creative 5.0 from 176 on The Knot, and Portland
+Parks & Recreation returns nothing at all.
+
+## What this means for the ranking
+
+Coverage of 56% is the honest ceiling for small local vendors — Dublin florists and
+Austin henna artists are on Instagram and nowhere else. The ranking prompt already
+requires a vendor with no public rating to be judged on price and fit and to say "no
+public rating found" in its reason, rather than being dumped to the bottom, and the
+screen says the same thing in plain words on the card.

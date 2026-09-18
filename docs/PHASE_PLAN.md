@@ -303,6 +303,13 @@ Where each technology is used:
 
 **Verify independently:** run the review gathering alone on at least ten vendors whose public ratings you can check by hand. Compare the recorded rating and review count against the source page. Target: no rating without a source, and ranked order that a person agrees with for at least eight of ten.
 
+**Done, 18 September 2026.** The review lookup was measured on its own over 16 vendors, three strategies against each other, with every recorded number checked against the page it claims to come from (`scripts/eval-reviews.mjs`, raw data in `docs/research/reviews-eval.json`, written up in `docs/research/FIRECRAWL_FINDINGS.md`).
+
+- **Ratings: 44% → 56% of vendors, and every one of them verified.** 100% have a source link, and 100% of the ratings and review counts were found on that page. The obvious wider-net version reached 69% but brought in a staff rating from Indeed and twice traded 19 reviews for 2, so what ships reads every result before choosing: most reviews wins, a vendor's own site can never be its own source, and employment, encyclopedia and food-delivery pages are refused outright.
+- **Ranked order: 9 of 9 agreed with, after one real fix.** On the first pass 8 of 9 agreed. The disagreement was a caterer ranked first for a "$200 starting price" that was $200 *per head*. Prices now carry what they are for — `total`, `per_person`, `per_hour`, `per_day` — the ranking multiplies a per-head rate by the guests on that day before comparing it to the budget, and the card says "from $20 per person · about $5,000 for 250 guests · $5,031 under budget". With that in place the caterers rank 4.9/201, then 5.0/18, then 4.9/110, which is the order a person picks.
+- **On screen:** the shortlist is split into "The top three" with a numbered rank and the rest below, each card carrying its rating linked to its source, its price against the budget, the one-line reason for its ranking, and what reviewers repeat. "Select these 3 for quotes" hands the shortlist straight to outreach.
+- **Still true and said plainly:** 44% of vendors have no public rating anywhere. Those cards say "No public rating found for this one" and are judged on price and fit instead of being dumped to the bottom.
+
 ### Phase 3, amended: hands-off sending
 
 The couple confirms the shortlist once, and PlusOne sends every email itself. There is no per-email approval step.

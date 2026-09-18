@@ -153,6 +153,19 @@ export const activityRefsValidator = v.object({
   eventId: v.optional(v.id("events")),
 });
 
+/**
+ * What a published price is actually for. A caterer's "$200" is per head, not a total,
+ * and treating it as a total ranked one first for being "under budget" in testing.
+ */
+export const priceUnit = v.union(
+  v.literal("total"),
+  v.literal("per_person"),
+  v.literal("per_hour"),
+  v.literal("per_day"),
+  v.literal("other"),
+);
+export type PriceUnit = Infer<typeof priceUnit>;
+
 /** Vendor card produced by OpenAI from scraped pages (input to vendors.upsertMany). */
 export const vendorCardValidator = v.object({
   name: v.string(),
@@ -161,6 +174,7 @@ export const vendorCardValidator = v.object({
   phone: v.optional(v.string()),
   city: v.optional(v.string()),
   startingPrice: v.optional(v.number()),
+  priceUnit: v.optional(priceUnit),
   priceCurrency: v.optional(v.string()),
   priceNotes: v.optional(v.string()),
   packages: v.array(packageValidator),
@@ -190,6 +204,7 @@ export const vendorDetailValidator = v.object({
   emails: v.array(v.string()),
   phone: v.optional(v.string()),
   startingPrice: v.optional(v.number()),
+  priceUnit: v.optional(priceUnit),
   priceText: v.optional(v.string()),
   currency: v.optional(v.string()),
   packages: v.array(packageValidator),

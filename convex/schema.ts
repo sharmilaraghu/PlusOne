@@ -17,6 +17,7 @@ import {
   messageKind,
   messageStatus,
   packageValidator,
+  priceUnit,
   replyClassification,
   researchStatus,
   role,
@@ -105,6 +106,8 @@ export const vendorFields = {
   city: v.optional(v.string()),
   category: v.string(),
   startingPrice: v.optional(v.number()),
+  /** What that price is for: a total, or a per-person / per-hour rate. */
+  priceUnit: v.optional(priceUnit),
   /** Currency of `startingPrice` as found on the vendor's own page — NOT the wedding's currency. */
   priceCurrency: v.optional(v.string()),
   priceNotes: v.optional(v.string()),

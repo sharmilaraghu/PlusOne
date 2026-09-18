@@ -189,6 +189,7 @@ export const upsertMany = internalMutation({
         city: card.city,
         category: slot.category,
         startingPrice: card.startingPrice,
+        priceUnit: card.priceUnit,
         priceCurrency: card.priceCurrency,
         priceNotes: card.priceNotes,
         packages: card.packages.slice(0, 10),

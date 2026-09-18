@@ -7,6 +7,7 @@ import type { FunctionReturnType } from "convex/server";
 import { flattenSlots, money, statusLabel, timeAgo, type FlatSlot } from "../lib/format";
 import { SUGGESTED_CATEGORIES } from "../../convex/lib/templates";
 import { Icon } from "../components/ui/Icon";
+import { VendorCard } from "../components/VendorCard";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
@@ -50,7 +51,7 @@ export function VendorsPage() {
         {!slot ? (
           <p className="text-muted">Pick a slot to start.</p>
         ) : (
-          <SlotPanel key={slot._id} slot={slot} wedding={wedding} canEdit={canEdit} />
+          <SlotPanel key={slot._id} slot={slot} wedding={wedding} events={events} canEdit={canEdit} />
         )}
       </section>
     </div>
@@ -59,7 +60,17 @@ export function VendorsPage() {
 
 type Slot = FlatSlot;
 
-function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingData["wedding"]; canEdit: boolean }) {
+function SlotPanel({
+  slot,
+  wedding,
+  events,
+  canEdit,
+}: {
+  slot: Slot;
+  wedding: WeddingData["wedding"];
+  events: WeddingData["events"];
+  canEdit: boolean;
+}) {
   const vendors = useQuery(api.vendors.listBySlot, { slotId: slot._id });
   const run = useQuery(api.research.latestForSlot, { slotId: slot._id });
   const drafts = useQuery(api.outreach.listDrafts, { slotId: slot._id })?.map((d) => ({ ...d.message, vendor: d.vendor }));
@@ -81,8 +92,26 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
   const [manual, setManual] = useState({ name: "", email: "", website: "" });
   const [error, setError] = useState<string | null>(null);
 
+  // The busiest day this need has to cover: what a per-head price must be multiplied by.
+  const guestCount = Math.max(0, ...events.filter((e) => slot.eventIds.includes(e._id)).map((e) => e.guestCount));
+
   const researching = run?.status === "running";
   const selectable = useMemo(() => (vendors ?? []).filter((v) => !!v.email), [vendors]);
+  // `listBySlot` already returns top picks first, then by score. The split here is
+  // only about how they are shown: the three PlusOne would choose, then the rest.
+  const topPicks = useMemo(() => (vendors ?? []).filter((v) => v.isTopPick), [vendors]);
+  const others = useMemo(() => (vendors ?? []).filter((v) => !v.isTopPick), [vendors]);
+  const topPickable = useMemo(() => topPicks.filter((v) => !!v.email), [topPicks]);
+  const ranked = (vendors ?? []).some((v) => v.score !== undefined);
+
+  function toggleSelected(vendorId: string, next: boolean) {
+    setSelected((prev) => {
+      const s = new Set(prev);
+      if (next) s.add(vendorId);
+      else s.delete(vendorId);
+      return s;
+    });
+  }
 
   async function requestQuotes() {
     setError(null);
@@ -146,7 +175,14 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
 
       <section aria-labelledby="found-h">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 id="found-h" className="text-lg">Vendors {vendors ? `(${vendors.length})` : ""}</h3>
+          <div>
+            <h3 id="found-h" className="text-lg">Vendors {vendors ? `(${vendors.length})` : ""}</h3>
+            {ranked && (
+              <p className="text-xs text-quiet">
+                Ranked on what reviewers say, price against your {money(slot.budget, wedding.currency)} budget, and fit.
+              </p>
+            )}
+          </div>
           {canEdit && (
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted">{selected.size} selected</span>
@@ -163,92 +199,72 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
             {researching ? "Reading vendor websites… cards appear as each one is read." : "No vendors yet. Run a search above, or add one you already know below."}
           </div>
         ) : (
-          <ul className="mt-3 grid gap-3 md:grid-cols-2">
-            {vendors.map((v) => {
-              const checked = selected.has(v._id);
-              return (
-                <li key={v._id} className={`card rise p-4 ${checked ? "ring-2 ring-accent/40" : ""}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{v.name}</p>
-                      <p className="text-xs text-muted">
-                        {v.city ?? wedding.city}
-                        {v.startingPrice ? ` · from ${money(v.startingPrice, wedding.currency)}` : v.priceNotes ? ` · ${v.priceNotes}` : ""}
-                      </p>
-                    </div>
-                    {canEdit && (
-                      <button className={v.shortlisted ? "chip-pending" : "chip-quiet"} onClick={() => void toggleShortlist({ vendorId: v._id })} aria-pressed={v.shortlisted}>
-                        {v.shortlisted ? "♥ Shortlisted" : "♡ Shortlist"}
-                      </button>
-                    )}
-                  </div>
-                  {v.summary && <p className="mt-2 text-sm">{v.summary}</p>}
-                  {v.highlights?.length > 0 && (
-                    <ul className="mt-2 flex flex-wrap gap-1">
-                      {v.highlights.slice(0, 4).map((h, i) => <li key={i} className="chip-quiet">{h}</li>)}
-                    </ul>
+          <>
+            {topPicks.length > 0 && (
+              <>
+                <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h4 className="display text-[1.15rem]">
+                    {topPicks.length === 1 ? "The best match" : `The top ${topPicks.length === 2 ? "two" : "three"}`}
+                  </h4>
+                  {canEdit && topPickable.length > 0 && (
+                    <button
+                      className="text-xs text-accent underline underline-offset-2"
+                      onClick={() => setSelected(new Set(topPickable.map((v) => v._id)))}
+                    >
+                      {topPickable.length === 1 ? "Select this one for quotes" : `Select these ${topPickable.length} for quotes`}
+                    </button>
                   )}
-                  {v.packages?.length > 0 && (
-                    <ul className="mt-2 space-y-0.5 text-xs text-muted">
-                      {v.packages.slice(0, 3).map((p, i) => (
-                        <li key={i}>
-                          <span className="text-ink">{p.name}</span>
-                          {p.price ? ` · ${money(p.price, wedding.currency)}` : ""}
-                          {p.description ? ` — ${p.description}` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                    {v.website && <a className="underline" href={v.website} target="_blank" rel="noreferrer">Website</a>}
-                    {v.sourceUrls?.slice(0, 2).map((u, i) => (
-                      <a key={i} className="text-muted underline" href={u} target="_blank" rel="noreferrer">source {i + 1}</a>
-                    ))}
-                    {v.ratingText && <span className="text-muted">{v.ratingText}</span>}
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-2">
-                    {v.email ? (
-                      <span className="truncate font-mono text-[11px] text-muted">{v.email}</span>
-                    ) : canEdit ? (
-                      <form
-                        className="flex min-w-0 flex-1 gap-1"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const f = new FormData(e.currentTarget);
-                          const email = String(f.get("email") ?? "").trim();
-                          if (email) void setEmail({ vendorId: v._id, email });
-                        }}
-                      >
-                        <input name="email" type="email" className="input py-1 text-xs" placeholder="No email found — add one" aria-label={`Email for ${v.name}`} />
-                        <button className="btn-ghost btn-sm">Save</button>
-                      </form>
-                    ) : (
-                      <span className="text-[11px] text-muted">No email yet</span>
-                    )}
-                    {canEdit && v.email && (
-                      <label className="flex items-center gap-1 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            const next = new Set(selected);
-                            if (e.target.checked) next.add(v._id);
-                            else next.delete(v._id);
-                            setSelected(next);
-                          }}
-                        />
-                        Email
-                      </label>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                </div>
+                <ul className="mt-3 grid items-start gap-4 xl:grid-cols-2">
+                  {topPicks.map((v, i) => (
+                    <VendorCard
+                      key={v._id}
+                      vendor={v}
+                      rank={i + 1}
+                      slotBudget={slot.budget}
+                      currency={wedding.currency}
+                      guestCount={guestCount}
+                      fallbackCity={wedding.city}
+                      canEdit={canEdit}
+                      selected={selected.has(v._id)}
+                      onToggleSelected={(next) => toggleSelected(v._id, next)}
+                      onToggleShortlist={() => void toggleShortlist({ vendorId: v._id })}
+                      onSetEmail={(email) => void setEmail({ vendorId: v._id, email })}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {others.length > 0 && (
+              <>
+                <h4 className="mt-7 display text-[1.15rem]">
+                  {topPicks.length > 0 ? `Also found (${others.length})` : `Found (${others.length})`}
+                </h4>
+                <ul className="mt-3 grid items-start gap-4 xl:grid-cols-2">
+                  {others.map((v) => (
+                    <VendorCard
+                      key={v._id}
+                      vendor={v}
+                      slotBudget={slot.budget}
+                      currency={wedding.currency}
+                      guestCount={guestCount}
+                      fallbackCity={wedding.city}
+                      canEdit={canEdit}
+                      selected={selected.has(v._id)}
+                      onToggleSelected={(next) => toggleSelected(v._id, next)}
+                      onToggleShortlist={() => void toggleShortlist({ vendorId: v._id })}
+                      onSetEmail={(email) => void setEmail({ vendorId: v._id, email })}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
+          </>
         )}
         {canEdit && selectable.length > 0 && selected.size === 0 && (
-          <button className="mt-2 text-xs text-muted underline" onClick={() => setSelected(new Set(selectable.map((v) => v._id)))}>
-            Select all {selectable.length} with an email
+          <button className="mt-3 text-xs text-muted underline" onClick={() => setSelected(new Set(selectable.map((v) => v._id)))}>
+            {selectable.length === 1 ? "Select the one with an email" : `Select all ${selectable.length} with an email`}
           </button>
         )}
       </section>

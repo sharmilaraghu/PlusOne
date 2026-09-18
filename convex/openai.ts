@@ -249,10 +249,29 @@ export const rankVendors = internalAction({
     if (vendors.length === 0) return 0;
 
     const currency = context.wedding.currency;
+    // How many people this need actually has to cover, so a per-head rate can be
+    // compared to the budget honestly instead of being read as a total.
+    const guestCount = Math.max(
+      0,
+      ...context.events.filter((e) => slot.eventIds.includes(e._id)).map((e) => e.guestCount),
+    );
     const lines = vendors.map((vendor, i) => {
+      const priceCurrency = vendor.priceCurrency ?? currency;
+      const unitWord =
+        vendor.priceUnit === "per_person"
+          ? " per person"
+          : vendor.priceUnit === "per_hour"
+            ? " per hour"
+            : vendor.priceUnit === "per_day"
+              ? " per day"
+              : "";
+      const perHeadTotal =
+        vendor.priceUnit === "per_person" && vendor.startingPrice !== undefined && guestCount > 0
+          ? ` — about ${formatMoney(vendor.startingPrice * guestCount, priceCurrency)} for ${guestCount} guests`
+          : "";
       const price =
         vendor.startingPrice !== undefined
-          ? `from ${formatMoney(vendor.startingPrice, vendor.priceCurrency ?? currency)}` +
+          ? `from ${formatMoney(vendor.startingPrice, priceCurrency)}${unitWord}${perHeadTotal}` +
             (vendor.priceCurrency && vendor.priceCurrency !== currency ? ` (quoted in ${vendor.priceCurrency}, not ${currency})` : "")
           : (vendor.priceNotes ?? "no price published");
       const rating =
@@ -284,6 +303,8 @@ export const rankVendors = internalAction({
         `Score each one 0-100 using, in order of weight: (a) rating and how many reviews back it up, ` +
         `(b) price against the ${formatMoney(slot.budget, currency)} budget — under budget is good, no published price is a ` +
         `mild unknown, well over budget is bad, (c) how well what they offer fits the couple's request and style.\n` +
+        `Where a price is marked "per person" or "per hour", it is a rate, NOT a total: compare the total shown beside it ` +
+        `to the budget, never the rate itself, and call it a per-person rate when you mention it.\n` +
         `A vendor with no public rating must NOT be pushed to the bottom for that alone — judge it on price and fit and say ` +
         `"no public rating found" in its reason.\n` +
         `Every reason must be one sentence that names the real evidence above (a rating, a review count, a price versus the ` +

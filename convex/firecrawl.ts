@@ -4,7 +4,7 @@ import Firecrawl from "firecrawl";
 import { v } from "convex/values";
 import { internalAction } from "./_generated/server";
 import { findEmails, hostOf, truncate } from "./lib/text";
-import { vendorDetailValidator, vendorReviewValidator, type VendorDetail, type VendorReview } from "./lib/validators";
+import { vendorDetailValidator, vendorReviewValidator, type PriceUnit, type VendorDetail, type VendorReview } from "./lib/validators";
 
 const fc = new Firecrawl({ apiKey: process.env.FIRECRAWL_API_KEY });
 
@@ -87,7 +87,12 @@ const NON_VENDOR_HOST_PATTERNS: RegExp[] = [
   /(^|\.)wordpress\.com$/,
 ];
 
-/** Review directories are excluded from discovery but are exactly where ratings live. */
+/**
+ * Review directories are excluded from discovery but are exactly where ratings live.
+ * The second block was added after measuring: the first eight covered the US and India
+ * and found nothing at all for Brighton caterers or Dublin florists.
+ * See docs/research/reviews-eval.json.
+ */
 export const REVIEW_DOMAINS = [
   "theknot.com",
   "weddingwire.com",
@@ -97,6 +102,41 @@ export const REVIEW_DOMAINS = [
   "hitched.co.uk",
   "trustpilot.com",
   "justdial.com",
+  "zola.com",
+  "bridebook.com",
+  "guidesforbrides.co.uk",
+  "weddingsonline.ie",
+  "onefabday.com",
+  "eventective.com",
+  "weddingrule.com",
+  "bark.com",
+  "weddingz.in",
+  "shaadisaga.com",
+];
+
+/**
+ * Hosts that carry a rating which has nothing to do with being a wedding vendor.
+ * Measured: Portland Parks & Recreation came back 4.0/5 from Indeed — its staff rating —
+ * and Tamale House East 4.5/5 from Uber Eats, which rates its takeaway, not its catering.
+ */
+const NON_VENDOR_REVIEW_HOSTS = [
+  "indeed.com",
+  "ubereats.com",
+  "doordash.com",
+  "grubhub.com",
+  "seamless.com",
+  "postmates.com",
+  "swiggy.com",
+  "zomato.com",
+  "glassdoor.com",
+  "linkedin.com",
+  "ziprecruiter.com",
+  "simplyhired.com",
+  "wikipedia.org",
+  "youtube.com",
+  "reddit.com",
+  "pinterest.com",
+  "tiktok.com",
 ];
 
 const SEARCH_MD_CHARS = 8_000;
@@ -130,6 +170,8 @@ const SYMBOL_TO_CODE: Array<[RegExp, string]> = [
 ];
 const MIN_USD = 50;
 const MAX_USD = 1_000_000;
+/** A per-head or per-hour rate is allowed to be small; a total is not. */
+const MIN_RATE_USD = 5;
 
 type Candidate = { url: string; title?: string; description?: string; markdown?: string };
 
@@ -171,6 +213,7 @@ function detectCurrency(text: string): string | undefined {
 function sanePrice(
   price: number | undefined,
   currency: string | undefined,
+  unit: PriceUnit | undefined,
 ): { startingPrice?: number; currency?: string } {
   if (price === undefined || !Number.isFinite(price) || price <= 0) return { currency };
   if (!currency) return { currency }; // never guess a currency for a bare number
@@ -178,8 +221,23 @@ function sanePrice(
   const rate = USD_PER[code];
   if (rate === undefined) return { currency: undefined }; // an unrecognised code can't be sanity-checked
   const usd = price * rate;
-  if (usd < MIN_USD || usd > MAX_USD) return { currency };
+  // A rate per head or per hour is legitimately small: $200 a plate is a real price,
+  // it just is not a total. Only a total has to clear the "is this a wedding?" floor.
+  const floor = unit && unit !== "total" ? MIN_RATE_USD : MIN_USD;
+  if (usd < floor || usd > MAX_USD) return { currency };
   return { startingPrice: price, currency: code };
+}
+
+/** What the page said the price is for, believed only when it is one of ours. */
+function readPriceUnit(raw: unknown, priceText: string | undefined): PriceUnit | undefined {
+  const allowed: PriceUnit[] = ["total", "per_person", "per_hour", "per_day", "other"];
+  if (typeof raw === "string" && (allowed as string[]).includes(raw)) return raw as PriceUnit;
+  // The model sometimes leaves the field out but writes the unit into the price text.
+  const text = (priceText ?? "").toLowerCase();
+  if (/(per|a|each)\s*(person|guest|head|plate|pax)|pp\b|per-person/.test(text)) return "per_person";
+  if (/per\s*hour|hourly|\/\s*hr\b/.test(text)) return "per_hour";
+  if (/per\s*day|day rate/.test(text)) return "per_day";
+  return undefined;
 }
 
 /** Only ever follow a link on the vendor's own host: a footer link to a directory or a web designer is not their contact page. */
@@ -241,8 +299,15 @@ const VENDOR_JSON_SCHEMA = {
       type: ["boolean", "null"],
       description: "true if the page offers only an enquiry form and no email address",
     },
-    startingPrice: { type: ["number", "null"], description: "Lowest total package price, not a per-hour or per-person rate" },
-    priceText: { type: ["string", "null"], description: "Price exactly as written on the page, e.g. 'packages from $2,400'" },
+    startingPrice: { type: ["number", "null"], description: "The lowest price this page publishes, as a plain number" },
+    priceUnit: {
+      type: ["string", "null"],
+      enum: ["total", "per_person", "per_hour", "per_day", "other", null],
+      description:
+        "What startingPrice is for. 'total' for a whole package or event, 'per_person' for a per-head or per-plate rate, " +
+        "'per_hour' for an hourly rate. Caterers usually publish per_person. Say what the page says, do not convert.",
+    },
+    priceText: { type: ["string", "null"], description: "Price exactly as written on the page, e.g. 'packages from $2,400' or '$200 per guest'" },
     currency: { type: ["string", "null"], description: "ISO code of the currency shown on the page, e.g. USD, INR" },
     packages: {
       type: "array",
@@ -366,6 +431,9 @@ export const researchVendorDetail = internalAction({
       if (rawPrice === undefined && typeof json.startingPrice === "number") {
         rawPrice = json.startingPrice;
         currencyFromPages = pageCurrency;
+        // A caterer's "$200" is per head. Kept as what it is, so nothing downstream
+        // compares it to the budget for the whole function.
+        detail.priceUnit = readPriceUnit(json.priceUnit, typeof json.priceText === "string" ? json.priceText : undefined);
       }
       if (!detail.priceText && typeof json.priceText === "string") {
         detail.priceText = json.priceText.slice(0, 200);
@@ -396,7 +464,7 @@ export const researchVendorDetail = internalAction({
 
     detail.emails = cleanEmails(rawEmails, host);
     const currency = currencyFromPages ?? (args.currency ? args.currency.toUpperCase() : undefined);
-    const priced = sanePrice(rawPrice, currency);
+    const priced = sanePrice(rawPrice, currency, detail.priceUnit);
     detail.startingPrice = priced.startingPrice;
     detail.currency = priced.currency;
     detail.contactFormUrl = contactFormUrl;
@@ -424,25 +492,55 @@ const REVIEW_JSON_SCHEMA = {
 
 /**
  * Look the vendor up on the review directories we deliberately exclude from discovery.
- * Returns the first result that actually shows a rating; never invents one.
+ *
+ * Three searches, narrowing: the need and the city, then the need alone, then an
+ * unrestricted one for the businesses no wedding directory lists. Every result is read
+ * before one is chosen, because a rating is only worth the reviews behind it — 4.7 from
+ * 19 reviews is better evidence than 5.0 from 2, and taking the first hit picked the
+ * wrong one for two of sixteen vendors in testing. A rating is never invented, never
+ * taken from the vendor's own site, and never taken from a page rating them as an
+ * employer. Measured in docs/research/reviews-eval.json.
  */
 export const lookupReviews = internalAction({
-  args: { businessName: v.string(), need: v.string(), city: v.string() },
+  args: {
+    businessName: v.string(),
+    need: v.string(),
+    city: v.string(),
+    /** The vendor's own site, so its own stars can never become its public rating. */
+    ownWebsite: v.optional(v.string()),
+  },
   returns: vendorReviewValidator,
   handler: async (_ctx, args): Promise<VendorReview> => {
     const startedAt = Date.now();
     const empty = (): VendorReview => ({ highlights: [], ms: Date.now() - startedAt });
     const name = args.businessName.trim();
     if (name.length < 2) return empty();
+    const ownHost = args.ownWebsite ? hostOf(args.ownWebsite) : null;
 
-    // Two attempts: with the city (precise), then without it. Adding the city loses
-    // listings whose directory page does not name it, which cost us ratings in testing.
-    for (const query of [`"${name}" ${args.need} ${args.city} reviews`, `"${name}" ${args.need} reviews`]) {
+    type Candidate = {
+      rating: number;
+      reviewCount?: number;
+      reviewSource?: string;
+      highlights: string[];
+      order: number;
+    };
+    const candidates: Candidate[] = [];
+
+    const queries = [
+      `"${name}" ${args.need} ${args.city} reviews`,
+      `"${name}" ${args.need} reviews`,
+      `"${name}" ${args.city} rating reviews`,
+    ];
+
+    for (let qi = 0; qi < queries.length; qi++) {
+      // The last attempt drops the directory filter: some real vendors are only rated
+      // on a local listing nobody would think to name in advance.
+      const unrestricted = qi === queries.length - 1;
       let results;
       try {
-        results = await fc.search(query, {
+        results = await fc.search(queries[qi], {
           limit: 3,
-          includeDomains: REVIEW_DOMAINS,
+          ...(unrestricted ? {} : { includeDomains: REVIEW_DOMAINS }),
           scrapeOptions: {
             formats: [
               {
@@ -456,34 +554,53 @@ export const lookupReviews = internalAction({
           },
         });
       } catch (err) {
-        console.warn("firecrawl review search failed", query, err instanceof Error ? err.message : err);
+        console.warn("firecrawl review search failed", queries[qi], err instanceof Error ? err.message : err);
         continue;
       }
+
       for (const item of results.web ?? []) {
         const json = ("json" in item ? (item.json as Record<string, unknown> | undefined) : undefined) ?? {};
         const rating = typeof json.rating === "number" ? json.rating : undefined;
         if (rating === undefined || !Number.isFinite(rating) || rating <= 0 || rating > 5) continue;
+        const count = typeof json.reviewCount === "number" && Number.isFinite(json.reviewCount) ? json.reviewCount : undefined;
+        if (count === 0) continue; // stars on a listing nobody has reviewed yet
         const meta = "metadata" in item ? item.metadata : undefined;
         const url = "url" in item && typeof item.url === "string" ? item.url : (meta?.sourceURL ?? undefined);
+        const host = url ? hostOf(url) : null;
+        if (!host) continue;
+        if (ownHost && host === ownHost) continue;
+        if (NON_VENDOR_REVIEW_HOSTS.some((b) => host === b || host.endsWith(`.${b}`))) continue;
         // The rating is the heaviest ranking signal, so only accept a page that names this business.
         const haystack = normalise(`${url ?? ""} ${meta?.title ?? ""} ${"title" in item && typeof item.title === "string" ? item.title : ""}`);
         if (!haystack.includes(normalise(name)) && !normalise(name).split("-").filter((w) => w.length > 3).some((w) => haystack.includes(w))) {
           continue;
         }
-        const count = typeof json.reviewCount === "number" && Number.isFinite(json.reviewCount) ? json.reviewCount : undefined;
-        const highlights = Array.isArray(json.highlights)
-          ? (json.highlights as unknown[]).filter((h): h is string => typeof h === "string").slice(0, 4).map((h) => h.slice(0, 160))
-          : [];
-        return {
+        candidates.push({
           rating: Math.round(rating * 10) / 10,
           reviewCount: count,
-          reviewSource: url ?? undefined,
-          highlights,
-          ms: Date.now() - startedAt,
-        };
+          reviewSource: url,
+          highlights: Array.isArray(json.highlights)
+            ? (json.highlights as unknown[]).filter((h): h is string => typeof h === "string").slice(0, 4).map((h) => h.slice(0, 160))
+            : [],
+          order: qi,
+        });
       }
+
+      // Enough evidence already: don't pay for searches we don't need.
+      if (candidates.some((c) => (c.reviewCount ?? 0) >= 10)) break;
     }
-    return empty();
+
+    if (candidates.length === 0) return empty();
+    // Most reviews wins; between equals, the more specific search wins.
+    candidates.sort((a, b) => (b.reviewCount ?? 0) - (a.reviewCount ?? 0) || a.order - b.order);
+    const best = candidates[0];
+    return {
+      rating: best.rating,
+      reviewCount: best.reviewCount,
+      reviewSource: best.reviewSource,
+      highlights: best.highlights,
+      ms: Date.now() - startedAt,
+    };
   },
 });
 

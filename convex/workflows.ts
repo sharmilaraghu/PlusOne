@@ -87,7 +87,7 @@ export const researchWorkflow = workflow.define({
         try {
           review = await step.runAction(
             internal.firecrawl.lookupReviews,
-            { businessName, need: plan.category, city: plan.city },
+            { businessName, need: plan.category, city: plan.city, ownWebsite: detail?.url ?? candidate.url },
             { retry: false },
           );
           ms += review.ms;
@@ -109,6 +109,7 @@ export const researchWorkflow = workflow.define({
                     emails: detail.emails,
                     phone: detail.phone,
                     startingPrice: detail.startingPrice,
+                    priceUnit: detail.priceUnit,
                     priceText: detail.priceText,
                     currency: detail.currency,
                     packages: detail.packages,
@@ -130,6 +131,7 @@ export const researchWorkflow = workflow.define({
           phone: cards[0].phone ?? detail?.phone,
           website: detail?.url ?? candidate.url, // the url we actually fetched, not a model guess
           startingPrice: detail ? detail.startingPrice : undefined,
+          priceUnit: detail?.startingPrice !== undefined ? detail.priceUnit : undefined,
           priceCurrency: detail?.startingPrice !== undefined ? detail.currency : undefined,
           priceNotes: detail?.priceText ?? cards[0].priceNotes,
           packages: detail && detail.packages.length ? detail.packages : cards[0].packages,
