@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-18T23:05:00Z
+- **Last updated:** 2026-09-18T23:20:00Z
 
 ## Log
 
@@ -197,3 +197,21 @@ stale attendee count left over from the RSVP bug, and the catering screen still 
 rating sourced from a food-delivery site, captured before those hosts were refused. The
 vendors screenshot uses photography instead, so the images show behaviour the code
 actually has.
+
+### 2026-09-18 - 24ef574
+Added badges and a sponsor row to the top of the README: the live app and build log first,
+then the stack, with Convex, Firecrawl, AgentMail and OpenAI each shown with their real mark
+and one line on what they do in PlusOne. The logos are committed under `docs/logos/` rather
+than hotlinked. Checked with GitHub's own markdown renderer before pushing: every badge
+loads and every table-of-contents anchor resolves.
+
+### 2026-09-18 - ed53e7f
+Fixed an inbox-eviction bug that could delete another deployment's data. One AgentMail
+account is shared by production and every dev deployment, and each can only see its own
+weddings; the eviction treated any inbox it did not recognise as idle. It had already
+fired: production, making room for a new wedding, deleted a dev deployment's inbox. Run
+the other way, local testing could have deleted a real couple's inbox on production.
+Only inboxes a deployment created itself and knows are idle are candidates now; anything
+it does not recognise is left alone, and the new wedding shares the fallback inbox
+(`convex/agentmail.ts`). Verified on the live account with the cap full: the dev
+deployment asked for an inbox, left production's untouched, and fell back. Deployed.
