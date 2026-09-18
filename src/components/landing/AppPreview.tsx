@@ -34,7 +34,8 @@ export function AppPreview() {
           </p>
           <ul className="ap__nav">
             <li className="is-active"><Icon name="home" /> Overview</li>
-            <li><Icon name="people" /> Vendors</li>
+            <li><Icon name="search" /> Vendors</li>
+            <li><Icon name="check" /> Decisions</li>
             <li><Icon name="mail" /> Inbox</li>
             <li><Icon name="people" /> Guests</li>
           </ul>

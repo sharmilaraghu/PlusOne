@@ -23,7 +23,7 @@ export function LandingPage() {
           </Link>
           <nav aria-label="Main" className="hero__links">
             <a href="#how" className="hero__link hero__link--how">How it works</a>
-            <a href="#how" className="hero__link hero__link--tour">How it works</a>
+            <a href="#days" className="hero__link hero__link--tour">Every day</a>
           </nav>
           <Link to="/signin" className="pill pill--outline hero__signin">Sign in</Link>
           <Link to="/signin" className="hero__signin-text">Sign in</Link>
@@ -65,7 +65,7 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="sec sec--sage" aria-labelledby="days-title">
+      <section id="days" className="sec sec--sage" aria-labelledby="days-title">
         <div className="wrap split">
           <div className="sec__head">
             <h2 id="days-title" className="h2">Every day of the celebration, <em>in one place</em></h2>
