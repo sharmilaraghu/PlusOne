@@ -5,10 +5,10 @@ import { steps } from "../components/landing/howItWorks";
 import "../landing.css";
 
 const days = [
-  { name: "Mehndi", when: "Friday", guests: 80, note: "Henna artist quoted $850" },
-  { name: "Sangeet", when: "Friday", guests: 150, note: "Caterer contacted" },
+  { name: "Welcome drinks", when: "Friday", guests: 80, note: "Bar quoted $1,150" },
+  { name: "Rehearsal dinner", when: "Friday", guests: 40, note: "Caterer contacted" },
   { name: "Ceremony", when: "Saturday", guests: 200, note: "Photographer quoted $4,200" },
-  { name: "Reception", when: "Sunday", guests: 220, note: "Venue booked" },
+  { name: "Reception", when: "Saturday", guests: 220, note: "Venue booked" },
 ];
 
 export function LandingPage() {
@@ -70,7 +70,7 @@ export function LandingPage() {
           <div className="sec__head">
             <h2 id="days-title" className="h2">Every day of the celebration, <em>in one place</em></h2>
             <p className="sec__lede">Weddings are rarely one afternoon. Start from your tradition and PlusOne lays out each day with its own guests, budget and vendors.</p>
-            <p className="traditions">Hindu · Muslim · Sikh · Western · Jewish · Fusion · your own</p>
+            <p className="traditions">Western · Jewish · Hindu · Muslim · Sikh · Fusion · your own</p>
           </div>
           <ul className="daylist" aria-label="Example celebration">
             {days.map((d) => (
@@ -126,7 +126,7 @@ export function LandingPage() {
                 </li>
               ))}
             </ul>
-            <p className="shared__live"><span className="shared__dot" aria-hidden="true" />Sam shortlisted Henna House <span className="shared__when">just now</span></p>
+            <p className="shared__live"><span className="shared__dot" aria-hidden="true" />Sam shortlisted Wildrose Florals <span className="shared__when">just now</span></p>
           </div>
         </div>
       </section>

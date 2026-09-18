@@ -5,7 +5,7 @@ import { EmptyState } from "../components/ui/EmptyState";
 export function AssistantPage() {
   return (
     <div className="mx-auto w-full max-w-[46rem]">
-      <PageHeader title="Assistant" meta="Ask anything about your plan, from what's left to book to what a Haldi usually costs." />
+      <PageHeader title="Assistant" meta="Ask anything about your plan, from what is left to book to what a florist usually costs." />
       <EmptyState
         icon="heart"
         title="The assistant is on its way"

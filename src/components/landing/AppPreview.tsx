@@ -8,8 +8,8 @@ import { Icon } from "./Icon";
 // Plate provenance: assets/plates/thumb-1.png, assets/plates/thumb-2.png, assets/plates/thumb-3.png, assets/plates/thumb-4.png
 const rows = [
   { thumb: thumb1, name: "Lumen & Lace Photography", day: "Ceremony", status: "Quote received", tone: "sage", price: "$4,200" },
-  { thumb: thumb2, name: "Henna House", day: "Mehndi", status: "Quote received", tone: "sage", price: "$850" },
-  { thumb: thumb3, name: "Saffron Table Catering", day: "Sangeet", status: "Email sent", tone: "blush", price: "" },
+  { thumb: thumb2, name: "Wildrose Florals", day: "Ceremony", status: "Quote received", tone: "sage", price: "$1,850" },
+  { thumb: thumb3, name: "The Long Table", day: "Reception", status: "Email sent", tone: "blush", price: "" },
   { thumb: thumb4, name: "Mercer Hall", day: "All days", status: "Booked", tone: "sage", price: "" },
 ];
 
@@ -45,16 +45,16 @@ export function AppPreview() {
           <p className="ap__title">Your vendors</p>
           <ul className="ap__table">
             {rows.map((r) => (
-              <li key={r.name} className={`ap__row${r.name === "Henna House" ? " ap__row--live" : ""}`}>
+              <li key={r.name} className={`ap__row${r.name === "Wildrose Florals" ? " ap__row--live" : ""}`}>
                 <span className="ap__thumbwrap"><span className="ap__thumbclip"><img className="ap__thumb" src={r.thumb} alt="" width={80} height={76} /></span></span>
                 <span className="ap__name">{r.name}</span>
                 <span className="ap__day">{r.day}</span>
-                {r.name === "Henna House" && !landed ? (
+                {r.name === "Wildrose Florals" && !landed ? (
                   <span className="ap__pill ap__pill--blush">Email sent</span>
                 ) : (
-                  <span className={`ap__pill ap__pill--${r.tone}${r.name === "Henna House" ? " ap__pill--pop" : ""}`}>{r.status}</span>
+                  <span className={`ap__pill ap__pill--${r.tone}${r.name === "Wildrose Florals" ? " ap__pill--pop" : ""}`}>{r.status}</span>
                 )}
-                <span className="ap__price">{r.name === "Henna House" && !landed ? "" : r.price}</span>
+                <span className="ap__price">{r.name === "Wildrose Florals" && !landed ? "" : r.price}</span>
               </li>
             ))}
           </ul>
@@ -66,7 +66,7 @@ export function AppPreview() {
       </figure>
       <div className={`ap-notif${landed ? " is-landed" : ""}`} aria-hidden="true">
         <span className="ap-notif__icon"><Icon name="mail" /><i /></span>
-        <p>New reply from Henna House — quote added to your budget</p>
+        <p>New reply from Wildrose Florals — quote added to your budget</p>
       </div>
     </>
   );
