@@ -15,13 +15,28 @@ export const MODEL_SMART = process.env.OPENAI_MODEL_SMART ?? "gpt-5.6-terra";
 const PAGE_CHARS = 12_000;
 const nn = <T>(x: T | null | undefined): T | undefined => (x === null ? undefined : x);
 
+/** How formal the couple said the day is, turned into an instruction about tone. */
+function toneFor(wedding: Doc<"weddings">): string {
+  switch (wedding.styleFormality) {
+    case "relaxed":
+      return "Tone: friendly and casual, first names, contractions welcome, no stiff phrasing.";
+    case "formal":
+      return "Tone: courteous and formal. No contractions, no slang, address the vendor politely by name.";
+    default:
+      return "Tone: warm and straightforward, the way one person writes to another they hope to work with.";
+  }
+}
+
 function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[]): string {
   const lines = events.map((e) => `- ${e.name} on ${e.date} (~${e.guestCount} guests, budget ${formatMoney(e.budget, wedding.currency)})`);
   return [
     `Couple: ${wedding.partnerA} & ${wedding.partnerB}`,
     `Wedding: ${wedding.name}, ${wedding.startDate} to ${wedding.endDate}, ${wedding.city}${wedding.country ? `, ${wedding.country}` : ""}`,
     `Tradition/template: ${wedding.template}. Total budget ${formatMoney(wedding.totalBudget, wedding.currency)}.`,
-    wedding.styleSummary ? `Style: ${wedding.styleSummary}` : "",
+    wedding.styleVibes?.length ? `The feel they want: ${wedding.styleVibes.join(", ")}` : "",
+    wedding.stylePalette ? `Colours: ${wedding.stylePalette}` : "",
+    wedding.styleFormality ? `Formality: ${wedding.styleFormality}` : "",
+    wedding.styleSummary ? `Style notes: ${wedding.styleSummary}` : "",
     "Events:",
     ...lines,
   ]
@@ -88,7 +103,8 @@ export const planSearch = internalAction({
         "Return exactly 3 short queries. Every query must name the city. Bias them towards a vendor's own site by using the " +
         "words a vendor writes on their own pages (e.g. \"studio\", \"packages\", \"book\", \"portfolio\") rather than " +
         "listing words (\"best\", \"top 10\", \"near me\"). Make the queries different from each other: one plain " +
-        "\"<vendor type> <city>\", one with a distinguishing detail (style, cuisine, tradition), and one that includes " +
+        "\"<vendor type> <city>\", one with a distinguishing detail drawn from the couple's own words about the feel " +
+        "they want (their vibe words, colours or tradition) when those genuinely narrow the search, and one that includes " +
         "\"packages\" or \"pricing\" so the result page is likely to show numbers. " +
         "Also return the normalised vendor category, the city to search, and a one-line budget hint for this slot.\n\n" +
         (area
@@ -336,7 +352,9 @@ export const draftInquiries = internalAction({
           "no placeholders in square brackets. Greet the vendor by name, give the wedding dates and city, list the events " +
           "this vendor would cover with approximate guest counts, mention the budget range only if it helps, ask exactly 3 " +
           "specific questions (availability on the dates, pricing/packages for this scope, and one question tailored to what " +
-          "their website says they offer), and sign off with both partners' first names. Subject line under 70 characters.\n\n" +
+          "their website says they offer), and sign off with both partners' first names. Subject line under 70 characters.\n" +
+          `${toneFor(wedding)}\n` +
+          "If the couple named a feel or colours, mention them only where they genuinely help the vendor answer, never as decoration.\n\n" +
           `${weddingBrief(wedding, events)}\n\nSlot: ${slot.title} (${slot.category}), budget ${formatMoney(slot.budget, wedding.currency)}\n` +
           `Vendor: ${vendor.name}${vendor.website ? ` (${vendor.website})` : ""}\n` +
           (vendor.summary ? `What we know about them: ${vendor.summary}\n` : "") +
