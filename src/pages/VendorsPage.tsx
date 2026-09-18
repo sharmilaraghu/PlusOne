@@ -8,6 +8,7 @@ import { flattenSlots, money, statusLabel, timeAgo, type FlatSlot } from "../lib
 import { SUGGESTED_CATEGORIES } from "../../convex/lib/templates";
 import { Icon } from "../components/ui/Icon";
 import { VendorCard } from "../components/VendorCard";
+import { ConfirmOutreach } from "../components/ConfirmOutreach";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
@@ -80,15 +81,13 @@ function SlotPanel({
   const setEmail = useMutation(api.vendors.setEmail);
   const addManual = useMutation(api.vendors.addManual);
   const draft = useMutation(api.outreach.draft);
-  const updateDraft = useMutation(api.outreach.updateDraft);
-  const send = useMutation(api.outreach.send);
   const markBooked = useMutation(api.slots.markBooked);
 
   const defaultQuery = `${slot.category} in ${wedding.city} for a ${wedding.template === "western" ? "" : wedding.template + " "}wedding under ${money(slot.budget, wedding.currency)}`;
   const [query, setQuery] = useState(defaultQuery);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [drafting, setDrafting] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [sentCount, setSentCount] = useState<number | null>(null);
   const [manual, setManual] = useState({ name: "", email: "", website: "" });
   const [error, setError] = useState<string | null>(null);
 
@@ -123,19 +122,6 @@ function SlotPanel({
       setError(e instanceof Error ? e.message : "Could not draft emails.");
     } finally {
       setDrafting(false);
-    }
-  }
-
-  async function sendAll() {
-    if (!drafts?.length) return;
-    setError(null);
-    setSending(true);
-    try {
-      await send({ messageIds: drafts.map((d) => d._id) });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not send.");
-    } finally {
-      setSending(false);
     }
   }
 
@@ -270,32 +256,27 @@ function SlotPanel({
       </section>
 
       {canEdit && drafts && drafts.length > 0 && (
-        <section aria-labelledby="drafts-h" className="card p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 id="drafts-h" className="text-lg">Review {drafts.length} {drafts.length === 1 ? "email" : "emails"}</h3>
-            <button className="btn-primary" disabled={sending} onClick={() => void sendAll()}>
-              {sending ? "Sending…" : `Send from ${wedding.inboxAddress ?? "your wedding inbox"}`}
-            </button>
-          </div>
-          <ul className="mt-4 space-y-4">
-            {drafts.map((d) => (
-              <li key={d._id} className="rounded-xl border border-line p-4">
-                <p className="text-xs text-muted">To {d.toAddress}</p>
-                <input
-                  className="input mt-2 font-medium"
-                  defaultValue={d.subject}
-                  aria-label="Subject"
-                  onBlur={(e) => e.target.value !== d.subject && void updateDraft({ messageId: d._id, subject: e.target.value })}
-                />
-                <textarea
-                  className="input mt-2 min-h-40 font-mono text-xs"
-                  defaultValue={d.bodyText}
-                  aria-label="Email body"
-                  onBlur={(e) => e.target.value !== d.bodyText && void updateDraft({ messageId: d._id, bodyText: e.target.value })}
-                />
-              </li>
-            ))}
-          </ul>
+        <ConfirmOutreach
+          slotId={slot._id}
+          drafts={drafts}
+          inboxAddress={wedding.inboxAddress}
+          editable={wedding.sendMode === "review"}
+          onSent={(queued) => setSentCount(queued)}
+        />
+      )}
+
+      {sentCount !== null && (
+        <section className="card flex flex-wrap items-center gap-x-3 gap-y-1 px-6 py-5" aria-live="polite">
+          <Icon name="send" size={18} className="text-accent" />
+          <p className="text-sm">
+            <span className="font-medium">
+              {sentCount} {sentCount === 1 ? "email is" : "emails are"} on the way.
+            </span>{" "}
+            <span className="text-muted">
+              PlusOne chases anyone who goes quiet and turns every reply into a quote. Watch the Inbox — you do not need to do
+              anything else.
+            </span>
+          </p>
         </section>
       )}
 

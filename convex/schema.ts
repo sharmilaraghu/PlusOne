@@ -22,6 +22,7 @@ import {
   researchStatus,
   role,
   routedAs,
+  sendMode,
   rsvpStatus,
   slotStatus,
   threadStatus,
@@ -51,6 +52,8 @@ export const weddingFields = {
   styleVibes: v.optional(v.array(v.string())),
   stylePalette: v.optional(v.string()),
   styleFormality: v.optional(styleFormality),
+  /** Whether PlusOne sends the vendor emails itself. Unset means it does. */
+  sendMode: v.optional(sendMode),
   inboxId: v.optional(v.string()),
   inboxAddress: v.optional(v.string()),
   createdBy: v.id("users"),

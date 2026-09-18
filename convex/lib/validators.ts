@@ -228,6 +228,14 @@ export const vendorReviewValidator = v.object({
 });
 export type VendorReview = Infer<typeof vendorReviewValidator>;
 
+/**
+ * Who presses send. "auto" is the point of the product: the couple confirms the
+ * shortlist once and PlusOne emails every vendor itself. "review" keeps the older
+ * behaviour for couples who want to read each email first.
+ */
+export const sendMode = v.union(v.literal("auto"), v.literal("review"));
+export type SendMode = Infer<typeof sendMode>;
+
 /** How formal the celebration is; sets the tone of the emails PlusOne writes. */
 export const styleFormality = v.union(v.literal("relaxed"), v.literal("smart"), v.literal("formal"));
 export type StyleFormality = "relaxed" | "smart" | "formal";

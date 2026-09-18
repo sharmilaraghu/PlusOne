@@ -319,6 +319,10 @@ The couple confirms the shortlist once, and PlusOne sends every email itself. Th
 
 **Verify independently:** confirm a shortlist of three test addresses and check that exactly three emails go out, each personal to its vendor, with no duplicates.
 
+**Done, 18 September 2026.** The per-email approval step is gone. After "Request quotes", one panel shows every vendor who will be written to with the address it will go to, one letter in full, and a single Send button; "Not yet" throws the drafts away. `outreach.sendAllForSlot` takes the need rather than a list of message ids, so a draft written a second later cannot be left behind, and each message keeps its own idempotency key. A couple who would rather read everything first chooses that in Settings → The emails, and the same panel becomes the editable list it replaced.
+
+Measured end to end against three AgentMail inboxes created for the purpose — no real vendor was written to. One confirmation produced exactly three messages, all `sent`, to three different addresses, with three different subjects, three different bodies, three different idempotency keys and three different AgentMail ids. All three arrived. Each was personal: the string band was asked about ceremony and drinks-reception sets, the DJ duo about the PA and lighting, and every letter carried the right dates and the right guest count for each function. Afterwards the need moved to "contacted" on its own and all three threads had a follow-up armed for three days later, which the hourly cron sends without anyone asking.
+
 ### Phase 4b (new): The decision dashboard
 
 **Goal:** one screen where the couple decides, without opening an inbox.

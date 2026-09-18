@@ -14,7 +14,7 @@ import {
   splitByWeights,
 } from "./lib/templates";
 import { addDays, daysBetween } from "./lib/text";
-import { cultureTemplate, styleFormality, role } from "./lib/validators";
+import { cultureTemplate, sendMode, styleFormality, role } from "./lib/validators";
 import { workflow } from "./workflows";
 
 export const listMine = query({
@@ -291,6 +291,7 @@ export const update = mutation({
       styleVibes: v.optional(v.array(v.string())),
       stylePalette: v.optional(v.string()),
       styleFormality: v.optional(styleFormality),
+      sendMode: v.optional(sendMode),
     }),
   },
   returns: v.null(),

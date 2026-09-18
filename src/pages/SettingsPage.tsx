@@ -29,6 +29,7 @@ export function SettingsPage() {
     stylePalette: wedding.stylePalette ?? "",
     styleFormality: (wedding.styleFormality ?? "smart") as Formality,
     inspirationUrl: wedding.inspirationUrl ?? "",
+    sendMode: (wedding.sendMode ?? "auto") as "auto" | "review",
   });
   const [vibes, setVibes] = useState<string[]>(wedding.styleVibes ?? []);
   const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
@@ -56,6 +57,7 @@ export function SettingsPage() {
           styleFormality: form.styleFormality,
           styleVibes: vibes,
           inspirationUrl: form.inspirationUrl.trim(),
+          sendMode: form.sendMode,
         },
       });
       setState("saved");
@@ -142,6 +144,41 @@ export function SettingsPage() {
           <Field label="Inspiration link" id="s-insp" hint="A Pinterest board, a blog post or a venue page.">
             <input id="s-insp" type="url" className="input" value={form.inspirationUrl} onChange={(e) => set("inspirationUrl", e.target.value)} disabled={!canEdit} placeholder="https://…" />
           </Field>
+        </div>
+      </section>
+
+      <section className="card mt-5 p-6 md:p-7">
+        <h2 className="display text-xl">The emails</h2>
+        <p className="mt-1 text-sm text-muted">
+          Once you have confirmed a shortlist, who presses send.
+        </p>
+        <div className="mt-4 grid gap-3">
+          {([
+            {
+              value: "auto" as const,
+              title: "PlusOne sends them",
+              body: "You confirm the shortlist once, having seen who is being written to and one letter in full. Everything after that — sending, chasing anyone who goes quiet, reading the replies into quotes — happens without you.",
+            },
+            {
+              value: "review" as const,
+              title: "Let me read each email first",
+              body: "Every letter is shown before anything is sent, and you can change any of it.",
+            },
+          ]).map((opt) => (
+            <button
+              key={opt.value}
+              type="button"
+              disabled={!canEdit}
+              aria-pressed={form.sendMode === opt.value}
+              onClick={() => set("sendMode", opt.value)}
+              className={`rounded-[14px] border px-5 py-4 text-left transition ${
+                form.sendMode === opt.value ? "border-accent bg-accent-soft/50" : "border-line bg-cream hover:bg-accent-soft/30"
+              }`}
+            >
+              <span className="block font-medium">{opt.title}</span>
+              <span className="mt-1 block text-sm leading-relaxed text-muted">{opt.body}</span>
+            </button>
+          ))}
         </div>
       </section>
 
