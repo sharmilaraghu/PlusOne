@@ -1,0 +1,470 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-17T15:53:37.831592+00:00",
+  "title": "Design System: PlusOne",
+  "extensions": {
+    "colorMeta": {
+      "wine": {
+        "role": "primary",
+        "displayName": "Bordeaux Wine",
+        "canonical": "#74162a",
+        "tonalRamp": [
+          "#400c17",
+          "#6b1427",
+          "#961c36",
+          "#c92649",
+          "#de5471",
+          "#e98b9f",
+          "#f3bfca",
+          "#fbeaed"
+        ]
+      },
+      "wine-deep": {
+        "role": "primary",
+        "displayName": "Deep Bordeaux",
+        "canonical": "#5e1122",
+        "tonalRamp": [
+          "#410c17",
+          "#6c1427",
+          "#971b37",
+          "#cb2549",
+          "#e05271",
+          "#ea8a9f",
+          "#f3beca",
+          "#fbe9ed"
+        ]
+      },
+      "blush": {
+        "role": "secondary",
+        "displayName": "Rose Tissue Blush",
+        "canonical": "#fcebea",
+        "tonalRamp": [
+          "#430d0a",
+          "#701510",
+          "#9c1e16",
+          "#d2281e",
+          "#e6554c",
+          "#ee8c87",
+          "#f5bfbc",
+          "#fceae9"
+        ]
+      },
+      "blush-soft": {
+        "role": "secondary",
+        "displayName": "Pale Blush",
+        "canonical": "#f8eceb",
+        "tonalRamp": [
+          "#391714",
+          "#5e2621",
+          "#84352e",
+          "#b2473e",
+          "#ca6f68",
+          "#db9e99",
+          "#ebc9c6",
+          "#f8edec"
+        ]
+      },
+      "sage-wash": {
+        "role": "tertiary",
+        "displayName": "Sage Wash",
+        "canonical": "#f2f6ef",
+        "tonalRamp": [
+          "#25311c",
+          "#3d522e",
+          "#567240",
+          "#739956",
+          "#95b67c",
+          "#b7cda7",
+          "#d7e3ce",
+          "#f2f6ef"
+        ]
+      },
+      "sage-pill": {
+        "role": "tertiary",
+        "displayName": "Sage Leaf",
+        "canonical": "#e3eadf",
+        "tonalRamp": [
+          "#242e1e",
+          "#3c4d33",
+          "#546c47",
+          "#71915f",
+          "#93ae84",
+          "#b6c8ac",
+          "#d7e1d1",
+          "#f2f5f0"
+        ]
+      },
+      "sage-ink": {
+        "role": "tertiary",
+        "displayName": "Deep Moss",
+        "canonical": "#202e1e",
+        "tonalRamp": [
+          "#202e1e",
+          "#364d32",
+          "#4b6c46",
+          "#65915f",
+          "#89ae84",
+          "#afc9ac",
+          "#d3e1d1",
+          "#f0f5f0"
+        ]
+      },
+      "ivory": {
+        "role": "neutral",
+        "displayName": "Ivory Paper",
+        "canonical": "#fefcf7",
+        "tonalRamp": [
+          "#443308",
+          "#71550e",
+          "#9f7714",
+          "#d5a01b",
+          "#e8bb4a",
+          "#f0d185",
+          "#f7e6bb",
+          "#fcf6e8"
+        ]
+      },
+      "card": {
+        "role": "neutral",
+        "displayName": "Card Cream",
+        "canonical": "#fffdfa",
+        "tonalRamp": [
+          "#492d04",
+          "#794b06",
+          "#aa6909",
+          "#e48d0c",
+          "#ffad33",
+          "#ffc875",
+          "#ffe0b2",
+          "#fff5e5"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Soft Paper",
+        "canonical": "#fbfaf8",
+        "tonalRamp": [
+          "#312a1c",
+          "#51462e",
+          "#726141",
+          "#998357",
+          "#b5a27d",
+          "#cdc0a7",
+          "#e3dcce",
+          "#f6f3ef"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Letterpress Ink",
+        "canonical": "#1e1e1e",
+        "tonalRamp": [
+          "#262626",
+          "#404040",
+          "#595959",
+          "#787878",
+          "#999999",
+          "#bababa",
+          "#d9d9d9",
+          "#f2f2f2"
+        ]
+      },
+      "ink-head": {
+        "role": "neutral",
+        "displayName": "Letterpress Ink (headings)",
+        "canonical": "#222221",
+        "tonalRamp": [
+          "#272726",
+          "#41413f",
+          "#5b5b58",
+          "#7a7a76",
+          "#9b9b97",
+          "#bbbbb9",
+          "#d9d9d8",
+          "#f2f2f2"
+        ]
+      },
+      "ink-soft": {
+        "role": "neutral",
+        "displayName": "Graphite",
+        "canonical": "#4f504f",
+        "tonalRamp": [
+          "#262626",
+          "#3f403f",
+          "#595a59",
+          "#777977",
+          "#989a98",
+          "#babbba",
+          "#d9d9d9",
+          "#f2f2f2"
+        ]
+      },
+      "hair": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "#ece7e2",
+        "tonalRamp": [
+          "#2e261e",
+          "#4d4032",
+          "#6c5947",
+          "#91785f",
+          "#ae9984",
+          "#c8baac",
+          "#e1d9d1",
+          "#f5f2f0"
+        ]
+      },
+      "rule-strong": {
+        "role": "neutral",
+        "displayName": "Stitched Rule",
+        "canonical": "#d9cfc8",
+        "tonalRamp": [
+          "#2d251f",
+          "#4b3e34",
+          "#6a5649",
+          "#8e7462",
+          "#ac9686",
+          "#c7b8ae",
+          "#e0d8d2",
+          "#f5f2f0"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Hero headline only; container-scaled in the measured frame, hairline text-stroke for ink weight."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Section heads, with one wine italic phrase."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Step titles, day names, quoted reply text, tour titles."
+      },
+      "accent-italic": {
+        "displayName": "Accent Italic",
+        "purpose": "The single wine italic word per headline, step numerals, the One in the wordmark."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Ledes and reading text; tabular numerals on."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Buttons, pills, table cells, meta lines, Example disclosures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "window-lift",
+        "value": "0 10px 40px rgba(80,40,40,0.1), 0 1px 2px rgba(80,40,40,0.06)",
+        "purpose": "App preview window (values at comp scale, authored in cqw)."
+      },
+      {
+        "name": "notif-lift",
+        "value": "0 12px 34px rgba(80,40,40,0.12), 0 1px 2px rgba(80,40,40,0.05)",
+        "purpose": "Floating new-reply notification."
+      },
+      {
+        "name": "card-pool",
+        "value": "0 18px 40px -26px rgba(80,40,40,0.3)",
+        "purpose": "Quote and shared-plan cards."
+      },
+      {
+        "name": "card-pool-sage",
+        "value": "0 18px 40px -24px rgba(40,60,40,0.35)",
+        "purpose": "Day list card on the sage wash."
+      },
+      {
+        "name": "dialog-lift",
+        "value": "0 40px 80px -30px rgba(60,20,30,0.45)",
+        "purpose": "Tour dialog; backdrop rgba(40,20,25,0.35) with 3px blur."
+      },
+      {
+        "name": "focus-ring",
+        "value": "outline: 2px solid #74162a; outline-offset: 3px",
+        "purpose": "All focus-visible states."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-settle",
+        "value": "cubic-bezier(0.16, 1, 0.3, 1)",
+        "purpose": "All meaningful motion."
+      },
+      {
+        "name": "state",
+        "value": "200ms ease",
+        "purpose": "Pill hover color and fill."
+      },
+      {
+        "name": "notif-rise",
+        "value": "700ms ease-settle, translateY(14px) and opacity",
+        "purpose": "Reply notification lands."
+      },
+      {
+        "name": "pill-pop",
+        "value": "600ms ease-settle, scale(0.94) and saturate(0.6)",
+        "purpose": "Status pill turns to Quote received."
+      },
+      {
+        "name": "row-glow",
+        "value": "1600ms ease-out, #f8ecec to transparent",
+        "purpose": "Changed vendor row glows once."
+      },
+      {
+        "name": "budget-grow",
+        "value": "1100ms ease-settle, scaleX(0.9) to 1",
+        "purpose": "Budget bar grows."
+      },
+      {
+        "name": "tour-step",
+        "value": "380ms ease-settle, translateY(8px) and opacity",
+        "purpose": "Tour step enters."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "none",
+        "purpose": "Final state shown with no transitions or animations."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "hero-reflow",
+        "value": "820px"
+      },
+      {
+        "name": "sections-stack",
+        "value": "960px"
+      },
+      {
+        "name": "hero-frame",
+        "value": "2048 / 1152 aspect, container-query units"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Pill",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Filled wine pill for the next action (Start planning, Next).",
+      "html": "<button class=\"ds-pill ds-pill--wine\">Start planning</button>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-pill{display:inline-flex;align-items:center;justify-content:center;height:52px;padding:0 28px;border:0;border-radius:999px;font-family:var(--sans);font-size:1.05rem;font-weight:400;cursor:pointer;text-decoration:none;transition:background-color 200ms ease,color 200ms ease,box-shadow 200ms ease} .ds-pill:focus-visible{outline:2px solid var(--wine);outline-offset:3px} .ds-pill--wine{background:var(--wine);color:#faf6f4} .ds-pill--wine:hover{background:var(--wine-deep)} .ds-pill:disabled{opacity:.35;cursor:default}"
+    },
+    {
+      "name": "Outline Pill",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Thin wine outline pill for the secondary action (tour, sign in, back).",
+      "html": "<button class=\"ds-pill ds-pill--outline\">Take the 1-minute tour</button>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-pill{display:inline-flex;align-items:center;justify-content:center;height:52px;padding:0 28px;border:0;border-radius:999px;font-family:var(--sans);font-size:1.05rem;font-weight:400;cursor:pointer;text-decoration:none;transition:background-color 200ms ease,color 200ms ease,box-shadow 200ms ease} .ds-pill:focus-visible{outline:2px solid var(--wine);outline-offset:3px} .ds-pill--outline{background:transparent;color:var(--wine);box-shadow:inset 0 0 0 1.5px var(--wine)} .ds-pill--outline:hover{background:var(--blush-soft)}"
+    },
+    {
+      "name": "Top Navigation",
+      "kind": "nav",
+      "refersTo": null,
+      "description": "Caslon wordmark with italic One, ink links, outline and filled pills over a hairline rule.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-brand\" href=\"#\">Plus<em>One</em></a><div class=\"ds-links\"><a href=\"#\">How it works</a><a href=\"#\">Take the tour</a></div><div class=\"ds-actions\"><a class=\"ds-p ds-p--o\" href=\"#\">Sign in</a><a class=\"ds-p ds-p--w\" href=\"#\">Start planning</a></div></nav>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-nav{display:flex;align-items:center;gap:24px;padding:14px 24px;background:var(--ivory);border-bottom:1px solid var(--hair);font-family:var(--sans)} .ds-brand{font-family:var(--serif);font-size:1.7rem;color:var(--wine);text-decoration:none;letter-spacing:-.01em} .ds-brand em{font-family:var(--italic)} .ds-links{display:flex;gap:28px;margin:0 auto} .ds-links a{color:var(--ink);text-decoration:none} .ds-links a:hover{color:var(--wine)} .ds-actions{display:flex;gap:10px} .ds-p{display:inline-flex;align-items:center;height:40px;padding:0 18px;border-radius:999px;text-decoration:none;transition:background-color 200ms ease} .ds-p--w{background:var(--wine);color:#faf6f4} .ds-p--w:hover{background:var(--wine-deep)} .ds-p--o{color:var(--wine);box-shadow:inset 0 0 0 1.5px var(--wine)} .ds-p--o:hover{background:var(--blush-soft)} .ds-nav a:focus-visible{outline:2px solid var(--wine);outline-offset:3px;border-radius:999px}"
+    },
+    {
+      "name": "Status and Role Pills",
+      "kind": "chip",
+      "refersTo": "status-pill-sage",
+      "description": "Sage for received, blush for pending, rose-outlined wine for roles.",
+      "html": "<span class=\"ds-chip ds-chip--sage\">Quote received</span> <span class=\"ds-chip ds-chip--blush\">Contacted</span> <span class=\"ds-chip ds-chip--role\">Planner</span>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-chip{display:inline-flex;align-items:center;padding:6px 12px;border-radius:999px;font-family:var(--sans);font-size:.9rem} .ds-chip--sage{background:var(--sage-pill);color:var(--sage-ink)} .ds-chip--blush{background:#f8efee;color:#2a2a24} .ds-chip--role{padding:4px 12px;font-size:.85rem;color:var(--wine);box-shadow:inset 0 0 0 1px #e2c9ce}"
+    },
+    {
+      "name": "Quote Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "Soft paper card with hairline border, warm pooled shadow, fact tiles and an Example disclosure.",
+      "html": "<div class=\"ds-card\"><p class=\"ds-from\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 6.5h17v11h-17zM3.8 7l8.2 6.2L20.2 7\"/></svg> Reply from Lumen &amp; Lace Photography</p><p class=\"ds-mail\">“Our Single Day package is <strong>$4,200</strong> with a <strong>$500 deposit</strong>.”</p><dl class=\"ds-facts\"><div><dt>Total</dt><dd>$4,200</dd></div><div><dt>Deposit</dt><dd>$500</dd></div></dl></div>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-card{max-width:440px;background:var(--paper);border:1px solid var(--hair);border-radius:18px;padding:28px;box-shadow:0 18px 40px -26px rgba(80,40,40,.3);font-family:var(--sans);font-variant-numeric:tabular-nums} .ds-from{display:flex;align-items:center;gap:8px;margin:0 0 14px;font-size:.9rem;color:#5a5a58} .ds-from svg{color:var(--wine)} .ds-mail{margin:0 0 22px;font-family:var(--serif);font-size:1.35rem;line-height:1.45;color:#2a2a29} .ds-mail strong{font-weight:400;color:var(--wine)} .ds-facts{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:12px} .ds-facts div{background:#fff;border:1px solid #efebe6;border-radius:12px;padding:12px 14px} .ds-facts dt{font-size:.8rem;color:var(--ink-soft)} .ds-facts dd{margin:2px 0 0;font-size:1.05rem;color:var(--ink)}"
+    },
+    {
+      "name": "Numbered Step",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "How it works sequence item: hairline top rule, italic wine numeral, serif title, one line. No card, no icon disc.",
+      "html": "<ol class=\"ds-steps\"><li><span>01</span><h3>Describe</h3><p>Tell PlusOne about your days, guests and budget.</p></li><li><span>02</span><h3>Find</h3><p>It researches vendors from their own sites.</p></li></ol>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-steps{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:32px;font-family:var(--sans)} .ds-steps li{display:grid;gap:8px;padding-top:22px;border-top:1px solid #d9cfc8} .ds-steps span{font-family:var(--italic);font-style:italic;font-size:1.15rem;color:var(--wine)} .ds-steps h3{margin:4px 0 0;font-family:var(--serif);font-weight:400;font-size:1.55rem;line-height:1.15;color:#222221} .ds-steps p{margin:0;font-size:1rem;line-height:1.55;color:#55544f}"
+    },
+    {
+      "name": "Vendor Row and Reply Notification",
+      "kind": "custom",
+      "refersTo": null,
+      "description": "App preview vendor row (round thumbnail, name, day, status pill, price) and the floating new-reply card.",
+      "html": "<div class=\"ds-ap\"><div class=\"ds-row\"><span class=\"ds-thumb\"></span><span>Henna House</span><span>Friday</span><span class=\"ds-st\">Quote received</span><span class=\"ds-price\">$850</span></div><div class=\"ds-notif\"><span class=\"ds-ic\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3.5 6.5h17v11h-17zM3.8 7l8.2 6.2L20.2 7\"/></svg><i></i></span><p>Henna House replied with a quote of $850.</p></div></div>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-ap{font-family:var(--sans);font-variant-numeric:tabular-nums;max-width:560px} .ds-row{display:grid;grid-template-columns:44px 1fr auto auto auto;align-items:center;gap:12px;padding:10px 14px;background:var(--paper);border:1.5px solid #ebe6e1;border-radius:14px;font-size:.95rem;color:var(--ink)} .ds-thumb{width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#e9d3c9,#b98f7e)} .ds-st{padding:6px 12px;border-radius:999px;background:var(--sage-pill);color:var(--sage-ink);font-size:.85rem;animation:ds-pop 600ms cubic-bezier(.16,1,.3,1)} .ds-price{text-align:right} .ds-notif{display:flex;align-items:center;gap:12px;margin-top:14px;padding:12px 16px;background:var(--card);border-radius:16px;box-shadow:0 12px 34px rgba(80,40,40,.12),0 1px 2px rgba(80,40,40,.05);animation:ds-rise 700ms cubic-bezier(.16,1,.3,1)} .ds-ic{position:relative;flex:none;display:grid;place-items:center;width:42px;height:42px;border-radius:50%;background:#f8e6e6;color:#77202e} .ds-ic i{position:absolute;right:6px;top:4px;width:8px;height:8px;border-radius:50%;background:var(--wine);box-shadow:0 0 0 2px #f8e6e6} .ds-notif p{margin:0;font-size:.92rem;line-height:1.45} @keyframes ds-rise{from{transform:translateY(14px);opacity:0}} @keyframes ds-pop{from{transform:scale(.94);filter:saturate(.6)}} @media (prefers-reduced-motion:reduce){.ds-st,.ds-notif{animation:none}}"
+    },
+    {
+      "name": "Tour Dialog",
+      "kind": "custom",
+      "refersTo": "tour-dialog",
+      "description": "Five-step dialog: count, segmented progress, round icon ground, serif title, Back and Next pills.",
+      "html": "<div class=\"ds-tour\"><p class=\"ds-count\">Step 2 of 5</p><ol class=\"ds-dots\"><li class=\"done\"></li><li class=\"on\"></li><li></li><li></li><li></li></ol><span class=\"ds-ticon\"><svg width=\"26\" height=\"26\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.5\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M10.5 17a6.5 6.5 0 1 0 0-13 6.5 6.5 0 0 0 0 13Zm4.8-1.7L20 20\"/></svg></span><h2>Find</h2><p>PlusOne researches vendors and reads prices from their own pages.</p><div class=\"ds-act\"><button class=\"ds-b ds-b--o\">Back</button><button class=\"ds-b ds-b--w\">Next</button></div></div>",
+      "css": ":host{--wine:#74162a;--wine-deep:#5e1122;--ivory:#fefcf7;--card:#fffdfa;--paper:#fbfaf8;--blush:#fcebea;--blush-soft:#f8eceb;--sage-pill:#e3eadf;--sage-ink:#202e1e;--ink:#1e1e1e;--ink-soft:#4f504f;--hair:#ece7e2;--serif:'Libre Caslon Display','Libre Caslon Text',Georgia,serif;--italic:'Libre Caslon Text',Georgia,serif;--sans:'Assistant Variable',Assistant,system-ui,sans-serif;} .ds-tour{max-width:520px;padding:28px;border-radius:22px;background:var(--paper);color:var(--ink);font-family:var(--sans);box-shadow:0 40px 80px -30px rgba(60,20,30,.45)} .ds-count{margin:0;font-size:.85rem;color:var(--ink-soft)} .ds-dots{list-style:none;display:flex;gap:6px;margin:14px 0 22px;padding:0} .ds-dots li{flex:1;height:4px;border-radius:4px;background:var(--hair)} .ds-dots li.done{background:#d9b6bd} .ds-dots li.on{background:var(--wine)} .ds-ticon{width:56px;height:56px;border-radius:50%;display:grid;place-items:center;background:var(--blush-soft);color:var(--wine)} .ds-tour h2{font-family:var(--serif);font-weight:400;font-size:2rem;line-height:1.1;margin:18px 0 10px} .ds-tour p{margin:0;font-size:1.05rem;line-height:1.65;color:#3f3f3e} .ds-act{display:flex;justify-content:space-between;margin-top:26px} .ds-b{height:46px;padding:0 24px;border:0;border-radius:999px;font:inherit;cursor:pointer;transition:background-color 200ms ease} .ds-b--w{background:var(--wine);color:#faf6f4} .ds-b--w:hover{background:var(--wine-deep)} .ds-b--o{background:transparent;color:var(--wine);box-shadow:inset 0 0 0 1.5px var(--wine)} .ds-b--o:hover{background:var(--blush-soft)} .ds-b:focus-visible{outline:2px solid var(--wine);outline-offset:3px}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Wedding Stationer's Desk",
+    "overview": "**Creative North Star: \"The Wedding Stationer's Desk\"**\n\nPlusOne reads like good wedding stationery laid next to a working planner: warm ivory paper, a single deep wine ink for the brand and every decision point, and soft blush and sage washes that separate sections the way tissue separates cards in an invitation suite. Headlines are set in Libre Caslon Display, with one italic Caslon word per headline carried in wine. Everything you read or operate is set in Assistant.\n\nThe density is calm and editorial. Sections breathe (72 to 128px of block padding), content sits in a 1180px column, and proof is shown rather than described: the product's own vendor table, quotes, day list and shared plan appear as quiet cards with hairline borders and soft, diffused, warm-tinted shadows. Motion is one gentle settle, used when something in the plan actually changes.\n\nThe world refuses the couple-photo marketplace hero and the generic SaaS feature grid, and it replaced a rejected \"Departures Board\" world (marigold and navy split-flap signage) that read as an airport. None of that vocabulary returns.",
+    "keyCharacteristics": [
+      "Warm ivory ground with full-width blush and sage section washes.",
+      "One wine accent: brand, primary pills, the italic headline word, active states, focus.",
+      "Caslon Display headlines with a single wine italic accent word.",
+      "Pill buttons only: filled wine or thin wine outline.",
+      "Rounded cards (12 to 18px) with hairline borders and soft diffused shadows.",
+      "Status as soft pills (sage for good news, blush for pending); people and vendors as round thumbnails.",
+      "Tabular numerals across the whole surface."
+    ],
+    "rules": [
+      {
+        "name": "The One Ink Rule",
+        "body": "Wine is the only saturated color. It marks the brand, the next action and the one italic word; it never fills a section or a card.",
+        "section": "colors"
+      },
+      {
+        "name": "The Wash Rule",
+        "body": "Blush and sage are grounds and soft status fills, never text colors. A section takes one wash edge to edge; cards inside it stay cream.",
+        "section": "colors"
+      },
+      {
+        "name": "The One Italic Rule",
+        "body": "Each headline carries at most one italic Caslon phrase, in wine (the hero's is also set at 0.88em). Never italicize body text for emphasis.",
+        "section": "typography"
+      },
+      {
+        "name": "The Serif Speaks, Sans Works Rule",
+        "body": "Serif is for headings, names and quoted words; buttons, tables, pills and labels are always Assistant.",
+        "section": "typography"
+      },
+      {
+        "name": "The Warm Shadow Rule",
+        "body": "Shadows are diffused and warm-tinted. No hard offset shadows, no neutral grey drop shadows.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** keep wine as the single saturated ink: brand, primary action, one italic headline word, active and focus states.",
+      "**Do** separate sections with full-width ivory, blush and sage washes rather than borders or cards.",
+      "**Do** use pills for every button and status, and circles for every person or vendor image.",
+      "**Do** show the product with realistic example data and label each illustration \"Example\".",
+      "**Do** give cards hairline borders and warm, diffused, negative-spread shadows.",
+      "**Do** keep tabular numerals on for all money and counts.",
+      "**Do** draw icons as inline 1.5px round-cap strokes."
+    ],
+    "donts": [
+      "**Don't** bring back the rejected Departures Board vocabulary: marigold, navy enamel, split-flap modules, lamps, rivets.",
+      "**Don't** open the page with a couple-photo hero or a grid of icon feature cards.",
+      "**Don't** use hard offset or neutral grey shadows.",
+      "**Don't** set buttons, tables or labels in the serif, or use more than one italic accent per headline.",
+      "**Don't** treat the signed-in app look (Fraunces, Inter, cream and brown Tailwind tokens) as a second approved style; it is pending migration to this world."
+    ]
+  }
+}

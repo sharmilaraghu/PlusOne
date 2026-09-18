@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Fraunces", ui-serif, Georgia, serif;
+
+  --color-paper: #fdfcfa;
+  --color-ink: #2a2622;
+  --color-muted: #7a716a;
+  --color-line: #ebe4da;
+  --color-accent: #8b5e3c;
+  --color-accent-soft: #f3e9df;
+  --color-rose: #f5e6eb;
+  --color-lilac: #e6e1f5;
+  --color-sand: #f8f4e8;
+  --color-sage: #e8f1e6;
+  --color-sky: #e3edf5;
+  --color-ok: #4f7f5f;
+  --color-warn: #b8862b;
+  --color-bad: #b3473f;
+}
+
+html { color-scheme: light; }
+body {
+  @apply bg-paper text-ink font-sans antialiased;
+  margin: 0;
+}
+h1, h2, h3, .display { font-family: var(--font-display); }
+
+@utility card { @apply rounded-2xl border border-line bg-white shadow-[0_1px_2px_rgba(42,38,34,0.04)]; }
+@utility btn { @apply inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2 text-sm font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/50 disabled:opacity-50 disabled:cursor-not-allowed; }
+@utility btn-primary { @apply btn bg-accent text-white hover:bg-[#764e31]; }
+@utility btn-ghost { @apply btn border border-line bg-white text-ink hover:bg-accent-soft; }
+@utility btn-sm { @apply px-3 py-1.5 text-xs; }
+@utility input { @apply w-full rounded-xl border border-line bg-white px-3 py-2 text-sm text-ink placeholder:text-muted/70 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent/40; }
+@utility label { @apply mb-1 block text-xs font-medium uppercase tracking-wide text-muted; }
+@utility chip { @apply inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium; }
+@utility skip-link { @apply sr-only focus:not-sr-only focus:absolute focus:left-3 focus:top-3 focus:z-50 focus:rounded-lg focus:bg-white focus:px-3 focus:py-2 focus:shadow; }
+
+@keyframes rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+.rise { animation: rise .35s ease both; }
+@media (prefers-reduced-motion: reduce) { .rise { animation: none; } }
