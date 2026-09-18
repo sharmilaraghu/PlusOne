@@ -10,6 +10,7 @@
 
 import type * as activity from "../activity.js";
 import type * as agentmail from "../agentmail.js";
+import type * as assistant from "../assistant.js";
 import type * as auth from "../auth.js";
 import type * as budget from "../budget.js";
 import type * as crons from "../crons.js";
@@ -52,6 +53,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
   agentmail: typeof agentmail;
+  assistant: typeof assistant;
   auth: typeof auth;
   budget: typeof budget;
   crons: typeof crons;

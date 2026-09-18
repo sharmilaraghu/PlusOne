@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { LandingPage } from "./pages/LandingPage";
 import { SignInPage } from "./pages/SignInPage";
 import { HomePage } from "./pages/HomePage";
+import { ErrorBoundary } from "./components/ErrorBoundary";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { VendorsPage } from "./pages/VendorsPage";
@@ -37,6 +38,7 @@ export default function App() {
               </Unauthenticated>
               <Authenticated>
                 <a href="#main" className="skip-link">Skip to content</a>
+                <ErrorBoundary>
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/new" element={<OnboardingPage />} />
@@ -54,6 +56,7 @@ export default function App() {
                   </Route>
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>
+                </ErrorBoundary>
               </Authenticated>
             </>
           }

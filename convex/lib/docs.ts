@@ -1,6 +1,7 @@
 import { v, type PropertyValidators } from "convex/values";
 import {
   activityFields,
+  chatMessageFields,
   budgetLineFields,
   eventFields,
   guestFields,
@@ -33,6 +34,7 @@ export const quoteDoc = doc("quotes", quoteFields);
 export const budgetLineDoc = doc("budgetLines", budgetLineFields);
 export const guestDoc = doc("guests", guestFields);
 export const activityDoc = doc("activity", activityFields);
+export const chatMessageDoc = doc("chatMessages", chatMessageFields);
 
 /** Public projection of a user (never expose auth internals). */
 export const userSummary = v.object({

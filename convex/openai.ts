@@ -522,9 +522,12 @@ export const parseRsvp = internalAction({
         note: z.string().nullable().describe("anything else the couple should know, one line"),
       }),
       prompt:
-        `A wedding guest replied to an RSVP email. Guest: ${guest.name}, invited party size ${guest.partySize}. ` +
-        `Work out whether they are coming, how many people are attending (default to the party size when they say yes ` +
-        `without a number; "plus one" means 2), and any dietary needs.\n\nSubject: ${message.subject}\n\n${truncate(message.bodyText, 6000)}`,
+        `A wedding guest replied to an RSVP email. Guest: ${guest.name}, invited for ${guest.partySize}. ` +
+        `Work out whether they are coming, how many people are actually attending, and any dietary needs.\n` +
+        `Count the people the reply itself names or implies, and let that override the number they were invited for: ` +
+        `"two of us", "me and my husband David" or naming a second person all mean 2, even when the invitation was for ` +
+        `one. "Plus one" means 2. Only fall back to the invited number when they say yes without indicating how many. ` +
+        `If they are not coming, the count is 0.\n\nSubject: ${message.subject}\n\n${truncate(message.bodyText, 6000)}`,
     });
     return {
       guestId: guest._id,
@@ -533,5 +536,108 @@ export const parseRsvp = internalAction({
       dietary: nn(object.dietary),
       note: nn(object.note),
     };
+  },
+});
+
+// ---- assistant ---------------------------------------------------------------
+
+const assistantSchema = z.object({
+  answer: z.string().describe("the reply to show the couple, in plain words, 1-5 short paragraphs"),
+  action: z
+    .enum(["none", "research", "add_need"])
+    .describe("only when the couple clearly asked for it; otherwise 'none'"),
+  needTitle: z.string().nullable().describe("for 'research', the exact title of the existing need to search for"),
+  query: z.string().nullable().describe("for 'research', what to search for in plain words"),
+  newNeedTitle: z.string().nullable().describe("for 'add_need', what to call the new vendor need"),
+  newNeedCategory: z.string().nullable().describe("for 'add_need', a short category such as Cake or Transport"),
+});
+
+/**
+ * Answer one question about this wedding.
+ *
+ * The assistant can start a search or add a vendor need, and nothing else. It is given
+ * no way to send an email: outreach always goes through the confirmation screen, so the
+ * couple's inbox never sends something they have not seen.
+ */
+export const answerQuestion = internalAction({
+  args: { weddingId: v.id("weddings"), replyId: v.id("chatMessages") },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    try {
+      const wedding = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
+      if (!wedding) throw new Error("Wedding not found");
+      const board = await ctx.runQuery(internal.assistant.context, { weddingId: args.weddingId });
+
+      const needLines = board.needs
+        .map(
+          (n) =>
+            `- ${n.title} (${n.category}): ${formatMoney(n.budget, wedding.wedding.currency)} planned, ${n.status}` +
+            `, ${n.vendorCount} vendor${n.vendorCount === 1 ? "" : "s"} found` +
+            (n.bestQuote !== null ? `, best quote ${formatMoney(n.bestQuote, wedding.wedding.currency)}` : ""),
+        )
+        .join("\n");
+      const conversation = board.recent.map((m) => `${m.role === "user" ? "Couple" : "You"}: ${m.content}`).join("\n");
+
+      const { object } = await generateObject({
+        model: openai(MODEL_SMART),
+        schema: assistantSchema,
+        prompt:
+          `You are PlusOne, a calm and competent wedding planning assistant talking to the couple whose plan is below. ` +
+          `Answer from their plan first; you may add general knowledge about weddings and traditions, but never invent ` +
+          `numbers, vendors or quotes that are not in the plan. Be warm and brief, use plain words, and give one clear ` +
+          `next step when there is one. If they ask you to do something you cannot do, say so plainly.\n` +
+          `You can do exactly two things: start a vendor search for an existing need ('research'), or add a new vendor ` +
+          `need ('add_need'). You cannot send email — say that outreach happens on the vendor screen, where they confirm ` +
+          `once and you send the rest.\n\n` +
+          `${weddingBrief(wedding.wedding, wedding.events)}\n\n` +
+          `Vendor needs:\n${needLines || "(none yet)"}\n\n` +
+          `Guests: ${board.guests.total} on the list, ${board.guests.yes} coming, ${board.guests.pending} yet to reply.\n` +
+          `Committed so far: ${formatMoney(board.committed, wedding.wedding.currency)} of ` +
+          `${formatMoney(wedding.wedding.totalBudget, wedding.wedding.currency)}.\n\n` +
+          `Conversation so far:\n${conversation}`,
+      });
+
+      const toolCalls: Array<{ name: string; args: unknown; result?: unknown; status: string }> = [];
+
+      if (object.action === "research" && object.needTitle) {
+        const wanted = object.needTitle.trim().toLowerCase();
+        const match =
+          board.needs.find((n) => n.title.toLowerCase() === wanted) ??
+          board.needs.find((n) => n.title.toLowerCase().includes(wanted) || wanted.includes(n.title.toLowerCase()));
+        if (match) {
+          const runId = await ctx.runMutation(internal.research.startForSlot, {
+            slotId: match.slotId,
+            query: object.query ?? `${match.title} in ${wedding.wedding.city}`,
+          });
+          toolCalls.push({ name: "research", args: { need: match.title }, result: { started: runId !== null }, status: "done" });
+        } else {
+          toolCalls.push({ name: "research", args: { need: object.needTitle }, result: { started: false }, status: "error" });
+        }
+      }
+
+      if (object.action === "add_need" && object.newNeedTitle) {
+        const slotId = await ctx.runMutation(internal.slots.addInternal, {
+          weddingId: args.weddingId,
+          title: object.newNeedTitle.trim().slice(0, 80),
+          category: (object.newNeedCategory ?? object.newNeedTitle).trim().slice(0, 60),
+        });
+        toolCalls.push({ name: "add_need", args: { title: object.newNeedTitle }, result: { slotId }, status: "done" });
+      }
+
+      await ctx.runMutation(internal.assistant.finishReply, {
+        replyId: args.replyId,
+        content: object.answer,
+        status: "done",
+        toolCalls: toolCalls.length ? toolCalls : undefined,
+      });
+    } catch (err) {
+      console.warn("assistant failed", err instanceof Error ? err.message : err);
+      await ctx.runMutation(internal.assistant.finishReply, {
+        replyId: args.replyId,
+        content: "Something went wrong answering that. Try asking again in a moment.",
+        status: "error",
+      });
+    }
+    return null;
   },
 });

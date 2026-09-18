@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { internalQuery, mutation, query } from "./_generated/server";
+import { internalQuery, mutation, query, internalMutation } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { quoteDoc, vendorDoc, vendorSlotDoc } from "./lib/docs";
 import { setCommittedForSlotHelper } from "./budget";
@@ -245,5 +245,35 @@ export const getInternal = internalQuery({
   returns: v.union(vendorSlotDoc, v.null()),
   handler: async (ctx, args) => {
     return await ctx.db.get(args.slotId);
+  },
+});
+
+/** Add a vendor need without a session, for the assistant acting on the couple's behalf. */
+export const addInternal = internalMutation({
+  args: { weddingId: v.id("weddings"), title: v.string(), category: v.string() },
+  returns: v.id("vendorSlots"),
+  handler: async (ctx, args) => {
+    const events = await ctx.db
+      .query("events")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(50);
+    const slotId = await ctx.db.insert("vendorSlots", {
+      weddingId: args.weddingId,
+      eventIds: events.map((e) => e._id),
+      category: args.category,
+      title: args.title,
+      budget: 0,
+      status: "research",
+    });
+    await ctx.db.insert("budgetLines", {
+      weddingId: args.weddingId,
+      slotId,
+      label: args.title,
+      planned: 0,
+      committed: 0,
+      paid: 0,
+    });
+    await rebalanceWeddingBudget(ctx, args.weddingId);
+    return slotId;
   },
 });
