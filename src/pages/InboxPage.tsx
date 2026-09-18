@@ -26,6 +26,7 @@ export function InboxPage() {
   const [filter, setFilter] = useState<string>("all");
   const threads = useQuery(api.threads.list, { weddingId })?.map((t) => ({ ...t.thread, vendorName: t.vendor.name, slotTitle: t.slot.title, latestQuote: t.latestQuote, lastPreview: t.lastMessage?.preview }));
   const canEdit = role !== "viewer";
+  const contracts = useQuery(api.inbound.listContractChecks, { weddingId });
 
   const visible = (threads ?? []).filter((t) => (filter === "all" ? t.status !== "draft" : t.status === filter));
 
@@ -72,6 +73,46 @@ export function InboxPage() {
       </aside>
       <section className="min-w-0">
         {threadId ? <ThreadView threadId={threadId as Id<"threads">} currency={wedding.currency} canEdit={canEdit} /> : <p className="text-muted">Select a conversation.</p>}
+
+        {/* Anything the couple forwarded in, read and flagged. */}
+        {contracts && contracts.length > 0 && (
+          <div className="mt-8">
+            <h2 className="display text-[1.3rem]">Documents you forwarded</h2>
+            <p className="mt-1 text-sm text-muted">
+              Send any contract to your wedding inbox and PlusOne reads it, quoting the line each warning comes from.
+            </p>
+            <ul className="mt-4 grid gap-4">
+              {contracts.map((c) => (
+                <li key={c._id} className="card p-5">
+                  <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                    <p className="font-medium">{c.filename}</p>
+                    <span className={c.status === "done" ? "chip-quiet" : c.status === "failed" ? "chip-warn" : "chip-pending"}>
+                      {c.status === "done" ? `${c.flags.length} things to know` : c.status === "failed" ? "could not be read" : "reading it…"}
+                    </span>
+                  </div>
+                  {c.summary && <p className="mt-2 text-sm leading-relaxed text-muted">{c.summary}</p>}
+                  {c.flags.length > 0 && (
+                    <ul className="mt-4 grid gap-3">
+                      {c.flags.map((f, i) => (
+                        <li
+                          key={i}
+                          className={`rounded-[12px] px-4 py-3 ${f.severity === "high" ? "bg-bad-bg" : f.severity === "medium" ? "bg-warn-bg" : "bg-line/40"}`}
+                        >
+                          <p className={`text-sm ${f.severity === "high" ? "text-bad" : f.severity === "medium" ? "text-warn" : "text-muted"}`}>
+                            {f.why}
+                          </p>
+                          <p className="mt-1.5 border-l-2 border-current/25 pl-2.5 text-xs italic leading-relaxed text-muted">
+                            “{f.clause}”
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </section>
     </div>
   );
