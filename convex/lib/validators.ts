@@ -138,6 +138,8 @@ export const extractedValidator = v.object({
   deposit: v.optional(v.number()),
   currency: v.optional(v.string()),
   availability: v.optional(v.string()),
+  /** Whether they said they are free on the couple's actual dates. */
+  availableOnDates: v.optional(v.union(v.literal("yes"), v.literal("no"), v.literal("unclear"))),
   includes: v.array(v.string()),
   excludes: v.array(v.string()),
   deadline: v.optional(v.string()),
@@ -153,6 +155,19 @@ export const activityRefsValidator = v.object({
   eventId: v.optional(v.id("events")),
 });
 
+/**
+ * What a published price is actually for. A caterer's "$200" is per head, not a total,
+ * and treating it as a total ranked one first for being "under budget" in testing.
+ */
+export const priceUnit = v.union(
+  v.literal("total"),
+  v.literal("per_person"),
+  v.literal("per_hour"),
+  v.literal("per_day"),
+  v.literal("other"),
+);
+export type PriceUnit = Infer<typeof priceUnit>;
+
 /** Vendor card produced by OpenAI from scraped pages (input to vendors.upsertMany). */
 export const vendorCardValidator = v.object({
   name: v.string(),
@@ -161,6 +176,8 @@ export const vendorCardValidator = v.object({
   phone: v.optional(v.string()),
   city: v.optional(v.string()),
   startingPrice: v.optional(v.number()),
+  priceUnit: v.optional(priceUnit),
+  priceCurrency: v.optional(v.string()),
   priceNotes: v.optional(v.string()),
   packages: v.array(packageValidator),
   capacity: v.optional(v.string()),
@@ -168,5 +185,59 @@ export const vendorCardValidator = v.object({
   highlights: v.array(v.string()),
   sourceUrls: v.array(v.string()),
   summary: v.string(),
+  // Phase 2b evidence merged in by the research workflow (never invented by the LLM).
+  rating: v.optional(v.number()),
+  reviewCount: v.optional(v.number()),
+  reviewSource: v.optional(v.string()),
+  reviewHighlights: v.optional(v.array(v.string())),
+  contactFormUrl: v.optional(v.string()),
+  hasContactFormOnly: v.optional(v.boolean()),
+  pagesRead: v.optional(v.array(v.string())),
+  /** The service area / address exactly as the scraped pages state it. No geocoding. */
+  serviceArea: v.optional(v.string()),
 });
 export type VendorCard = Infer<typeof vendorCardValidator>;
+
+/** What `firecrawl.researchVendorDetail` returns for one vendor. */
+export const vendorDetailValidator = v.object({
+  url: v.string(),
+  title: v.optional(v.string()),
+  businessName: v.optional(v.string()),
+  emails: v.array(v.string()),
+  phone: v.optional(v.string()),
+  startingPrice: v.optional(v.number()),
+  priceUnit: v.optional(priceUnit),
+  priceText: v.optional(v.string()),
+  currency: v.optional(v.string()),
+  packages: v.array(packageValidator),
+  servesCity: v.optional(v.string()),
+  address: v.optional(v.string()),
+  hasContactFormOnly: v.optional(v.boolean()),
+  contactFormUrl: v.optional(v.string()),
+  pagesRead: v.array(v.string()),
+  markdown: v.string(),
+  ms: v.number(),
+});
+export type VendorDetail = Infer<typeof vendorDetailValidator>;
+
+/** What `firecrawl.lookupReviews` returns. Every field is null when nothing was found. */
+export const vendorReviewValidator = v.object({
+  rating: v.optional(v.number()),
+  reviewCount: v.optional(v.number()),
+  reviewSource: v.optional(v.string()),
+  highlights: v.array(v.string()),
+  ms: v.number(),
+});
+export type VendorReview = Infer<typeof vendorReviewValidator>;
+
+/**
+ * Who presses send. "auto" is the point of the product: the couple confirms the
+ * shortlist once and PlusOne emails every vendor itself. "review" keeps the older
+ * behaviour for couples who want to read each email first.
+ */
+export const sendMode = v.union(v.literal("auto"), v.literal("review"));
+export type SendMode = Infer<typeof sendMode>;
+
+/** How formal the celebration is; sets the tone of the emails PlusOne writes. */
+export const styleFormality = v.union(v.literal("relaxed"), v.literal("smart"), v.literal("formal"));
+export type StyleFormality = "relaxed" | "smart" | "formal";

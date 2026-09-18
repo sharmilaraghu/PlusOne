@@ -3,6 +3,7 @@ import { internalQuery, mutation, query } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { quoteDoc, vendorDoc, vendorSlotDoc } from "./lib/docs";
 import { setCommittedForSlotHelper } from "./budget";
+import { rebalanceWeddingBudget } from "./lib/budget";
 
 export const list = query({
   args: { weddingId: v.id("weddings") },
@@ -153,6 +154,85 @@ export const markBooked = mutation({
       type: "booked",
       text: `booked ${vendor.name} for ${slot.title}.`,
       refs: { slotId: args.slotId, vendorId: args.vendorId, threadId: thread?._id },
+    });
+    return null;
+  },
+});
+
+/**
+ * Remove a vendor need from the plan, with everything that was only ever a
+ * research step for it. Anything that means a real person was contacted — a
+ * booking, or an email thread that actually went out — stops the removal.
+ */
+export const remove = mutation({
+  args: { slotId: v.id("vendorSlots") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const slot = await ctx.db.get(args.slotId);
+    if (!slot) throw new ConvexError("That need is no longer part of your plan.");
+    const { userId } = await requireMember(ctx, slot.weddingId, "planner");
+
+    // Only a real booking blocks removal. A need the couple simply ticked as "already
+    // booked" when they signed up has no vendor behind it and can be dropped freely.
+    if (slot.status === "booked" && slot.bookedVendorId) {
+      const booked = await ctx.db.get(slot.bookedVendorId);
+      throw new ConvexError(
+        `${booked?.name ?? "A vendor"} is already booked for ${slot.title}. Un-book it first, then you can remove it.`,
+      );
+    }
+
+    const threads = await ctx.db
+      .query("threads")
+      .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
+      .take(100);
+    const live = threads.find((t) => t.status !== "draft");
+    if (live) {
+      const vendor = await ctx.db.get(live.vendorId);
+      throw new ConvexError(
+        `You've already emailed ${vendor?.name ?? "a vendor"} about ${slot.title}, so this need can't be removed. Mark it booked or leave it as is.`,
+      );
+    }
+
+    // Vendors found only for this need go with it, unless a draft thread still
+    // points at one — those are left alone along with their threads.
+    const vendors = await ctx.db
+      .query("vendors")
+      .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
+      .take(200);
+    const vendorIdsWithThreads = new Set(threads.map((t) => t.vendorId));
+    let removedVendors = 0;
+    for (const vendor of vendors) {
+      if (vendorIdsWithThreads.has(vendor._id)) continue;
+      await ctx.db.delete(vendor._id);
+      removedVendors += 1;
+    }
+
+    for (const run of await ctx.db
+      .query("researchRuns")
+      .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
+      .take(100)) {
+      await ctx.db.delete(run._id);
+    }
+
+    const line = await ctx.db
+      .query("budgetLines")
+      .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
+      .first();
+    if (line) await ctx.db.delete(line._id);
+
+    await ctx.db.delete(args.slotId);
+
+    // Its budget goes back to the needs that remain.
+    await rebalanceWeddingBudget(ctx, slot.weddingId);
+
+    await logActivity(ctx, {
+      weddingId: slot.weddingId,
+      actorUserId: userId,
+      type: "note",
+      text:
+        `removed ${slot.title} from the plan` +
+        (removedVendors > 0 ? `, along with ${removedVendors} vendor${removedVendors === 1 ? "" : "s"} found for it` : "") +
+        ".",
     });
     return null;
   },

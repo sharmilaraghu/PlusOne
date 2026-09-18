@@ -1,0 +1,354 @@
+{
+  "ranAt": "2026-09-18T07:20:47.002Z",
+  "cases": [
+    {
+      "name": "Emily Boone",
+      "need": "Wedding photographer",
+      "city": "Austin, Texas",
+      "ownHost": "emilyboone.com",
+      "strategies": {
+        "C": {
+          "rating": 5,
+          "reviewCount": 30,
+          "reviewSource": "https://www.theknot.com/marketplace/emily-boone-photography-austin-tx-1070264",
+          "host": "theknot.com",
+          "highlights": [
+            "Best wedding photographer",
+            "Highly recommended",
+            "Made us feel comfortable",
+            "Captured special moments"
+          ],
+          "viaQuery": 1,
+          "candidates": 1,
+          "ms": 3555,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 37494
+          }
+        }
+      }
+    },
+    {
+      "name": "April Mae Creative",
+      "need": "Wedding photographer",
+      "city": "Austin, Texas",
+      "ownHost": "aprilmaecreative.com",
+      "strategies": {
+        "C": {
+          "rating": 5,
+          "reviewCount": 176,
+          "reviewSource": "https://www.theknot.com/marketplace/april-mae-creative-austin-tx-961324",
+          "host": "theknot.com",
+          "highlights": [],
+          "viaQuery": 1,
+          "candidates": 2,
+          "ms": 3753,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 56461
+          }
+        }
+      }
+    },
+    {
+      "name": "Alyssa Nikole Photography",
+      "need": "Wedding photographer",
+      "city": "Austin, Texas",
+      "ownHost": "alyssanikolephotography.com",
+      "strategies": {
+        "C": {
+          "rating": 4.7,
+          "reviewCount": 10,
+          "reviewSource": "https://www.theknot.com/marketplace/alyssa-nikole-photography-austin-tx-607396",
+          "host": "theknot.com",
+          "highlights": [
+            "Alyssa brings love to life in her photos",
+            "Sweetest and most patient",
+            "Captures emotions beautifully",
+            "Highly recommended for any type of photography"
+          ],
+          "viaQuery": 1,
+          "candidates": 2,
+          "ms": 3592,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 15317
+          }
+        }
+      }
+    },
+    {
+      "name": "Nisha Henna Arts",
+      "need": "Mehndi / henna artist",
+      "city": "Austin, Texas",
+      "ownHost": "hennaarts.com",
+      "strategies": {
+        "C": {
+          "ms": 7656,
+          "candidates": 0,
+          "verified": null
+        }
+      }
+    },
+    {
+      "name": "Henna by Charu",
+      "need": "Mehndi / henna artist",
+      "city": "Austin, Texas",
+      "ownHost": "hennabycharu.com",
+      "strategies": {
+        "C": {
+          "ms": 6045,
+          "candidates": 0,
+          "verified": null
+        }
+      }
+    },
+    {
+      "name": "Henna By Neeti",
+      "need": "Mehndi / henna artist",
+      "city": "Austin, Texas",
+      "ownHost": "hennabyneeti.com",
+      "strategies": {
+        "C": {
+          "rating": 5,
+          "reviewCount": 2,
+          "reviewSource": "https://us.sulekha.com/austin-tx/mehndi-service/henna-by-neeti-1639014",
+          "host": "us.sulekha.com",
+          "highlights": [
+            "amazing job",
+            "beautiful and creative",
+            "most professional",
+            "highly recommended"
+          ],
+          "viaQuery": 3,
+          "candidates": 1,
+          "ms": 44206,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 37040
+          }
+        }
+      }
+    },
+    {
+      "name": "Nostos Catering Services",
+      "need": "Wedding caterer",
+      "city": "Brighton, UK",
+      "ownHost": "nostos-hove.co.uk",
+      "strategies": {
+        "C": {
+          "ms": 12082,
+          "candidates": 0,
+          "verified": null
+        }
+      }
+    },
+    {
+      "name": "Pulse Bespoke Catering",
+      "need": "Wedding caterer",
+      "city": "Brighton, UK",
+      "ownHost": "pulsecatering.co.uk",
+      "strategies": {
+        "C": {
+          "ms": 7268,
+          "candidates": 0,
+          "verified": null
+        }
+      }
+    },
+    {
+      "name": "SPACE + THYME",
+      "need": "Wedding caterer",
+      "city": "Brighton, UK",
+      "ownHost": "spaceandthyme.co.uk",
+      "strategies": {
+        "C": {
+          "rating": 5,
+          "reviewCount": 4,
+          "reviewSource": "https://www.chamberofcommerce.uk/business-directory/england/brighton/caterer/558517-space-thyme-catering-bars-events-hire",
+          "host": "chamberofcommerce.uk",
+          "highlights": [
+            "friendly and helpful staff",
+            "excellent customer service",
+            "delicious food",
+            "accommodating dietary requirements"
+          ],
+          "viaQuery": 3,
+          "candidates": 1,
+          "ms": 6125,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 11941
+          }
+        }
+      }
+    },
+    {
+      "name": "Samantha Jagan",
+      "need": "Bridal makeup artist",
+      "city": "Chennai, India",
+      "ownHost": "samanthajagan.com",
+      "strategies": {
+        "C": {
+          "rating": 5,
+          "reviewCount": 2,
+          "reviewSource": "https://www.wedmegood.com/profile/Wedding-makeup-by-Samantha-Jagan-108914",
+          "host": "wedmegood.com",
+          "highlights": [
+            "excellent makeup artist",
+            "professional and friendly",
+            "stunning looks",
+            "highly recommended"
+          ],
+          "viaQuery": 1,
+          "candidates": 4,
+          "ms": 45571,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 6295
+          }
+        }
+      }
+    },
+    {
+      "name": "Union Pine",
+      "need": "Wedding venue",
+      "city": "Portland, Oregon",
+      "ownHost": "unionpine.com",
+      "strategies": {
+        "C": {
+          "rating": 4.7,
+          "reviewCount": 19,
+          "reviewSource": "https://www.weddingwire.com/biz/union-pine/03765e865300cc01.html",
+          "host": "weddingwire.com",
+          "highlights": [
+            "Very good",
+            "Recommended by 94% of couples",
+            "Cozy, Friendly, Flexible",
+            "Unique + Nostalgic"
+          ],
+          "viaQuery": 2,
+          "candidates": 5,
+          "ms": 8191,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 19812
+          }
+        }
+      }
+    },
+    {
+      "name": "Lakeside Gardens",
+      "need": "Wedding venue",
+      "city": "Portland, Oregon",
+      "ownHost": "lakesidegardensevents.com",
+      "strategies": {
+        "C": {
+          "rating": 4.8,
+          "reviewCount": 28,
+          "reviewSource": "https://www.theknot.com/marketplace/lakeside-gardens-portland-or-408617",
+          "host": "theknot.com",
+          "highlights": [
+            "Beautiful venue",
+            "Great staff",
+            "Seamless coordination",
+            "Stunning landscape"
+          ],
+          "viaQuery": 1,
+          "candidates": 1,
+          "ms": 3685,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 34196
+          }
+        }
+      }
+    },
+    {
+      "name": "Portland Parks & Recreation",
+      "need": "Wedding venue",
+      "city": "Portland, Oregon",
+      "ownHost": "portland.gov",
+      "strategies": {
+        "C": {
+          "ms": 8713,
+          "candidates": 0,
+          "verified": null
+        }
+      }
+    },
+    {
+      "name": "rosebud + pebbles",
+      "need": "Wedding florist",
+      "city": "Dublin, Ireland",
+      "ownHost": "rosebudandpebbles.com",
+      "strategies": {
+        "C": {
+          "ms": 32491,
+          "candidates": 0,
+          "verified": null
+        }
+      }
+    },
+    {
+      "name": "Mermaid Florist",
+      "need": "Wedding florist",
+      "city": "Dublin, Ireland",
+      "ownHost": "mermaidflorist.ie",
+      "strategies": {
+        "C": {
+          "ms": 6205,
+          "candidates": 0,
+          "verified": null
+        }
+      }
+    },
+    {
+      "name": "Bella Botanica",
+      "need": "Wedding florist",
+      "city": "Dublin, Ireland",
+      "ownHost": "bellabotanicaflowers.com",
+      "strategies": {
+        "C": {
+          "rating": 5,
+          "reviewCount": 33,
+          "reviewSource": "https://locallyirish.ie/business/bella-botanica-flowers",
+          "host": "locallyirish.ie",
+          "highlights": [
+            "5.0 (33 Google reviews)",
+            "Closed now",
+            "Free to contact",
+            "Florists in Meath"
+          ],
+          "viaQuery": 3,
+          "candidates": 1,
+          "ms": 6493,
+          "verified": {
+            "ratingSeen": true,
+            "countSeen": true,
+            "chars": 7500
+          }
+        }
+      }
+    }
+  ],
+  "summaryC": {
+    "cases": 16,
+    "rated": 9,
+    "ratedPct": 56,
+    "ratingsWithASource": 9,
+    "ratingsSeenOnTheirSource": 9,
+    "ratingsNotOnTheirSource": 0,
+    "reviewCounts": 9,
+    "reviewCountsSeenOnTheirSource": 9,
+    "medianMs": 7268
+  }
+}

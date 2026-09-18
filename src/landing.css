@@ -16,10 +16,10 @@
   --sage-ink: #2c3b29;
   --pill-blush: #f8efee;
 
-  --serif: "Libre Caslon Display", "Libre Caslon Text", Georgia, serif;
-  --serif-hero: "Libre Caslon Text", Georgia, serif;
-  --serif-italic: "Libre Caslon Text", Georgia, serif;
-  --sans: "Assistant Variable", "Assistant", system-ui, sans-serif;
+  --serif: "EB Garamond Variable", "EB Garamond", Georgia, serif;
+  --serif-hero: "EB Garamond Variable", "EB Garamond", Georgia, serif;
+  --serif-italic: "EB Garamond Variable", "EB Garamond", Georgia, serif;
+  --sans: "Work Sans Variable", "Work Sans", system-ui, sans-serif;
 
   background: var(--ivory);
   color: var(--ink);

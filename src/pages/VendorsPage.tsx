@@ -5,6 +5,10 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { flattenSlots, money, statusLabel, timeAgo, type FlatSlot } from "../lib/format";
+import { SUGGESTED_CATEGORIES } from "../../convex/lib/templates";
+import { Icon } from "../components/ui/Icon";
+import { VendorCard } from "../components/VendorCard";
+import { ConfirmOutreach } from "../components/ConfirmOutreach";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
@@ -41,14 +45,14 @@ export function VendorsPage() {
             </li>
           ))}
         </ul>
-        {canEdit && <AddSlot weddingId={weddingId} events={events} />}
+        {canEdit && <AddSlot weddingId={weddingId} events={events} currency={wedding.currency} />}
       </aside>
 
       <section className="min-w-0">
         {!slot ? (
           <p className="text-muted">Pick a slot to start.</p>
         ) : (
-          <SlotPanel key={slot._id} slot={slot} wedding={wedding} canEdit={canEdit} />
+          <SlotPanel key={slot._id} slot={slot} wedding={wedding} events={events} canEdit={canEdit} />
         )}
       </section>
     </div>
@@ -57,7 +61,17 @@ export function VendorsPage() {
 
 type Slot = FlatSlot;
 
-function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingData["wedding"]; canEdit: boolean }) {
+function SlotPanel({
+  slot,
+  wedding,
+  events,
+  canEdit,
+}: {
+  slot: Slot;
+  wedding: WeddingData["wedding"];
+  events: WeddingData["events"];
+  canEdit: boolean;
+}) {
   const vendors = useQuery(api.vendors.listBySlot, { slotId: slot._id });
   const run = useQuery(api.research.latestForSlot, { slotId: slot._id });
   const drafts = useQuery(api.outreach.listDrafts, { slotId: slot._id })?.map((d) => ({ ...d.message, vendor: d.vendor }));
@@ -67,20 +81,36 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
   const setEmail = useMutation(api.vendors.setEmail);
   const addManual = useMutation(api.vendors.addManual);
   const draft = useMutation(api.outreach.draft);
-  const updateDraft = useMutation(api.outreach.updateDraft);
-  const send = useMutation(api.outreach.send);
   const markBooked = useMutation(api.slots.markBooked);
 
   const defaultQuery = `${slot.category} in ${wedding.city} for a ${wedding.template === "western" ? "" : wedding.template + " "}wedding under ${money(slot.budget, wedding.currency)}`;
   const [query, setQuery] = useState(defaultQuery);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [drafting, setDrafting] = useState(false);
-  const [sending, setSending] = useState(false);
+  const [sentCount, setSentCount] = useState<number | null>(null);
   const [manual, setManual] = useState({ name: "", email: "", website: "" });
   const [error, setError] = useState<string | null>(null);
 
+  // The busiest day this need has to cover: what a per-head price must be multiplied by.
+  const guestCount = Math.max(0, ...events.filter((e) => slot.eventIds.includes(e._id)).map((e) => e.guestCount));
+
   const researching = run?.status === "running";
   const selectable = useMemo(() => (vendors ?? []).filter((v) => !!v.email), [vendors]);
+  // `listBySlot` already returns top picks first, then by score. The split here is
+  // only about how they are shown: the three PlusOne would choose, then the rest.
+  const topPicks = useMemo(() => (vendors ?? []).filter((v) => v.isTopPick), [vendors]);
+  const others = useMemo(() => (vendors ?? []).filter((v) => !v.isTopPick), [vendors]);
+  const topPickable = useMemo(() => topPicks.filter((v) => !!v.email), [topPicks]);
+  const ranked = (vendors ?? []).some((v) => v.score !== undefined);
+
+  function toggleSelected(vendorId: string, next: boolean) {
+    setSelected((prev) => {
+      const s = new Set(prev);
+      if (next) s.add(vendorId);
+      else s.delete(vendorId);
+      return s;
+    });
+  }
 
   async function requestQuotes() {
     setError(null);
@@ -95,19 +125,6 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
     }
   }
 
-  async function sendAll() {
-    if (!drafts?.length) return;
-    setError(null);
-    setSending(true);
-    try {
-      await send({ messageIds: drafts.map((d) => d._id) });
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Could not send.");
-    } finally {
-      setSending(false);
-    }
-  }
-
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
@@ -118,6 +135,7 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
             {slot.bookedVendor ? ` · booked ${slot.bookedVendor.name}` : ""}
           </p>
         </div>
+        {canEdit && <RemoveSlot slot={slot} weddingId={wedding._id as Id<"weddings">} />}
       </header>
 
       {canEdit && (
@@ -143,7 +161,14 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
 
       <section aria-labelledby="found-h">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h3 id="found-h" className="text-lg">Vendors {vendors ? `(${vendors.length})` : ""}</h3>
+          <div>
+            <h3 id="found-h" className="text-lg">Vendors {vendors ? `(${vendors.length})` : ""}</h3>
+            {ranked && (
+              <p className="text-xs text-quiet">
+                Ranked on what reviewers say, price against your {money(slot.budget, wedding.currency)} budget, and fit.
+              </p>
+            )}
+          </div>
           {canEdit && (
             <div className="flex items-center gap-2 text-sm">
               <span className="text-muted">{selected.size} selected</span>
@@ -160,123 +185,98 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
             {researching ? "Reading vendor websites… cards appear as each one is read." : "No vendors yet. Run a search above, or add one you already know below."}
           </div>
         ) : (
-          <ul className="mt-3 grid gap-3 md:grid-cols-2">
-            {vendors.map((v) => {
-              const checked = selected.has(v._id);
-              return (
-                <li key={v._id} className={`card rise p-4 ${checked ? "ring-2 ring-accent/40" : ""}`}>
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="truncate font-medium">{v.name}</p>
-                      <p className="text-xs text-muted">
-                        {v.city ?? wedding.city}
-                        {v.startingPrice ? ` · from ${money(v.startingPrice, wedding.currency)}` : v.priceNotes ? ` · ${v.priceNotes}` : ""}
-                      </p>
-                    </div>
-                    {canEdit && (
-                      <button className={`chip ${v.shortlisted ? "bg-rose text-accent" : "bg-sand text-muted"}`} onClick={() => void toggleShortlist({ vendorId: v._id })} aria-pressed={v.shortlisted}>
-                        {v.shortlisted ? "♥ Shortlisted" : "♡ Shortlist"}
-                      </button>
-                    )}
-                  </div>
-                  {v.summary && <p className="mt-2 text-sm">{v.summary}</p>}
-                  {v.highlights?.length > 0 && (
-                    <ul className="mt-2 flex flex-wrap gap-1">
-                      {v.highlights.slice(0, 4).map((h, i) => <li key={i} className="chip bg-sand text-muted">{h}</li>)}
-                    </ul>
+          <>
+            {topPicks.length > 0 && (
+              <>
+                <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <h4 className="display text-[1.15rem]">
+                    {topPicks.length === 1 ? "The best match" : `The top ${topPicks.length === 2 ? "two" : "three"}`}
+                  </h4>
+                  {canEdit && topPickable.length > 0 && (
+                    <button
+                      className="text-xs text-accent underline underline-offset-2"
+                      onClick={() => setSelected(new Set(topPickable.map((v) => v._id)))}
+                    >
+                      {topPickable.length === 1 ? "Select this one for quotes" : `Select these ${topPickable.length} for quotes`}
+                    </button>
                   )}
-                  {v.packages?.length > 0 && (
-                    <ul className="mt-2 space-y-0.5 text-xs text-muted">
-                      {v.packages.slice(0, 3).map((p, i) => (
-                        <li key={i}>
-                          <span className="text-ink">{p.name}</span>
-                          {p.price ? ` · ${money(p.price, wedding.currency)}` : ""}
-                          {p.description ? ` — ${p.description}` : ""}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                  <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-                    {v.website && <a className="underline" href={v.website} target="_blank" rel="noreferrer">Website</a>}
-                    {v.sourceUrls?.slice(0, 2).map((u, i) => (
-                      <a key={i} className="text-muted underline" href={u} target="_blank" rel="noreferrer">source {i + 1}</a>
-                    ))}
-                    {v.ratingText && <span className="text-muted">{v.ratingText}</span>}
-                  </div>
-                  <div className="mt-3 flex items-center justify-between gap-2">
-                    {v.email ? (
-                      <span className="truncate font-mono text-[11px] text-muted">{v.email}</span>
-                    ) : canEdit ? (
-                      <form
-                        className="flex min-w-0 flex-1 gap-1"
-                        onSubmit={(e) => {
-                          e.preventDefault();
-                          const f = new FormData(e.currentTarget);
-                          const email = String(f.get("email") ?? "").trim();
-                          if (email) void setEmail({ vendorId: v._id, email });
-                        }}
-                      >
-                        <input name="email" type="email" className="input py-1 text-xs" placeholder="No email found — add one" aria-label={`Email for ${v.name}`} />
-                        <button className="btn-ghost btn-sm">Save</button>
-                      </form>
-                    ) : (
-                      <span className="text-[11px] text-muted">No email yet</span>
-                    )}
-                    {canEdit && v.email && (
-                      <label className="flex items-center gap-1 text-xs">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            const next = new Set(selected);
-                            if (e.target.checked) next.add(v._id);
-                            else next.delete(v._id);
-                            setSelected(next);
-                          }}
-                        />
-                        Email
-                      </label>
-                    )}
-                  </div>
-                </li>
-              );
-            })}
-          </ul>
+                </div>
+                <ul className="mt-3 grid items-start gap-4 xl:grid-cols-2">
+                  {topPicks.map((v, i) => (
+                    <VendorCard
+                      key={v._id}
+                      vendor={v}
+                      rank={i + 1}
+                      slotBudget={slot.budget}
+                      currency={wedding.currency}
+                      guestCount={guestCount}
+                      fallbackCity={wedding.city}
+                      canEdit={canEdit}
+                      selected={selected.has(v._id)}
+                      onToggleSelected={(next) => toggleSelected(v._id, next)}
+                      onToggleShortlist={() => void toggleShortlist({ vendorId: v._id })}
+                      onSetEmail={(email) => void setEmail({ vendorId: v._id, email })}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
+
+            {others.length > 0 && (
+              <>
+                <h4 className="mt-7 display text-[1.15rem]">
+                  {topPicks.length > 0 ? `Also found (${others.length})` : `Found (${others.length})`}
+                </h4>
+                <ul className="mt-3 grid items-start gap-4 xl:grid-cols-2">
+                  {others.map((v) => (
+                    <VendorCard
+                      key={v._id}
+                      vendor={v}
+                      slotBudget={slot.budget}
+                      currency={wedding.currency}
+                      guestCount={guestCount}
+                      fallbackCity={wedding.city}
+                      canEdit={canEdit}
+                      selected={selected.has(v._id)}
+                      onToggleSelected={(next) => toggleSelected(v._id, next)}
+                      onToggleShortlist={() => void toggleShortlist({ vendorId: v._id })}
+                      onSetEmail={(email) => void setEmail({ vendorId: v._id, email })}
+                    />
+                  ))}
+                </ul>
+              </>
+            )}
+          </>
         )}
         {canEdit && selectable.length > 0 && selected.size === 0 && (
-          <button className="mt-2 text-xs text-muted underline" onClick={() => setSelected(new Set(selectable.map((v) => v._id)))}>
-            Select all {selectable.length} with an email
+          <button className="mt-3 text-xs text-muted underline" onClick={() => setSelected(new Set(selectable.map((v) => v._id)))}>
+            {selectable.length === 1 ? "Select the one with an email" : `Select all ${selectable.length} with an email`}
           </button>
         )}
       </section>
 
       {canEdit && drafts && drafts.length > 0 && (
-        <section aria-labelledby="drafts-h" className="card p-5">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <h3 id="drafts-h" className="text-lg">Review {drafts.length} {drafts.length === 1 ? "email" : "emails"}</h3>
-            <button className="btn-primary" disabled={sending} onClick={() => void sendAll()}>
-              {sending ? "Sending…" : `Send from ${wedding.inboxAddress ?? "your wedding inbox"}`}
-            </button>
-          </div>
-          <ul className="mt-4 space-y-4">
-            {drafts.map((d) => (
-              <li key={d._id} className="rounded-xl border border-line p-4">
-                <p className="text-xs text-muted">To {d.toAddress}</p>
-                <input
-                  className="input mt-2 font-medium"
-                  defaultValue={d.subject}
-                  aria-label="Subject"
-                  onBlur={(e) => e.target.value !== d.subject && void updateDraft({ messageId: d._id, subject: e.target.value })}
-                />
-                <textarea
-                  className="input mt-2 min-h-40 font-mono text-xs"
-                  defaultValue={d.bodyText}
-                  aria-label="Email body"
-                  onBlur={(e) => e.target.value !== d.bodyText && void updateDraft({ messageId: d._id, bodyText: e.target.value })}
-                />
-              </li>
-            ))}
-          </ul>
+        <ConfirmOutreach
+          slotId={slot._id}
+          drafts={drafts}
+          inboxAddress={wedding.inboxAddress}
+          editable={wedding.sendMode === "review"}
+          onSent={(queued) => setSentCount(queued)}
+        />
+      )}
+
+      {sentCount !== null && (
+        <section className="card flex flex-wrap items-center gap-x-3 gap-y-1 px-6 py-5" aria-live="polite">
+          <Icon name="send" size={18} className="text-accent" />
+          <p className="text-sm">
+            <span className="font-medium">
+              {sentCount} {sentCount === 1 ? "email is" : "emails are"} on the way.
+            </span>{" "}
+            <span className="text-muted">
+              PlusOne chases anyone who goes quiet and turns every reply into a quote. Watch the Inbox — you do not need to do
+              anything else.
+            </span>
+          </p>
         </section>
       )}
 
@@ -340,42 +340,132 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
   );
 }
 
-function AddSlot({ weddingId, events }: { weddingId: Id<"weddings">; events: WeddingData["events"] }) {
+function AddSlot({ weddingId, events, currency }: { weddingId: Id<"weddings">; events: WeddingData["events"]; currency: string }) {
   const add = useMutation(api.slots.add);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [budget, setBudget] = useState(2000);
+  const [budget, setBudget] = useState(1000);
   const [eventIds, setEventIds] = useState<string[]>(events.map((e) => e._id));
-  if (!open) return <button className="mt-3 text-xs text-muted underline" onClick={() => setOpen(true)}>+ Add a slot</button>;
+  const [busy, setBusy] = useState(false);
+  const taken = new Set<string>();
+
+  function submit() {
+    if (!title.trim() || eventIds.length === 0) return;
+    setBusy(true);
+    void add({
+      weddingId,
+      title: title.trim(),
+      category: category.trim() || title.trim(),
+      eventIds: eventIds as Id<"events">[],
+      budget: Number(budget) || 0,
+    }).finally(() => {
+      setBusy(false);
+      setOpen(false);
+      setTitle("");
+      setCategory("");
+    });
+  }
+
+  if (!open) {
+    return (
+      <button type="button" className="btn-quiet btn-sm mt-4 w-full" onClick={() => setOpen(true)}>
+        <Icon name="plus" size={15} /> Add a vendor need
+      </button>
+    );
+  }
+
   return (
-    <form
-      className="card mt-3 space-y-2 p-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        void add({ weddingId, title: title.trim(), category: category.trim() || title.trim(), eventIds: eventIds as Id<"events">[], budget }).then(() => {
-          setOpen(false);
-          setTitle("");
-          setCategory("");
-        });
-      }}
-    >
-      <input className="input" placeholder="Title, e.g. Dhol player" value={title} onChange={(e) => setTitle(e.target.value)} required aria-label="Slot title" />
-      <input className="input" placeholder="Category, e.g. Music" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" />
-      <input className="input" type="number" min={0} step={100} value={budget} onChange={(e) => setBudget(Number(e.target.value))} aria-label="Budget" />
-      <fieldset className="text-xs">
-        <legend className="label">Events</legend>
-        {events.map((ev) => (
-          <label key={ev._id} className="mr-2 inline-flex items-center gap-1">
-            <input type="checkbox" checked={eventIds.includes(ev._id)} onChange={(e) => setEventIds(e.target.checked ? [...eventIds, ev._id] : eventIds.filter((x) => x !== ev._id))} />
-            {ev.name}
-          </label>
+    <section className="card mt-4 p-4" aria-label="Add a vendor need">
+      <p className="label">Common needs</p>
+      <ul className="flex flex-wrap gap-1.5">
+        {SUGGESTED_CATEGORIES.filter((c) => !taken.has(c.title)).map((c) => (
+          <li key={c.title}>
+            <button
+              type="button"
+              title={c.hint}
+              onClick={() => { setTitle(c.title); setCategory(c.category); }}
+              className={`rounded-full px-3 py-1.5 text-xs transition ${
+                title === c.title ? "bg-accent text-paper" : "bg-cream text-ink shadow-[inset_0_0_0_1px_var(--color-line)] hover:bg-accent-soft"
+              }`}
+            >
+              {c.title}
+            </button>
+          </li>
         ))}
-      </fieldset>
-      <div className="flex gap-2">
-        <button className="btn-primary btn-sm">Add</button>
-        <button type="button" className="btn-ghost btn-sm" onClick={() => setOpen(false)}>Cancel</button>
+      </ul>
+
+      <div className="mt-4 grid gap-3">
+        <div>
+          <label className="label" htmlFor="slot-title">What do you need?</label>
+          <input id="slot-title" className="input" placeholder="Dhol player" value={title} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+        <div>
+          <label className="label" htmlFor="slot-budget">Budget ({currency})</label>
+          <input id="slot-budget" className="input" type="number" min={0} step={100} value={budget} onChange={(e) => setBudget(Number(e.target.value))} />
+        </div>
+        <fieldset>
+          <legend className="label">Which days?</legend>
+          <div className="flex flex-wrap gap-1.5">
+            {events.map((ev) => {
+              const on = eventIds.includes(ev._id);
+              return (
+                <button
+                  key={ev._id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setEventIds(on ? eventIds.filter((x) => x !== ev._id) : [...eventIds, ev._id])}
+                  className={`rounded-full px-3 py-1.5 text-xs transition ${on ? "bg-accent text-paper" : "bg-cream text-ink shadow-[inset_0_0_0_1px_var(--color-line)] hover:bg-accent-soft"}`}
+                >
+                  {ev.name}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
       </div>
-    </form>
+
+      <div className="mt-4 flex gap-2">
+        <button type="button" className="btn-primary btn-sm" onClick={submit} disabled={busy || !title.trim() || eventIds.length === 0}>
+          {busy ? "Adding…" : "Add it"}
+        </button>
+        <button type="button" className="btn-quiet btn-sm" onClick={() => setOpen(false)}>Cancel</button>
+      </div>
+    </section>
+  );
+}
+
+/** Drop a need you no longer have. Booked needs are refused by the backend. */
+function RemoveSlot({ slot, weddingId }: { slot: Slot; weddingId: Id<"weddings"> }) {
+  const remove = useMutation(api.slots.remove);
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!window.confirm(`Remove ${slot.title} from your plan? Its budget goes back to the rest.`)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await remove({ slotId: slot._id });
+      navigate(`/w/${weddingId}/vendors`, { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That need couldn't be removed.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="text-right">
+      <button
+        type="button"
+        className="text-sm text-muted underline underline-offset-2 transition hover:text-bad"
+        onClick={() => void submit()}
+        disabled={busy}
+      >
+        Remove this need
+      </button>
+      {error && <p role="alert" className="mt-1 max-w-xs text-sm text-bad">{error}</p>}
+    </div>
   );
 }

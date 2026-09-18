@@ -3,16 +3,18 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { logActivity, requireMember, requireUserId } from "./lib/auth";
+import { rebalanceWeddingBudget } from "./lib/budget";
 import { eventDoc, weddingDoc } from "./lib/docs";
 import {
   EVENT_COLORS,
   TEMPLATE_EVENTS,
+  allocateSlotBudgets,
   defaultSlotsFor,
   spreadDayIndexes,
   splitByWeights,
 } from "./lib/templates";
 import { addDays, daysBetween } from "./lib/text";
-import { cultureTemplate, role } from "./lib/validators";
+import { cultureTemplate, sendMode, styleFormality, role } from "./lib/validators";
 import { workflow } from "./workflows";
 
 export const listMine = query({
@@ -111,13 +113,51 @@ export const create = mutation({
     startDate: v.string(),
     endDate: v.string(),
     city: v.string(),
+    /** Neighbourhood / district inside the city; vendor searches are biased to it. */
+    area: v.optional(v.string()),
     country: v.optional(v.string()),
     currency: v.string(),
     totalBudget: v.number(),
     template: cultureTemplate,
     inspirationUrl: v.optional(v.string()),
-    customEvents: v.optional(
-      v.array(v.object({ name: v.string(), dayIndex: v.number(), date: v.string() })),
+    styleVibes: v.optional(v.array(v.string())),
+    stylePalette: v.optional(v.string()),
+    styleFormality: v.optional(styleFormality),
+    /**
+     * The couple's own functions, honoured for every tradition. Omit to take the
+     * tradition's defaults. `budget` is a share of the total, not an amount: the
+     * shares are normalised so they always add up to the wedding's budget.
+     */
+    events: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          date: v.string(),
+          dayIndex: v.optional(v.number()),
+          guestCount: v.number(),
+          budget: v.number(),
+        }),
+      ),
+    ),
+    /**
+     * The vendors this couple actually needs, and which of them they have already
+     * booked. Omit to take the tradition's defaults, all of them unbooked. A booked
+     * need is never researched or emailed, and what they have already spent on it
+     * counts against the budget from the first screen.
+     */
+    needs: v.optional(
+      v.array(
+        v.object({
+          category: v.string(),
+          title: v.string(),
+          /** Share of the budget, as a percentage. Falls back to an even share. */
+          pct: v.optional(v.number()),
+          booked: v.boolean(),
+          committed: v.optional(v.number()),
+          /** Which functions this need serves, by name. Omitted means all of them. */
+          eventNames: v.optional(v.array(v.string())),
+        }),
+      ),
     ),
   },
   returns: v.id("weddings"),
@@ -141,11 +181,15 @@ export const create = mutation({
       startDate: args.startDate,
       endDate: args.endDate,
       city: args.city.trim(),
+      area: args.area?.trim() || undefined,
       country: args.country,
       currency: args.currency.toUpperCase(),
       totalBudget: args.totalBudget,
       template: args.template,
       inspirationUrl: args.inspirationUrl,
+      styleVibes: args.styleVibes?.filter((t) => t.trim()).slice(0, 12),
+      stylePalette: args.stylePalette?.trim() || undefined,
+      styleFormality: args.styleFormality,
       createdBy: userId,
     });
     await ctx.db.insert("members", { weddingId, userId, role: "owner" });
@@ -153,14 +197,23 @@ export const create = mutation({
     // Events from the template (or the couple's own list for "custom").
     const totalDays = daysBetween(args.startDate, args.endDate);
     let plan: { name: string; dayIndex: number; date: string; weight: number; guestCount: number; description?: string }[];
-    if (args.template === "custom" && args.customEvents && args.customEvents.length > 0) {
-      plan = args.customEvents.slice(0, 20).map((e) => ({
-        name: e.name.trim(),
-        dayIndex: Math.max(0, Math.min(totalDays, Math.floor(e.dayIndex))),
-        date: e.date,
-        weight: 1,
-        guestCount: 100,
-      }));
+    if (args.events && args.events.length > 0) {
+      plan = args.events.slice(0, 20).map((e) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date)) throw new ConvexError("Each function needs a date as YYYY-MM-DD.");
+        if (!Number.isFinite(e.guestCount) || e.guestCount < 0) throw new ConvexError("Guest counts must be zero or more.");
+        if (!Number.isFinite(e.budget) || e.budget < 0) throw new ConvexError("Function budgets must be zero or more.");
+        const dayIndex = e.dayIndex ?? daysBetween(args.startDate, e.date);
+        return {
+          name: e.name.trim() || "Celebration",
+          dayIndex: Math.max(0, Math.min(totalDays, Math.floor(dayIndex))),
+          date: e.date,
+          // Budgets are weights here, so a couple's split is honoured exactly and
+          // still adds up to the total even when their numbers do not.
+          weight: e.budget,
+          guestCount: Math.floor(e.guestCount),
+        };
+      });
+      if (plan.every((e) => e.weight === 0)) plan = plan.map((e) => ({ ...e, weight: 1 }));
     } else {
       const tpl = TEMPLATE_EVENTS[args.template];
       const dayIndexes = spreadDayIndexes(tpl.length, totalDays);
@@ -190,27 +243,53 @@ export const create = mutation({
       eventNames.push(e.name);
     }
 
-    // Default vendor slots + one planned budget line per slot.
-    for (const slot of defaultSlotsFor(args.template)) {
-      const matched = slot.eventNames
-        ? eventIds.filter((_, i) => slot.eventNames!.includes(eventNames[i]))
-        : eventIds;
-      const slotEventIds = matched.length > 0 ? matched : eventIds;
-      const budget = Math.round((args.totalBudget * slot.pct) / 100);
+    // Default vendor needs, with their budgets drawn from the functions they serve
+    // so needs, functions and the wedding total all add up to the same number.
+    const chosen = args.needs && args.needs.length > 0 ? args.needs.slice(0, 40) : undefined;
+    const templateSlots: Array<{ category: string; title: string; pct: number; eventNames?: string[]; booked?: boolean; committed?: number }> =
+      chosen
+        ? chosen.map((n) => ({
+            category: n.category.trim().slice(0, 60) || "Other",
+            title: n.title.trim().slice(0, 80) || n.category.trim().slice(0, 80) || "A vendor",
+            pct: Number.isFinite(n.pct) && (n.pct ?? 0) > 0 ? (n.pct as number) : 100 / chosen.length,
+            eventNames: n.eventNames,
+            booked: n.booked,
+            committed: Number.isFinite(n.committed) && (n.committed ?? 0) > 0 ? n.committed : undefined,
+          }))
+        : defaultSlotsFor(args.template);
+    const slotPlans = templateSlots.map((slot) => {
+      const matchedIndexes = slot.eventNames
+        ? eventNames.map((n, i) => (slot.eventNames!.includes(n) ? i : -1)).filter((i) => i >= 0)
+        : eventIds.map((_, i) => i);
+      const eventIndexes = matchedIndexes.length > 0 ? matchedIndexes : eventIds.map((_, i) => i);
+      return { pct: slot.pct, eventIndexes };
+    });
+    const slotBudgets = allocateSlotBudgets(eventBudgets, slotPlans);
+
+    for (let i = 0; i < templateSlots.length; i++) {
+      const slot = templateSlots[i];
+      const { eventIndexes } = slotPlans[i];
+      const budget = slotBudgets[i];
       const slotId = await ctx.db.insert("vendorSlots", {
         weddingId,
-        eventIds: slotEventIds,
+        eventIds: eventIndexes.map((idx) => eventIds[idx]),
         category: slot.category,
         title: slot.title,
         budget,
-        status: "research",
+        // Something they have already booked is not something to go looking for.
+        status: slot.booked ? "booked" : "research",
       });
       await ctx.db.insert("budgetLines", {
         weddingId,
         slotId,
+        // A need that serves exactly one function is attributed to it, instead of
+        // being split evenly across guesses when the budget is summarised.
+        eventId: eventIndexes.length === 1 ? eventIds[eventIndexes[0]] : undefined,
         label: slot.title,
         planned: budget,
-        committed: 0,
+        // Money already spent is money already spent: the budget bar tells the truth
+        // from the first screen rather than pretending nothing is committed.
+        committed: slot.committed ?? 0,
         paid: 0,
       });
     }
@@ -237,20 +316,30 @@ export const update = mutation({
       startDate: v.optional(v.string()),
       endDate: v.optional(v.string()),
       city: v.optional(v.string()),
+      area: v.optional(v.string()),
       country: v.optional(v.string()),
       currency: v.optional(v.string()),
       totalBudget: v.optional(v.number()),
       styleSummary: v.optional(v.string()),
       inspirationUrl: v.optional(v.string()),
+      styleVibes: v.optional(v.array(v.string())),
+      stylePalette: v.optional(v.string()),
+      styleFormality: v.optional(styleFormality),
+      sendMode: v.optional(sendMode),
     }),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await requireMember(ctx, args.weddingId, "planner");
+    const { wedding } = await requireMember(ctx, args.weddingId, "planner");
     if (args.patch.totalBudget !== undefined && (!Number.isFinite(args.patch.totalBudget) || args.patch.totalBudget < 0)) {
       throw new ConvexError("Total budget must be a non-negative number.");
     }
     await ctx.db.patch(args.weddingId, args.patch);
+    // A new total has to reach the functions, the needs and the budget lines,
+    // or the budget bar would be measuring against a number nothing adds up to.
+    if (args.patch.totalBudget !== undefined && args.patch.totalBudget !== wedding.totalBudget) {
+      await rebalanceWeddingBudget(ctx, args.weddingId);
+    }
     return null;
   },
 });

@@ -1,0 +1,341 @@
+{
+  "ranAt": "2026-09-18T02:38:19.070Z",
+  "results": [
+    {
+      "need": "Wedding photographer",
+      "city": "Austin, Texas",
+      "host": "emilyboone.com",
+      "url": "https://emilyboone.com/",
+      "pages": [
+        "https://emilyboone.com/"
+      ],
+      "emails": [],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": 5,
+      "reviewCount": 30,
+      "formOnly": true,
+      "ms": 25436,
+      "name": "Emily Boone",
+      "reviewSource": "https://www.theknot.com/marketplace/emily-boone-photography-austin-tx-1070264"
+    },
+    {
+      "need": "Wedding photographer",
+      "city": "Austin, Texas",
+      "host": "aprilmaecreative.com",
+      "url": "https://aprilmaecreative.com/",
+      "pages": [
+        "https://aprilmaecreative.com/"
+      ],
+      "emails": [],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": 5,
+      "reviewCount": 176,
+      "formOnly": true,
+      "ms": 39993,
+      "name": "April Mae Creative",
+      "reviewSource": "https://www.theknot.com/marketplace/april-mae-creative-austin-tx-961324"
+    },
+    {
+      "need": "Wedding photographer",
+      "city": "Austin, Texas",
+      "host": "alyssanikolephotography.com",
+      "url": "https://alyssanikolephotography.com/",
+      "pages": [
+        "https://alyssanikolephotography.com/",
+        "https://alyssanikolephotography.com/contact"
+      ],
+      "emails": [
+        "hello@alyssanikolephotography.com"
+      ],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": 4.7,
+      "reviewCount": 10,
+      "formOnly": true,
+      "ms": 19839,
+      "name": "Alyssa Nikole Photography",
+      "reviewSource": "https://www.theknot.com/marketplace/alyssa-nikole-photography-austin-tx-607396"
+    },
+    {
+      "need": "Mehndi / henna artist",
+      "city": "Austin, Texas",
+      "host": "hennaarts.com",
+      "url": "https://www.hennaarts.com/",
+      "pages": [
+        "https://www.hennaarts.com/",
+        "https://www.hennaarts.com/contact.htm",
+        "https://www.hennaarts.com/services.htm"
+      ],
+      "emails": [
+        "HennaByNisha@gmail.com"
+      ],
+      "price": null,
+      "priceText": null,
+      "packages": 9,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": true,
+      "ms": 32179,
+      "name": "Nisha Henna Arts"
+    },
+    {
+      "need": "Mehndi / henna artist",
+      "city": "Austin, Texas",
+      "host": "hennabycharu.com",
+      "url": "https://hennabycharu.com/",
+      "pages": [
+        "https://hennabycharu.com/",
+        "https://hennabycharu.com/contact"
+      ],
+      "emails": [],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": true,
+      "ms": 14480,
+      "name": "Henna by Charu"
+    },
+    {
+      "need": "Mehndi / henna artist",
+      "city": "Austin, Texas",
+      "host": "hennabyneeti.com",
+      "url": "https://www.hennabyneeti.com/",
+      "pages": [
+        "https://www.hennabyneeti.com/",
+        "https://www.hennabyneeti.com/contact",
+        "https://www.hennabyneeti.com/services-1"
+      ],
+      "emails": [
+        "neetithakor@gmail.com"
+      ],
+      "price": 8,
+      "priceText": "Starting at $8",
+      "packages": 7,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": true,
+      "ms": 21563,
+      "name": "Henna By Neeti"
+    },
+    {
+      "need": "Wedding caterer",
+      "city": "Brighton, UK",
+      "host": "nostos-hove.co.uk",
+      "url": "https://www.nostos-hove.co.uk/catering-services-in-brighton-hove/",
+      "pages": [
+        "https://www.nostos-hove.co.uk/catering-services-in-brighton-hove/",
+        "https://www.nostos-hove.co.uk/catering-services-in-brighton-hove"
+      ],
+      "emails": [
+        "null"
+      ],
+      "price": 3000,
+      "priceText": "Catering gig above £3,000",
+      "packages": 11,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": true,
+      "ms": 25405,
+      "name": "Nostos Catering Services"
+    },
+    {
+      "need": "Wedding caterer",
+      "city": "Brighton, UK",
+      "host": "pulsecatering.co.uk",
+      "url": "https://www.pulsecatering.co.uk/",
+      "pages": [
+        "https://www.pulsecatering.co.uk/",
+        "https://www.pulsecatering.co.uk/contact"
+      ],
+      "emails": [
+        "hello@pulsecatering.co.uk",
+        "hello@pulsecatering.co.uk%C2%A0"
+      ],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": true,
+      "ms": 17283,
+      "name": "Pulse Bespoke Catering"
+    },
+    {
+      "need": "Wedding caterer",
+      "city": "Brighton, UK",
+      "host": "spaceandthyme.co.uk",
+      "url": "https://www.spaceandthyme.co.uk/catering/weddings",
+      "pages": [
+        "https://www.spaceandthyme.co.uk/catering/weddings",
+        "https://www.spaceandthyme.co.uk/contact",
+        "https://www.spaceandthyme.co.uk/about/services"
+      ],
+      "emails": [],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": true,
+      "ms": 15690,
+      "name": "SPACE + THYME"
+    },
+    {
+      "need": "Bridal makeup artist",
+      "city": "Chennai, India",
+      "host": "samanthajagan.com",
+      "url": "https://samanthajagan.com/",
+      "pages": [
+        "https://samanthajagan.com/",
+        "https://samanthajagan.com/contact"
+      ],
+      "emails": [
+        "samanthajagan@gmail.com"
+      ],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": 5,
+      "reviewCount": 2,
+      "formOnly": false,
+      "ms": 30006,
+      "name": "Samantha Jagan",
+      "reviewSource": "https://www.wedmegood.com/profile/Wedding-makeup-by-Samantha-Jagan-108914/reviews?srsltid=AU7gw4WsnI4DAwNqJeYoARNxOgv0dJzLV6ZseQC7NOEyLTMM8kiaAaQv"
+    },
+    {
+      "need": "Wedding venue",
+      "city": "Portland, Oregon",
+      "host": "unionpine.com",
+      "url": "https://www.unionpine.com/",
+      "pages": [
+        "https://www.unionpine.com/"
+      ],
+      "emails": [],
+      "price": null,
+      "priceText": null,
+      "packages": 0,
+      "rating": 5,
+      "reviewCount": 4,
+      "formOnly": true,
+      "ms": 15284,
+      "name": "Union Pine",
+      "reviewSource": "https://www.theknot.com/marketplace/union-pine-portland-or-819469"
+    },
+    {
+      "need": "Wedding venue",
+      "city": "Portland, Oregon",
+      "host": "lakesidegardensevents.com",
+      "url": "https://www.lakesidegardensevents.com/",
+      "pages": [
+        "https://www.lakesidegardensevents.com/",
+        "https://www.lakesidegardensevents.com/contact"
+      ],
+      "emails": [
+        "nfo@lakesidegardensevents.com",
+        "info@lakesidegardensevents.com"
+      ],
+      "price": null,
+      "priceText": null,
+      "packages": 1,
+      "rating": 4.8,
+      "reviewCount": 28,
+      "formOnly": true,
+      "ms": 18806,
+      "name": "Lakeside Gardens",
+      "reviewSource": "https://www.theknot.com/marketplace/lakeside-gardens-portland-or-408617"
+    },
+    {
+      "need": "Wedding venue",
+      "city": "Portland, Oregon",
+      "host": "portland.gov",
+      "url": "https://www.portland.gov/parks/wedding",
+      "pages": [
+        "https://www.portland.gov/parks/wedding",
+        "https://www.portland.gov/water/customer-service/pay-your-utility-bill/utility-rates-and-charges"
+      ],
+      "emails": [
+        "emailReservationsandPayments@portlandoregon.gov",
+        "ReservationsandPayments@portlandoregon.gov",
+        "PWBCustomerService@portlandoregon.gov"
+      ],
+      "price": 8.833,
+      "priceText": "Rates for water volume charge are based on usage, starting at $8.833 per ccf.",
+      "packages": 3,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": false,
+      "ms": 15668,
+      "name": "Portland Parks & Recreation"
+    },
+    {
+      "need": "Wedding florist",
+      "city": "Dublin, Ireland",
+      "host": "rosebudandpebbles.com",
+      "url": "https://www.rosebudandpebbles.com/",
+      "pages": [
+        "https://www.rosebudandpebbles.com/",
+        "https://www.rosebudandpebbles.com/contact",
+        "https://www.rosebudandpebbles.com/price-list"
+      ],
+      "emails": [
+        "rosebudandpebbles@gmail.com",
+        "contact@weddingvendor.com"
+      ],
+      "price": 200,
+      "priceText": "€200 booking fee",
+      "packages": 6,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": false,
+      "ms": 16428,
+      "name": "rosebud + pebbles"
+    },
+    {
+      "need": "Wedding florist",
+      "city": "Dublin, Ireland",
+      "host": "mermaidflorist.ie",
+      "url": "https://www.mermaidflorist.ie/wedding-flowers/",
+      "pages": [
+        "https://www.mermaidflorist.ie/wedding-flowers/",
+        "https://www.mermaidflorist.ie/contact"
+      ],
+      "emails": [
+        "info@mermaidflorist.ie",
+        "sales@irishflowersstore.com"
+      ],
+      "price": null,
+      "priceText": null,
+      "packages": 3,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": false,
+      "ms": 30470,
+      "name": "Mermaid Florist"
+    },
+    {
+      "need": "Wedding florist",
+      "city": "Dublin, Ireland",
+      "host": "bellabotanicaflowers.com",
+      "url": "https://www.bellabotanicaflowers.com/",
+      "pages": [
+        "https://www.bellabotanicaflowers.com/"
+      ],
+      "emails": [],
+      "price": null,
+      "priceText": null,
+      "packages": 4,
+      "rating": null,
+      "reviewCount": null,
+      "formOnly": true,
+      "ms": 12595,
+      "name": "Bella Botanica"
+    }
+  ]
+}

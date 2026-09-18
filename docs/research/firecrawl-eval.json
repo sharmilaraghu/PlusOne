@@ -1,0 +1,875 @@
+{
+  "ranAt": "2026-09-18T02:28:59.136Z",
+  "cases": [
+    {
+      "need": "Wedding photographer",
+      "city": "Austin, Texas",
+      "budget": "$3,500",
+      "query": "Wedding photographer Austin, Texas",
+      "searchMs": 5732,
+      "candidates": [
+        {
+          "url": "https://emilyboone.com/",
+          "host": "emilyboone.com",
+          "title": "Emily Boone - Austin Wedding Photographer",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Emily Boone’s own website explicitly offers wedding photography in Austin."
+        },
+        {
+          "url": "https://aprilmaecreative.com/",
+          "host": "aprilmaecreative.com",
+          "title": "April Mae Creative: Austin Wedding Photographer",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "April Mae Creative’s own website identifies the business as an Austin wedding photographer and describes its wedding photography services."
+        },
+        {
+          "url": "https://alyssanikolephotography.com/",
+          "host": "alyssanikolephotography.com",
+          "title": "Alyssa Nikole Photography: Wedding Photographer in Austin",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Alyssa Nikole Photography’s own website explicitly offers wedding photography in Austin."
+        },
+        {
+          "url": "https://www.kaylasnell.com/",
+          "host": "kaylasnell.com",
+          "title": "Kayla Snell Photography - Austin Film Wedding Photographer + ...",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Kayla Snell Photography’s own website identifies the business as an Austin film wedding photographer."
+        },
+        {
+          "url": "https://ambervickery.com/",
+          "host": "ambervickery.com",
+          "title": "Amber VIckery: Film + Digital Photographer in Austin, TX",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Amber Vickery’s own website explicitly identifies her as an Austin wedding photographer and offers wedding photography."
+        },
+        {
+          "url": "https://lucystruve.com/",
+          "host": "lucystruve.com",
+          "title": "Lucy Struve Photography: Austin Wedding Photographer",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Lucy Struve Photography’s own website offers wedding photography services in Texas, including Austin."
+        },
+        {
+          "url": "https://www.byjessicajoseph.com/",
+          "host": "byjessicajoseph.com",
+          "title": "Jessica Joseph Photography: Austin Wedding Photographer",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Jessica Joseph Photography’s own website explicitly identifies the business as an Austin wedding photographer."
+        },
+        {
+          "url": "https://twopairphotography.com/blog/",
+          "host": "twopairphotography.com",
+          "title": "OUR WORK - Austin Wedding Photographers - Two Pair Photography",
+          "need": "Wedding photographer",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Two Pair Photography’s own website showcases its wedding photography work and identifies the business as Austin wedding photographers; the page is a portfolio/work page rather than a third-party directory."
+        }
+      ],
+      "scrapes": [
+        {
+          "url": "https://emilyboone.com/",
+          "host": "emilyboone.com",
+          "ms": 2245,
+          "mdChars": 7094,
+          "json": {
+            "businessName": "Emily Boone",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Austin",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://emilyboone.com/contact"
+          ]
+        },
+        {
+          "url": "https://aprilmaecreative.com/",
+          "host": "aprilmaecreative.com",
+          "ms": 2150,
+          "mdChars": 2989,
+          "json": {
+            "businessName": "April Mae Creative",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Austin, Texas",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://aprilmaecreative.com/contact",
+            "https://www.facebook.com/AprilMaeCreative/"
+          ]
+        },
+        {
+          "url": "https://alyssanikolephotography.com/",
+          "host": "alyssanikolephotography.com",
+          "ms": 1945,
+          "mdChars": 6595,
+          "json": {
+            "businessName": "Alyssa Nikole",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Austin, San Antonio, Corpus Christi",
+            "isWeddingVendor": false
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://alyssanikolephotography.com/contact"
+          ]
+        }
+      ]
+    },
+    {
+      "need": "Mehndi / henna artist",
+      "city": "Austin, Texas",
+      "budget": "$1,000",
+      "query": "Mehndi / henna artist Austin, Texas",
+      "searchMs": 8192,
+      "candidates": [
+        {
+          "url": "https://www.hennaarts.com/",
+          "host": "hennaarts.com",
+          "title": "Best Henna Tattoo Artist in Austin | Bridal & Corporate Mehndi",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Official website for Nisha Henna Arts, offering bridal mehndi and henna services in Austin."
+        },
+        {
+          "url": "https://hennabycharu.com/",
+          "host": "hennabycharu.com",
+          "title": "Hennabycharu – Henna by Charu",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Official Henna by Charu website for a henna artist; it presents the artist's own henna services rather than a directory or marketplace."
+        },
+        {
+          "url": "https://www.hennabyneeti.com/",
+          "host": "hennabyneeti.com",
+          "title": "Henna by Neeti | Austin's Best Henna Artist | Bridal Henna | Discover ...",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Official Henna by Neeti website explicitly identifying an Austin henna artist and offering bridal henna services."
+        },
+        {
+          "url": "https://bhuvanadhinesh.com/2022/08/31/henna-artists-in-austin-austin-henna-artists/",
+          "host": "bhuvanadhinesh.com",
+          "title": "Henna Artists in Austin / Austin Henna Artists / Mehndi Artists in ...",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": false,
+          "why": "This is a blog/list article listing henna artists in Austin, not the dedicated website of the requested vendor."
+        },
+        {
+          "url": "https://us.sulekha.com/austin-tx/mehndi-service",
+          "host": "us.sulekha.com",
+          "title": "Indian Henna Artists & Mehndi Designers in Austin, TX - Sulekha US",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": false,
+          "why": "Sulekha is a directory/marketplace listing mehndi services, not a vendor's own website."
+        },
+        {
+          "url": "https://epicentertainment.com/henna-tattoo-artists-austin/",
+          "host": "epicentertainment.com",
+          "title": "Professional Henna Tattoo Artists for Hire in Austin | EPIC",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": true,
+          "why": "Official EPIC Entertainment website offering professional henna tattoo artists for events in Austin."
+        },
+        {
+          "url": "https://m.yelp.ca/search?find_desc=Mehndi+Artist&find_loc=University+of+Texas%2C+Austin%2C+TX",
+          "host": "m.yelp.ca",
+          "title": "TOP 10 BEST Mehndi Artist near 110 Inner Campus Drive, Austin ...",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": false,
+          "why": "Yelp is a directory/review platform, not a vendor's own website."
+        },
+        {
+          "url": "https://www.gigsalad.com/Variety/henna-tattoo-artist/TX/Austin",
+          "host": "gigsalad.com",
+          "title": "Best Henna Tattoo Artists for Hire in Austin, TX | GigSalad",
+          "need": "Mehndi / henna artist",
+          "city": "Austin, Texas",
+          "isVendorSite": false,
+          "why": "GigSalad is a marketplace for booking entertainers, not a vendor's own website."
+        }
+      ],
+      "scrapes": [
+        {
+          "url": "https://www.hennaarts.com/",
+          "host": "hennaarts.com",
+          "ms": 2543,
+          "mdChars": 36852,
+          "json": {
+            "businessName": "Nisha Henna Arts",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Austin",
+            "isWeddingVendor": false
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://www.hennaarts.com/contact.htm",
+            "https://www.facebook.com/watch/Google/?ref=embed_video",
+            "https://www.facebook.com/watch/?ref=embed_video&v=735952720444230"
+          ]
+        },
+        {
+          "url": "https://hennabycharu.com/",
+          "host": "hennabycharu.com",
+          "ms": 1870,
+          "mdChars": 10728,
+          "json": {
+            "businessName": "Henna by Charu",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Austin, Round Rock",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://www.facebook.com/hennabycharu/",
+            "https://hennabycharu.com/contact/",
+            "https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fhennabycharu.com"
+          ]
+        },
+        {
+          "url": "https://www.hennabyneeti.com/",
+          "host": "hennabyneeti.com",
+          "ms": 3350,
+          "mdChars": 9971,
+          "json": {
+            "businessName": "Henna by Neeti",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Austin, Texas",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": []
+        }
+      ]
+    },
+    {
+      "need": "Wedding caterer",
+      "city": "Brighton, UK",
+      "budget": "£6,000",
+      "query": "Wedding caterer Brighton, UK",
+      "searchMs": 24532,
+      "candidates": [
+        {
+          "url": "https://www.nostos-hove.co.uk/catering-services-in-brighton-hove/",
+          "host": "nostos-hove.co.uk",
+          "title": "Catering Services in Brighton & Hove",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": true,
+          "why": "Nostos's own website promotes its catering services for events in Brighton & Hove, making it a relevant catering vendor site."
+        },
+        {
+          "url": "https://www.pulsecatering.co.uk/",
+          "host": "pulsecatering.co.uk",
+          "title": "Bespoke event catering in Sussex and the surrounding areas | Pulse ...",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": true,
+          "why": "Pulse's own website offers bespoke event catering in Sussex, including the Brighton area, and is a catering business rather than a directory."
+        },
+        {
+          "url": "https://www.spaceandthyme.co.uk/catering/weddings",
+          "host": "spaceandthyme.co.uk",
+          "title": "Weddings - Brighton - SPACE + THYME",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": true,
+          "why": "This is SPACE + THYME's own website with a dedicated weddings catering page for Brighton."
+        },
+        {
+          "url": "https://www.hitched.co.uk/wedding-catering/brighton/",
+          "host": "hitched.co.uk",
+          "title": "The 10 Best Wedding Catering in Brighton | hitched.co.uk",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": false,
+          "why": "Hitched is a wedding supplier directory and marketplace, not the caterer's own website."
+        },
+        {
+          "url": "https://paellafella.co.uk/paella-tapas-caterers-in-brighton-bn1/",
+          "host": "paellafella.co.uk",
+          "title": "Paella & Tapas Caterers in Brighton BN1",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": true,
+          "why": "Paella Fella's own website offers paella and tapas catering in Brighton and includes wedding catering information and testimonials."
+        },
+        {
+          "url": "https://www.poptop.uk.com/brighton/suppliers/catering/weddingcatering/",
+          "host": "poptop.uk.com",
+          "title": "Hire Wedding Catering in Brighton - Poptop UK",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": false,
+          "why": "Poptop is a marketplace/catalogue for hiring wedding caterers, not an individual vendor's own website."
+        },
+        {
+          "url": "https://www.butlerandhog.co.uk/",
+          "host": "butlerandhog.co.uk",
+          "title": "Butler & HOG Catering | Event Catering in Sussex",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": true,
+          "why": "Butler & HOG's own website presents its event catering business in Sussex, serving the relevant Brighton area and suitable for wedding events."
+        },
+        {
+          "url": "https://restaurantsbrighton.co.uk/catering-brighton/",
+          "host": "restaurantsbrighton.co.uk",
+          "title": "Catering Companies in Brighton",
+          "need": "Wedding caterer",
+          "city": "Brighton, UK",
+          "isVendorSite": false,
+          "why": "This is a local listings or directory-style site presenting catering companies in Brighton, not an individual caterer's own website."
+        }
+      ],
+      "scrapes": [
+        {
+          "url": "https://www.nostos-hove.co.uk/catering-services-in-brighton-hove/",
+          "host": "nostos-hove.co.uk",
+          "ms": 3129,
+          "mdChars": 16433,
+          "json": {
+            "businessName": "Nostos Catering Services",
+            "contactEmail": null,
+            "startingPrice": 3000,
+            "priceText": "Catering gigs above £3,000 offer a free two-hour well-being corner.",
+            "packages": [],
+            "servesCity": "Brighton & Hove",
+            "isWeddingVendor": false
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://www.nostos-hove.co.uk/catering-services-in-brighton-hove/#catering-contact"
+          ]
+        },
+        {
+          "url": "https://www.pulsecatering.co.uk/",
+          "host": "pulsecatering.co.uk",
+          "ms": 2418,
+          "mdChars": 11895,
+          "json": {
+            "businessName": "Pulse Bespoke Catering",
+            "contactEmail": "hello@pulsecatering.co.uk",
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Brighton, Sussex",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [
+            "hello@pulsecatering.co.uk"
+          ],
+          "mailtoLinks": [
+            "mailto:hello@pulsecatering.co.uk"
+          ],
+          "contactLinks": [
+            "https://www.pulsecatering.co.uk/contact"
+          ]
+        },
+        {
+          "url": "https://www.spaceandthyme.co.uk/catering/weddings",
+          "host": "spaceandthyme.co.uk",
+          "ms": 2300,
+          "mdChars": 5914,
+          "json": {
+            "businessName": "SPACE + THYME",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Brighton",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://facebook.com/spaceandthymebrighton",
+            "https://www.spaceandthyme.co.uk/contact",
+            "https://en-gb.facebook.com/littlehorsted"
+          ]
+        }
+      ]
+    },
+    {
+      "need": "Bridal makeup artist",
+      "city": "Chennai, India",
+      "budget": "₹40,000",
+      "query": "Bridal makeup artist Chennai, India",
+      "searchMs": 10868,
+      "candidates": [
+        {
+          "url": "https://www.wedmegood.com/vendors/chennai/bridal-makeup/?srsltid=AU7gw4U3wH9isgN-SFcC53L9gdOPFHTsv4HCm-inW-1Jq6TA2_oVzinh",
+          "host": "wedmegood.com",
+          "title": "20 Best Bridal Makeup Artists in Chennai - Prices & Reviews",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": false,
+          "why": "WedMeGood is a vendor-directory listing page, not an individual makeup artist's own website."
+        },
+        {
+          "url": "https://www.saybridalstudio.in/blog/best-bridal-makeup-artists-in-chennai/",
+          "host": "saybridalstudio.in",
+          "title": "10 Best-rated Bridal Makeup Artists in Chennai(2026 Refresh)",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": false,
+          "why": "Although it appears to be a makeup studio's site, this URL is a blog/listicle ranking other bridal makeup artists."
+        },
+        {
+          "url": "https://samanthajagan.com/",
+          "host": "samanthajagan.com",
+          "title": "Samantha Jagan | India's Renowned Makeup Artist",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": true,
+          "why": "Samantha Jagan's official website represents the makeup artist directly and showcases her makeup and bridal work."
+        },
+        {
+          "url": "https://www.justdial.com/Chennai/Bridal-Makeup-Artists/nct-11271913",
+          "host": "justdial.com",
+          "title": "List of Top Bridal Makeup Artists in Chennai - Justdial",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": false,
+          "why": "Justdial is a business directory listing multiple bridal makeup artists."
+        },
+        {
+          "url": "https://www.weddingbazaar.com/bridal-makeup-artists",
+          "host": "weddingbazaar.com",
+          "title": "Best Verified Bridal Makeup Artists in India with Prices & Reviews",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": false,
+          "why": "WeddingBazaar is a vendor marketplace/directory, not an individual vendor's own website."
+        },
+        {
+          "url": "https://www.threads.com/@artistryjasmine",
+          "host": "threads.com",
+          "title": "Jasmine | Chennai Bridal Makeup Artist (@artistryjasmine) • Threads ...",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": false,
+          "why": "This is a Threads social-media profile rather than the vendor's own website."
+        },
+        {
+          "url": "https://www.weddingwire.in/bridal-makeup-artists/chennai",
+          "host": "weddingwire.in",
+          "title": "The 10 Best Bridal Makeup Artists in Chennai - Weddingwire.in",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": false,
+          "why": "WeddingWire is a wedding-vendor directory listing multiple makeup artists."
+        },
+        {
+          "url": "https://shivangivermamakeupstudioandacademy.com/top-bridal-makeup-artists-in-india-2026-city-by-city-guide/",
+          "host": "shivangivermamakeupstudioandacademy.com",
+          "title": "Top Bridal Makeup Artists in India 2026 — City-by-City Guide",
+          "need": "Bridal makeup artist",
+          "city": "Chennai, India",
+          "isVendorSite": false,
+          "why": "This is a blog/listicle on a makeup studio's website, not a direct service page for the stated city."
+        }
+      ],
+      "scrapes": [
+        {
+          "url": "https://samanthajagan.com/",
+          "host": "samanthajagan.com",
+          "ms": 2434,
+          "mdChars": 7002,
+          "json": {
+            "businessName": "Samantha Jagan Makeup Artist",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Chennai",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://samanthajagan.com/contact/"
+          ]
+        }
+      ]
+    },
+    {
+      "need": "Wedding venue",
+      "city": "Portland, Oregon",
+      "budget": "$12,000",
+      "query": "Wedding venue Portland, Oregon",
+      "searchMs": 11150,
+      "candidates": [
+        {
+          "url": "https://www.herecomestheguide.com/wedding-venues/oregon/region/portland",
+          "host": "herecomestheguide.com",
+          "title": "Portland, OR Wedding Venues With Prices - Here Comes The Guide",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": false,
+          "why": "Here Comes The Guide is a wedding venue directory and guide, not the website of a specific Portland venue."
+        },
+        {
+          "url": "https://www.chrisbrodell.com/blog/portland-outdoor-wedding-venues",
+          "host": "chrisbrodell.com",
+          "title": "20 Beautiful Outdoor Wedding Venues in Portland - Chris Brodell",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": false,
+          "why": "This is a photographer's blog post listing outdoor wedding venues, not a venue's own website."
+        },
+        {
+          "url": "https://brianamorrison.com/wedding-photos/best-indoor-wedding-venues-portland-oregon/",
+          "host": "brianamorrison.com",
+          "title": "Best Indoor Wedding Venues in Portland City Limits - Briana Morrison",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": false,
+          "why": "This is a photographer's article listing indoor wedding venues, not a venue's own website."
+        },
+        {
+          "url": "https://www.unionpine.com/",
+          "host": "unionpine.com",
+          "title": "unionpine",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": true,
+          "why": "Union/Pine is a Portland event and wedding venue, and this is its official website."
+        },
+        {
+          "url": "https://thetenneys.co/curated-list-of-portlands-best-wedding-venues/",
+          "host": "thetenneys.co",
+          "title": "Best Portland Wedding Venues: A Curated List - The Tenneys",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": false,
+          "why": "The Tenneys are wedding photographers publishing a curated venue list, not a venue's own website."
+        },
+        {
+          "url": "https://www.lakesidegardensevents.com/",
+          "host": "lakesidegardensevents.com",
+          "title": "Lakeside Gardens | Wedding and Event Venue",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": true,
+          "why": "Lakeside Gardens is an official wedding and event venue website serving the Portland area."
+        },
+        {
+          "url": "https://www.portland.gov/parks/wedding",
+          "host": "portland.gov",
+          "title": "Wedding Reservations | Portland.gov",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": true,
+          "why": "This is the official Portland Parks wedding reservations page for reservable city venues and parks in Portland."
+        },
+        {
+          "url": "https://www.hotelvintage-portland.com/portland-wedding-venues/",
+          "host": "hotelvintage-portland.com",
+          "title": "Portland, Oregon Wedding Venues",
+          "need": "Wedding venue",
+          "city": "Portland, Oregon",
+          "isVendorSite": true,
+          "why": "Hotel Vintage Portland's official website promotes its downtown Portland wedding venues."
+        }
+      ],
+      "scrapes": [
+        {
+          "url": "https://www.unionpine.com/",
+          "host": "unionpine.com",
+          "ms": 3304,
+          "mdChars": 9483,
+          "json": {
+            "businessName": "Union/Pine",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Portland",
+            "isWeddingVendor": false
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": []
+        },
+        {
+          "url": "https://www.lakesidegardensevents.com/",
+          "host": "lakesidegardensevents.com",
+          "ms": 2009,
+          "mdChars": 10523,
+          "json": {
+            "businessName": "Lakeside Gardens",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [
+              {
+                "name": "Grand Estate",
+                "price": null
+              }
+            ],
+            "servesCity": "Oregon",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://www.lakesidegardensevents.com/contact"
+          ]
+        },
+        {
+          "url": "https://www.portland.gov/parks/wedding",
+          "host": "portland.gov",
+          "ms": 1986,
+          "mdChars": 11313,
+          "json": {
+            "businessName": "Portland Parks & Recreation",
+            "contactEmail": "ReservationsandPayments@portlandoregon.gov",
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [],
+            "servesCity": "Portland",
+            "isWeddingVendor": false
+          },
+          "emailsInMarkdown": [
+            "emailReservationsandPayments@portlandoregon.gov",
+            "ReservationsandPayments@portlandoregon.gov"
+          ],
+          "mailtoLinks": [
+            "mailto:ReservationsandPayments@portlandoregon.gov"
+          ],
+          "contactLinks": []
+        }
+      ]
+    },
+    {
+      "need": "Wedding florist",
+      "city": "Dublin, Ireland",
+      "budget": "€2,500",
+      "query": "Wedding florist Dublin, Ireland",
+      "searchMs": 9730,
+      "candidates": [
+        {
+          "url": "https://onefabday.com/best-wedding-florists-in-ireland/",
+          "host": "onefabday.com",
+          "title": "The Best Wedding Florists in Ireland | One Fab Day",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": false,
+          "why": "One Fab Day is a wedding publication/listicle featuring florists, not a florist's own website."
+        },
+        {
+          "url": "https://www.rosebudandpebbles.com/",
+          "host": "rosebudandpebbles.com",
+          "title": "Rosebud and Pebbles | Irish wedding florist and event stylist",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": true,
+          "why": "Rosebud and Pebbles is an Irish wedding florist and event stylist operating its own website."
+        },
+        {
+          "url": "https://www.mermaidflorist.ie/wedding-flowers/",
+          "host": "mermaidflorist.ie",
+          "title": "Wedding Flowers Dublin | Online Flower Delivery - Mermaid Florist",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": true,
+          "why": "Mermaid Florist is a florist's own website offering wedding flowers in Dublin."
+        },
+        {
+          "url": "https://www.bellabotanicaflowers.com/",
+          "host": "bellabotanicaflowers.com",
+          "title": "Romantic Floral Designs — Wedding & Events — Bella Botanica",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": true,
+          "why": "Bella Botanica is a floral design business's own website with wedding and event services."
+        },
+        {
+          "url": "https://www.joysflowers.ie/",
+          "host": "joysflowers.ie",
+          "title": "Same day flower delivery in Dublin from Joy's Flowers, your local ...",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": true,
+          "why": "Joy's Flowers is a local Dublin florist's own website and offers florist services suitable for weddings."
+        },
+        {
+          "url": "https://arbourblooms.ie/pages/wedding-flowers?srsltid=AU7gw4V3jaA1p_FCoSMT61_JT2yVyfvKrkbdVwKhOLGJwRpljux2xeL7",
+          "host": "arbourblooms.ie",
+          "title": "Wedding Flowers, Bridal Bouquets & Event Florist Dublin",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": true,
+          "why": "Arbour Blooms is a florist's own website explicitly offering wedding flowers and bridal bouquets in Dublin."
+        },
+        {
+          "url": "https://adonis.ie/",
+          "host": "adonis.ie",
+          "title": "Adonis Flower Designers – Dublin 8 Florist | Fresh Hand-Tied ...",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": true,
+          "why": "Adonis Flower Designers is a Dublin florist's own website offering professional floral design services."
+        },
+        {
+          "url": "https://smythandbloom.com/",
+          "host": "smythandbloom.com",
+          "title": "Smyth & Bloom | Bespoke Wedding Flowers Ireland | Affordable ...",
+          "need": "Wedding florist",
+          "city": "Dublin, Ireland",
+          "isVendorSite": true,
+          "why": "Smyth & Bloom is a florist's own website explicitly offering bespoke wedding flowers across Ireland, including Dublin."
+        }
+      ],
+      "scrapes": [
+        {
+          "url": "https://www.rosebudandpebbles.com/",
+          "host": "rosebudandpebbles.com",
+          "ms": 2488,
+          "mdChars": 5078,
+          "json": {
+            "businessName": "rosebud + pebbles",
+            "contactEmail": "rosebudandpebbles@gmail.com",
+            "startingPrice": 200,
+            "priceText": "€200 booking fee",
+            "packages": [],
+            "servesCity": "Dublin",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [
+            "rosebudandpebbles@gmail.com"
+          ],
+          "mailtoLinks": [
+            "mailto:rosebudandpebbles@gmail.com"
+          ],
+          "contactLinks": []
+        },
+        {
+          "url": "https://www.mermaidflorist.ie/wedding-flowers/",
+          "host": "mermaidflorist.ie",
+          "ms": 3469,
+          "mdChars": 60995,
+          "json": {
+            "businessName": "Mermaid Florist",
+            "contactEmail": "info@mermaidflorist.ie",
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [
+              {
+                "name": "Simply Elegant Bridal Package",
+                "price": null
+              },
+              {
+                "name": "Ireland’s Ancient East Bridal Package",
+                "price": null
+              },
+              {
+                "name": "Bespoke Design Bridal Package",
+                "price": null
+              }
+            ],
+            "servesCity": "Bray, Co. Wicklow",
+            "isWeddingVendor": false
+          },
+          "emailsInMarkdown": [
+            "info@mermaidflorist.ie"
+          ],
+          "mailtoLinks": [
+            "mailto:info@mermaidflorist.ie"
+          ],
+          "contactLinks": [
+            "https://www.mermaidflorist.ie/contact/",
+            "https://www.facebook.com/Mermaid-Florists-1428722020674747"
+          ]
+        },
+        {
+          "url": "https://www.bellabotanicaflowers.com/",
+          "host": "bellabotanicaflowers.com",
+          "ms": 3668,
+          "mdChars": 7721,
+          "json": {
+            "businessName": "Bella Botanica",
+            "contactEmail": null,
+            "startingPrice": null,
+            "priceText": null,
+            "packages": [
+              {
+                "name": "Weddings",
+                "price": null
+              },
+              {
+                "name": "Private Parties",
+                "price": null
+              },
+              {
+                "name": "Brand Events",
+                "price": null
+              },
+              {
+                "name": "Event Florals",
+                "price": null
+              }
+            ],
+            "servesCity": "Co. Meath, Ireland",
+            "isWeddingVendor": true
+          },
+          "emailsInMarkdown": [],
+          "mailtoLinks": [],
+          "contactLinks": [
+            "https://www.bellabotanicaflowers.com/contact"
+          ]
+        }
+      ]
+    }
+  ]
+}

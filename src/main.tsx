@@ -4,10 +4,9 @@ import { ConvexReactClient } from "convex/react";
 import { ConvexAuthProvider } from "@convex-dev/auth/react";
 import { BrowserRouter } from "react-router-dom";
 import App from "./App";
-import "@fontsource/libre-caslon-display";
-import "@fontsource/libre-caslon-text/400.css";
-import "@fontsource/libre-caslon-text/400-italic.css";
-import "@fontsource-variable/assistant";
+import "@fontsource-variable/eb-garamond";
+import "@fontsource-variable/eb-garamond/wght-italic.css";
+import "@fontsource-variable/work-sans";
 import "./index.css";
 
 const convexUrl = import.meta.env.VITE_CONVEX_URL as string | undefined;

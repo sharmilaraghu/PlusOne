@@ -42,8 +42,6 @@ export function pct(part: number, whole: number) {
   return Math.min(100, Math.round((part / whole) * 100));
 }
 
-export const eventPalette = ["#f5e6eb", "#e6e1f5", "#f8f4e8", "#e8f1e6", "#e3edf5", "#f3e9df"];
-
 export function statusLabel(s: string) {
   return s.replace(/_/g, " ");
 }
@@ -55,4 +53,19 @@ type SlotRow = FunctionReturnType<typeof api.slots.list>[number];
 export type FlatSlot = SlotRow["slot"] & Omit<SlotRow, "slot">;
 export function flattenSlots(rows: SlotRow[] | undefined): FlatSlot[] | undefined {
   return rows?.map((r) => ({ ...r.slot, vendorsCount: r.vendorsCount, bestQuote: r.bestQuote, bookedVendor: r.bookedVendor }));
+}
+
+/** Date helpers for the onboarding steps, kept in ISO (YYYY-MM-DD) form. */
+export function addDaysIso(iso: string, days: number) {
+  const d = new Date(`${iso}T12:00:00`);
+  if (Number.isNaN(d.getTime())) return iso;
+  d.setDate(d.getDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+
+export function daysBetweenIso(from: string, to: string) {
+  const a = new Date(`${from}T12:00:00`).getTime();
+  const b = new Date(`${to}T12:00:00`).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b)) return 0;
+  return Math.round((b - a) / 86400000);
 }
