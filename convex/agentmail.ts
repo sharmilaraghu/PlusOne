@@ -319,8 +319,13 @@ export const ingestInbound = internalAction({
         return null;
       }
 
-      // 2. Known guest
-      const guest = fromAddress ? await ctx.runQuery(internal.inbound.findGuestByEmail, { inboxId: args.inboxId, email: fromAddress }) : null;
+      const pdf = stored.find((s) => s.contentType.includes("pdf") || s.filename.toLowerCase().endsWith(".pdf"));
+
+      // 2. Known guest, unless they are forwarding a document. A guest who forwards a
+      // contract is not answering the invitation, and reading it as an RSVP overwrote
+      // the answer they had already given.
+      const guest =
+        fromAddress && !pdf ? await ctx.runQuery(internal.inbound.findGuestByEmail, { inboxId: args.inboxId, email: fromAddress }) : null;
       if (guest) {
         const { messageId, created } = await ctx.runMutation(internal.messages.recordInbound, {
           weddingId: guest.weddingId,
@@ -340,8 +345,7 @@ export const ingestInbound = internalAction({
         return null;
       }
 
-      // 3. Unknown sender
-      const pdf = stored.find((s) => s.contentType.includes("pdf") || s.filename.toLowerCase().endsWith(".pdf"));
+      // 3. A forwarded document, or an unknown sender
       if (pdf && args.weddingId) {
         await ctx.runMutation(internal.inbound.createContractCheck, {
           weddingId: args.weddingId,

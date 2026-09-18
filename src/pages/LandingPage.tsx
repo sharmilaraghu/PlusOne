@@ -17,14 +17,17 @@ export function LandingPage() {
     <div className="lp">
       <a href="#main" className="lp-skip">Skip to content</a>
       <section className="hero" aria-labelledby="hero-title">
+        {/* The day itself, drifting behind the promise. Paused for reduced motion. */}
+        <div className="hero__reel" aria-hidden="true">
+          {["/plate-4.jpg", "/plate-6.jpg", "/plate-3.jpg", "/plate-8.jpg"].map((src, i) => (
+            <img key={src} src={src} alt="" style={{ animationDelay: `${i * 7}s` }} loading={i === 0 ? "eager" : "lazy"} />
+          ))}
+          <span className="hero__reel-veil" />
+        </div>
         <header className="hero__nav">
           <Link to="/" className="brand" aria-label="PlusOne home">
             Plus<em>One</em>
           </Link>
-          <nav aria-label="Main" className="hero__links">
-            <a href="#how" className="hero__link hero__link--how">How it works</a>
-            <a href="#days" className="hero__link hero__link--tour">Every day</a>
-          </nav>
           <Link to="/signin" className="pill pill--outline hero__signin">Sign in</Link>
           <Link to="/signin" className="hero__signin-text">Sign in</Link>
           <Link to="/signin?new=1" className="pill pill--wine hero__cta">Start planning</Link>
@@ -137,7 +140,6 @@ export function LandingPage() {
           <p className="sec__lede">Describe your wedding in about two minutes, then let PlusOne start the legwork.</p>
           <div className="closing__actions">
             <Link to="/signin?new=1" className="pill pill--wine btn-lg">Start planning</Link>
-            <a href="#how" className="pill pill--outline btn-lg">How it works</a>
           </div>
         </div>
       </section>

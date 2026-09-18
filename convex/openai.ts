@@ -516,7 +516,12 @@ export const parseRsvp = internalAction({
     const { object } = await generateObject({
       model: openai(MODEL_FAST),
       schema: z.object({
-        rsvp: z.enum(["yes", "no", "maybe", "pending"]).describe("pending only if the email does not answer at all"),
+        rsvp: z
+          .enum(["yes", "no", "maybe", "pending"])
+          .describe(
+            "'pending' whenever the email does not actually answer the invitation — a forwarded document, a question, " +
+              "a thank-you or small talk are all 'pending', and leave the list untouched",
+          ),
         attendingCount: z.number().int().min(0).max(20),
         dietary: z.string().nullable(),
         note: z.string().nullable().describe("anything else the couple should know, one line"),
@@ -527,7 +532,8 @@ export const parseRsvp = internalAction({
         `Count the people the reply itself names or implies, and let that override the number they were invited for: ` +
         `"two of us", "me and my husband David" or naming a second person all mean 2, even when the invitation was for ` +
         `one. "Plus one" means 2. Only fall back to the invited number when they say yes without indicating how many. ` +
-        `If they are not coming, the count is 0.\n\nSubject: ${message.subject}\n\n${truncate(message.bodyText, 6000)}`,
+        `If they are not coming, the count is 0. If the email does not address attendance at all, answer 'pending' and ` +
+        `leave the count at ${guest.attendingCount}.\n\nSubject: ${message.subject}\n\n${truncate(message.bodyText, 6000)}`,
     });
     return {
       guestId: guest._id,
@@ -636,6 +642,80 @@ export const answerQuestion = internalAction({
         replyId: args.replyId,
         content: "Something went wrong answering that. Try asking again in a moment.",
         status: "error",
+      });
+    }
+    return null;
+  },
+});
+
+// ---- forwarded contracts -----------------------------------------------------
+
+const contractSchema = z.object({
+  summary: z.string().describe("two or three plain sentences: what this agreement commits the couple to"),
+  flags: z
+    .array(
+      z.object({
+        severity: z.enum(["low", "medium", "high"]),
+        clause: z.string().describe("the sentence or phrase from the contract, quoted, that this is about"),
+        why: z.string().describe("one plain sentence on what it means for the couple"),
+      }),
+    )
+    .max(8),
+});
+
+/**
+ * Read a forwarded contract and say plainly what is worth knowing.
+ *
+ * Every flag has to quote the sentence it came from: a red flag nobody can trace back
+ * to the page is worse than no flag at all, because the couple cannot check it.
+ */
+export const checkContract = internalAction({
+  args: { contractCheckId: v.id("contractChecks") },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    const check = await ctx.runQuery(internal.inbound.getContractCheck, { contractCheckId: args.contractCheckId });
+    if (!check) return null;
+    try {
+      const blob = await ctx.storage.get(check.storageId);
+      if (!blob) throw new Error("The forwarded file is no longer stored");
+      const bytes = await blob.arrayBuffer();
+
+      const { object } = await generateObject({
+        model: openai(MODEL_SMART),
+        schema: contractSchema,
+        messages: [
+          {
+            role: "user",
+            content: [
+              {
+                type: "text",
+                text:
+                  `This is a wedding vendor contract a couple forwarded to their planning inbox. Write a short plain-English ` +
+                  `summary, then flag what they should know before signing: cancellation rules, what happens if they move the ` +
+                  `date, overtime charges, the deposit and whether it is refundable, and what happens if the vendor cannot ` +
+                  `attend. Quote the exact sentence each flag comes from — never paraphrase it into the clause field, and ` +
+                  `never flag something the document does not say. If the document is not a contract, say so in the summary ` +
+                  `and return no flags.`,
+              },
+              { type: "file", data: bytes, mediaType: "application/pdf", filename: check.filename },
+            ],
+          },
+        ],
+      });
+
+      await ctx.runMutation(internal.inbound.finishContractCheck, {
+        contractCheckId: args.contractCheckId,
+        status: "done",
+        summary: object.summary,
+        flags: object.flags,
+      });
+    } catch (err) {
+      console.warn("contract check failed", err instanceof Error ? err.message : err);
+      await ctx.runMutation(internal.inbound.finishContractCheck, {
+        contractCheckId: args.contractCheckId,
+        status: "failed",
+        summary: "This file could not be read. Open it yourself, or forward it again.",
+        flags: [],
       });
     }
     return null;

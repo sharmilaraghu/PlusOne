@@ -1,7 +1,9 @@
 import { v } from "convex/values";
-import { internalMutation, internalQuery } from "./_generated/server";
-import { guestDoc, weddingDoc } from "./lib/docs";
-import { routedAs } from "./lib/validators";
+import { internal } from "./_generated/api";
+import { internalMutation, internalQuery, query } from "./_generated/server";
+import { logActivity, requireMember } from "./lib/auth";
+import { contractCheckDoc, guestDoc, weddingDoc } from "./lib/docs";
+import { contractStatus, flagSeverity, routedAs } from "./lib/validators";
 
 /**
  * First touch for every webhook delivery. Idempotent on the AgentMail message
@@ -109,7 +111,7 @@ export const createContractCheck = internalMutation({
   args: { weddingId: v.id("weddings"), storageId: v.id("_storage"), filename: v.string(), vendorId: v.optional(v.id("vendors")) },
   returns: v.id("contractChecks"),
   handler: async (ctx, args) => {
-    return await ctx.db.insert("contractChecks", {
+    const contractCheckId = await ctx.db.insert("contractChecks", {
       weddingId: args.weddingId,
       storageId: args.storageId,
       filename: args.filename,
@@ -117,5 +119,58 @@ export const createContractCheck = internalMutation({
       status: "pending",
       flags: [],
     });
+    // Read it straight away; the couple forwarded it because they want an answer.
+    await ctx.scheduler.runAfter(0, internal.openai.checkContract, { contractCheckId });
+    return contractCheckId;
+  },
+});
+
+export const getContractCheck = internalQuery({
+  args: { contractCheckId: v.id("contractChecks") },
+  returns: v.union(contractCheckDoc, v.null()),
+  handler: async (ctx, args) => await ctx.db.get(args.contractCheckId),
+});
+
+export const finishContractCheck = internalMutation({
+  args: {
+    contractCheckId: v.id("contractChecks"),
+    status: contractStatus,
+    summary: v.string(),
+    flags: v.array(v.object({ severity: flagSeverity, clause: v.string(), why: v.string() })),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const check = await ctx.db.get(args.contractCheckId);
+    if (!check) return null;
+    await ctx.db.patch(args.contractCheckId, { status: args.status, summary: args.summary, flags: args.flags });
+    const high = args.flags.filter((f) => f.severity === "high").length;
+    await logActivity(ctx, {
+      weddingId: check.weddingId,
+      type: "note",
+      text:
+        `read the contract "${check.filename}"` +
+        (args.status === "failed"
+          ? ", but it could not be opened."
+          : high > 0
+            ? `, and found ${high} thing${high === 1 ? "" : "s"} worth a second look.`
+            : ", and found nothing alarming."),
+    });
+    return null;
+  },
+});
+
+/** Everything the couple has forwarded, newest first. */
+export const listContractChecks = query({
+  args: { weddingId: v.id("weddings") },
+  returns: v.array(contractCheckDoc),
+  handler: async (ctx, args) => {
+    await requireMember(ctx, args.weddingId);
+    return (
+      await ctx.db
+        .query("contractChecks")
+        .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+        .order("desc")
+        .take(30)
+    );
   },
 });
