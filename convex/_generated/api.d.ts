@@ -41,7 +41,6 @@ import type * as users from "../users.js";
 import type * as vendors from "../vendors.js";
 import type * as weddings from "../weddings.js";
 import type * as workflows from "../workflows.js";
-import type * as zzScratchVerify from "../zzScratchVerify.js";
 
 import type {
   ApiFromModules,
@@ -83,7 +82,6 @@ declare const fullApi: ApiFromModules<{
   vendors: typeof vendors;
   weddings: typeof weddings;
   workflows: typeof workflows;
-  zzScratchVerify: typeof zzScratchVerify;
 }>;
 
 /**

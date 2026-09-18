@@ -45,6 +45,29 @@ export const update = mutation({
       }
     }
     await ctx.db.patch(args.eventId, args.patch);
+
+    // Changing one function's budget moves money away from the others. The couple
+    // gets exactly the number they typed and the rest share what is left in the
+    // proportions they already had, so the total never drifts.
+    if (args.patch.budget !== undefined) {
+      const wedding = await ctx.db.get(event.weddingId);
+      const weights = new Map<Id<"events">, number>();
+      if (wedding) {
+        const events = await ctx.db
+          .query("events")
+          .withIndex("by_weddingId", (q) => q.eq("weddingId", event.weddingId))
+          .take(50);
+        const others = events.filter((e) => e._id !== args.eventId);
+        const mine = Math.min(args.patch.budget, wedding.totalBudget);
+        const rest = Math.max(0, wedding.totalBudget - mine);
+        const otherTotal = others.reduce((a, e) => a + e.budget, 0);
+        weights.set(args.eventId, mine);
+        for (const e of others) {
+          weights.set(e._id, otherTotal > 0 ? (e.budget / otherTotal) * rest : rest / Math.max(1, others.length));
+        }
+      }
+      await rebalanceWeddingBudget(ctx, event.weddingId, weights.size > 0 ? weights : undefined);
+    }
     return null;
   },
 });
@@ -69,7 +92,7 @@ export const add = mutation({
       .take(50);
     if (existing.length >= 20) throw new ConvexError("A wedding can have at most 20 events.");
     const order = existing.length;
-    return await ctx.db.insert("events", {
+    const eventId = await ctx.db.insert("events", {
       weddingId: args.weddingId,
       name: args.name.trim(),
       date: args.date,
@@ -79,6 +102,15 @@ export const add = mutation({
       color: EVENT_COLORS[order % EVENT_COLORS.length],
       order,
     });
+    // The new function's budget comes out of the same total as everyone else's.
+    await rebalanceWeddingBudget(ctx, args.weddingId);
+    await logActivity(ctx, {
+      weddingId: args.weddingId,
+      type: "note",
+      text: `added ${args.name.trim()} to the plan.`,
+      refs: { eventId },
+    });
+    return eventId;
   },
 });
 

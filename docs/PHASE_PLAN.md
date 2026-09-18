@@ -372,6 +372,10 @@ Everything is prefilled once a tradition is chosen, so the defaults path still t
 Add the missing operations: remove a function, re-split the budget, remove a vendor need. Inline editing on each day card, a settings screen for the wedding details and style, and an "add a vendor need" panel using the suggestions list that already exists.
 **Verify:** rename, move, re-budget and delete days; deleting a day with a booked vendor is refused; the budget totals still agree afterwards.
 
+**Done, 18 September 2026.** The backend gained `events.remove`, `events.setBudgets`, `slots.remove` and a single `convex/lib/budget.ts` where all the money maths now lives, so every edit leaves `sum(functions) === total === sum(needs) === sum(budget lines)` true. `events.add` and `events.update` re-spread the budget too, and a budget typed on a day card is honoured exactly — the other days share what is left, in the proportions they already had. The screens gained inline day editing and "Add a day" on the overview, "Remove this need" on a vendor need, a settings screen, and an "add a vendor need" panel built from `SUGGESTED_CATEGORIES`.
+
+Measured on the dev deployment, one wedding at a total of $40,000: adding a sixth day, setting it to 80 guests and exactly $9,000, then removing it again left all three sums at 40000 at every step, and the day kept the $9,000 that was typed. Removing a function still refuses to remove the only one, moves needs that have been contacted, quoted or booked onto another day rather than deleting them, and `slots.remove` refuses a booked need by name. Repeat edits drift the per-day figures by a dollar or two through rounding; persisting each need's original percentage would remove that, and is noted as optional.
+
 ### Phase I: style reaches the machine (about 45 minutes)
 Feed the vibe, palette and formality into the one place that builds context for searches, vendor cards and emails, and let formality set the tone of the emails PlusOne writes.
 **Verify:** two weddings differing only in formality produce recognisably different emails.

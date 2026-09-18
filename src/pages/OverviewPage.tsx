@@ -1,4 +1,5 @@
-import { useQuery } from "convex/react";
+import { useState } from "react";
+import { useMutation, useQuery } from "convex/react";
 import { Link, useOutletContext } from "react-router-dom";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
@@ -13,7 +14,8 @@ import { Icon } from "../components/ui/Icon";
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
 export function OverviewPage() {
-  const { wedding, events, stats } = useOutletContext<WeddingData>();
+  const { wedding, role, events, stats } = useOutletContext<WeddingData>();
+  const canEdit = role !== "viewer";
   const weddingId = wedding._id as Id<"weddings">;
   const slots = flattenSlots(useQuery(api.slots.list, { weddingId }));
   const budget = useQuery(api.budget.summary, { weddingId });
@@ -95,8 +97,11 @@ export function OverviewPage() {
                 event={ev}
                 slots={(slots ?? []).filter((s) => s.eventIds.includes(ev._id) && !sharedIds.has(s._id))}
                 currency={wedding.currency}
+                canEdit={canEdit}
+                canRemove={canEdit && ordered.length > 1}
               />
             ))}
+            {canEdit && <AddDay weddingId={weddingId} wedding={wedding} nextDayIndex={days} />}
           </div>
         )}
       </section>
@@ -138,6 +143,93 @@ export function OverviewPage() {
         </section>
         <ActivityFeed weddingId={weddingId} />
       </aside>
+    </div>
+  );
+}
+
+/** Add another function to the plan. Its budget comes out of the same total. */
+function AddDay({
+  weddingId,
+  wedding,
+  nextDayIndex,
+}: {
+  weddingId: Id<"weddings">;
+  wedding: WeddingData["wedding"];
+  nextDayIndex: number;
+}) {
+  const add = useMutation(api.events.add);
+  const [open, setOpen] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [name, setName] = useState("");
+  const [date, setDate] = useState(wedding.endDate);
+
+  async function submit() {
+    if (!name.trim()) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const dayIndex = Math.max(
+        0,
+        Math.round((new Date(date).getTime() - new Date(wedding.startDate).getTime()) / 86400000),
+      );
+      await add({
+        weddingId,
+        name: name.trim(),
+        date,
+        dayIndex: Number.isFinite(dayIndex) ? dayIndex : nextDayIndex,
+        budget: 0,
+        guestCount: 0,
+      });
+      setName("");
+      setOpen(false);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That day couldn't be added.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex items-center justify-center gap-2 rounded-[18px] border border-dashed border-rule px-6 py-5 text-sm text-muted transition hover:border-accent hover:bg-accent-soft/40 hover:text-accent"
+      >
+        <Icon name="plus" size={16} /> Add a day
+      </button>
+    );
+  }
+
+  return (
+    <div className="card px-6 py-5">
+      <div className="grid gap-3 sm:grid-cols-[1fr_11rem]">
+        <label className="grid gap-1 text-xs font-semibold uppercase tracking-[0.08em] text-quiet">
+          What is it called?
+          <input
+            className="input"
+            autoFocus
+            placeholder="Mehendi, rehearsal dinner…"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+        </label>
+        <label className="grid gap-1 text-xs font-semibold uppercase tracking-[0.08em] text-quiet">
+          Date
+          <input type="date" className="input" value={date} onChange={(e) => setDate(e.target.value)} />
+        </label>
+      </div>
+      <p className="mt-3 text-xs text-quiet">Guests and budget can be set on the card once it's here.</p>
+      {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+      <div className="mt-4 flex gap-2">
+        <button type="button" className="btn-primary btn-sm" onClick={() => void submit()} disabled={busy || !name.trim()}>
+          {busy ? "Adding…" : "Add the day"}
+        </button>
+        <button type="button" className="btn-quiet btn-sm" onClick={() => { setOpen(false); setError(null); }}>
+          Cancel
+        </button>
+      </div>
     </div>
   );
 }

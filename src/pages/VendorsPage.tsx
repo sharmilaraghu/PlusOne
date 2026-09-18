@@ -120,6 +120,7 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
             {slot.bookedVendor ? ` · booked ${slot.bookedVendor.name}` : ""}
           </p>
         </div>
+        {canEdit && <RemoveSlot slot={slot} weddingId={wedding._id as Id<"weddings">} />}
       </header>
 
       {canEdit && (
@@ -434,5 +435,40 @@ function AddSlot({ weddingId, events, currency }: { weddingId: Id<"weddings">; e
         <button type="button" className="btn-quiet btn-sm" onClick={() => setOpen(false)}>Cancel</button>
       </div>
     </section>
+  );
+}
+
+/** Drop a need you no longer have. Booked needs are refused by the backend. */
+function RemoveSlot({ slot, weddingId }: { slot: Slot; weddingId: Id<"weddings"> }) {
+  const remove = useMutation(api.slots.remove);
+  const navigate = useNavigate();
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit() {
+    if (!window.confirm(`Remove ${slot.title} from your plan? Its budget goes back to the rest.`)) return;
+    setBusy(true);
+    setError(null);
+    try {
+      await remove({ slotId: slot._id });
+      navigate(`/w/${weddingId}/vendors`, { replace: true });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That need couldn't be removed.");
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="text-right">
+      <button
+        type="button"
+        className="text-sm text-muted underline underline-offset-2 transition hover:text-bad"
+        onClick={() => void submit()}
+        disabled={busy}
+      >
+        Remove this need
+      </button>
+      {error && <p role="alert" className="mt-1 max-w-xs text-sm text-bad">{error}</p>}
+    </div>
   );
 }

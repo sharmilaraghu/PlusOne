@@ -34,15 +34,24 @@ export async function rebalanceWeddingBudget(
       .take(50)
   ).sort((a, b) => a.order - b.order);
 
+  // Each need's weight is read off what it spends per function it serves, so a
+  // need serving a single function keeps its standing when the functions' budgets
+  // move — weighting by the raw budget would shrink it a little more every edit.
+  const oldEventBudget = new Map(events.map((e) => [e._id, e.budget]));
+
   // ---- 1. The functions' budgets always add up to the wedding total ---------
   const eventBudgets: number[] = [];
+  let eventBudgetsMoved = false;
   if (events.length > 0) {
     let weights = events.map((e) => eventWeights?.get(e._id) ?? e.budget);
     if (weights.every((w) => w <= 0)) weights = events.map(() => 1);
     const split = splitByWeights(wedding.totalBudget, weights);
     for (let i = 0; i < events.length; i++) {
       eventBudgets.push(split[i]);
-      if (events[i].budget !== split[i]) await ctx.db.patch(events[i]._id, { budget: split[i] });
+      if (events[i].budget !== split[i]) {
+        await ctx.db.patch(events[i]._id, { budget: split[i] });
+        eventBudgetsMoved = true;
+      }
     }
   }
 
@@ -54,19 +63,24 @@ export async function rebalanceWeddingBudget(
   if (slots.length === 0) return;
 
   const eventIndexById = new Map(events.map((e, i) => [e._id, i]));
-  const weightFor = (budget: number) => (budget > 0 ? budget : 1);
-  const slotPlans = slots.map((slot) => ({
-    pct: weightFor(slot.budget),
-    eventIndexes: slot.eventIds
+  const slotPlans = slots.map((slot) => {
+    const eventIndexes = slot.eventIds
       .map((id) => eventIndexById.get(id))
-      .filter((i): i is number => i !== undefined),
-  }));
+      .filter((i): i is number => i !== undefined);
+    const servedBefore = slot.eventIds.reduce((a, id) => a + (oldEventBudget.get(id) ?? 0), 0);
+    const pct = servedBefore > 0 ? slot.budget / servedBefore : slot.budget > 0 ? slot.budget : 1;
+    return { pct, eventIndexes };
+  });
 
-  const alloc = allocateSlotBudgets(eventBudgets, slotPlans);
+  // Nothing moved and the needs already add up: leave their budgets exactly as
+  // they are (re-deriving them would nudge the numbers for no reason) and only
+  // make sure the budget lines still mirror them.
+  const target = eventBudgets.reduce((a, b) => a + b, 0);
+  const inSync = slots.reduce((a, s) => a + s.budget, 0) === target;
+  const alloc = !eventBudgetsMoved && inSync ? slots.map((s) => s.budget) : allocateSlotBudgets(eventBudgets, slotPlans);
 
   // A function nobody serves yet (or a rounding crumb) would otherwise leave the
   // needs adding up to less than the wedding total; spread it over the needs.
-  const target = eventBudgets.reduce((a, b) => a + b, 0);
   const allocated = alloc.reduce((a, b) => a + b, 0);
   const leftover = Math.round(target - allocated);
   if (leftover > 0) {
