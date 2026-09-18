@@ -13,6 +13,7 @@ const nav = [
   { to: "guests", label: "Guests", icon: "guests" as const },
   { to: "assistant", label: "Assistant", icon: "heart" as const },
   { to: "members", label: "People", icon: "people" as const },
+  { to: "settings", label: "Settings", icon: "settings" as const },
 ];
 
 export function WeddingLayout() {

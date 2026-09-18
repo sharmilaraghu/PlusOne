@@ -10,6 +10,7 @@ import { InboxPage } from "./pages/InboxPage";
 import { GuestsPage } from "./pages/GuestsPage";
 import { AssistantPage } from "./pages/AssistantPage";
 import { MembersPage } from "./pages/MembersPage";
+import { SettingsPage } from "./pages/SettingsPage";
 import { JoinPage } from "./pages/JoinPage";
 import { HowItWorksPage } from "./pages/HowItWorksPage";
 import { WeddingLayout } from "./components/WeddingLayout";
@@ -47,6 +48,7 @@ export default function App() {
                     <Route path="guests" element={<GuestsPage />} />
                     <Route path="assistant" element={<AssistantPage />} />
                     <Route path="members" element={<MembersPage />} />
+                    <Route path="settings" element={<SettingsPage />} />
                   </Route>
                   <Route path="*" element={<Navigate to="/" replace />} />
                 </Routes>

@@ -3,6 +3,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { logActivity, requireMember, requireUserId } from "./lib/auth";
+import { rebalanceWeddingBudget } from "./lib/budget";
 import { eventDoc, weddingDoc } from "./lib/docs";
 import {
   EVENT_COLORS,
@@ -294,11 +295,16 @@ export const update = mutation({
   },
   returns: v.null(),
   handler: async (ctx, args) => {
-    await requireMember(ctx, args.weddingId, "planner");
+    const { wedding } = await requireMember(ctx, args.weddingId, "planner");
     if (args.patch.totalBudget !== undefined && (!Number.isFinite(args.patch.totalBudget) || args.patch.totalBudget < 0)) {
       throw new ConvexError("Total budget must be a non-negative number.");
     }
     await ctx.db.patch(args.weddingId, args.patch);
+    // A new total has to reach the functions, the needs and the budget lines,
+    // or the budget bar would be measuring against a number nothing adds up to.
+    if (args.patch.totalBudget !== undefined && args.patch.totalBudget !== wedding.totalBudget) {
+      await rebalanceWeddingBudget(ctx, args.weddingId);
+    }
     return null;
   },
 });

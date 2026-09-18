@@ -21,6 +21,7 @@ import type * as http from "../http.js";
 import type * as inbound from "../inbound.js";
 import type * as invites from "../invites.js";
 import type * as lib_auth from "../lib/auth.js";
+import type * as lib_budget from "../lib/budget.js";
 import type * as lib_docs from "../lib/docs.js";
 import type * as lib_pools from "../lib/pools.js";
 import type * as lib_svix from "../lib/svix.js";
@@ -40,6 +41,7 @@ import type * as users from "../users.js";
 import type * as vendors from "../vendors.js";
 import type * as weddings from "../weddings.js";
 import type * as workflows from "../workflows.js";
+import type * as zzScratchVerify from "../zzScratchVerify.js";
 
 import type {
   ApiFromModules,
@@ -61,6 +63,7 @@ declare const fullApi: ApiFromModules<{
   inbound: typeof inbound;
   invites: typeof invites;
   "lib/auth": typeof lib_auth;
+  "lib/budget": typeof lib_budget;
   "lib/docs": typeof lib_docs;
   "lib/pools": typeof lib_pools;
   "lib/svix": typeof lib_svix;
@@ -80,6 +83,7 @@ declare const fullApi: ApiFromModules<{
   vendors: typeof vendors;
   weddings: typeof weddings;
   workflows: typeof workflows;
+  zzScratchVerify: typeof zzScratchVerify;
 }>;
 
 /**

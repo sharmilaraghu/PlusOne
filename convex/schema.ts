@@ -328,6 +328,7 @@ export default defineSchema({
   threads: defineTable(threadFields)
     .index("by_weddingId", ["weddingId"])
     .index("by_vendorId", ["vendorId"])
+    .index("by_slotId", ["slotId"])
     .index("by_agentmailThreadId", ["agentmailThreadId"])
     .index("by_status_and_nextFollowUpAt", ["status", "nextFollowUpAt"]),
 

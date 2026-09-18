@@ -5,6 +5,8 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { flattenSlots, money, statusLabel, timeAgo, type FlatSlot } from "../lib/format";
+import { SUGGESTED_CATEGORIES } from "../../convex/lib/templates";
+import { Icon } from "../components/ui/Icon";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
@@ -41,7 +43,7 @@ export function VendorsPage() {
             </li>
           ))}
         </ul>
-        {canEdit && <AddSlot weddingId={weddingId} events={events} />}
+        {canEdit && <AddSlot weddingId={weddingId} events={events} currency={wedding.currency} />}
       </aside>
 
       <section className="min-w-0">
@@ -340,42 +342,97 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
   );
 }
 
-function AddSlot({ weddingId, events }: { weddingId: Id<"weddings">; events: WeddingData["events"] }) {
+function AddSlot({ weddingId, events, currency }: { weddingId: Id<"weddings">; events: WeddingData["events"]; currency: string }) {
   const add = useMutation(api.slots.add);
   const [open, setOpen] = useState(false);
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("");
-  const [budget, setBudget] = useState(2000);
+  const [budget, setBudget] = useState(1000);
   const [eventIds, setEventIds] = useState<string[]>(events.map((e) => e._id));
-  if (!open) return <button className="mt-3 text-xs text-muted underline" onClick={() => setOpen(true)}>+ Add a slot</button>;
+  const [busy, setBusy] = useState(false);
+  const taken = new Set<string>();
+
+  function submit() {
+    if (!title.trim() || eventIds.length === 0) return;
+    setBusy(true);
+    void add({
+      weddingId,
+      title: title.trim(),
+      category: category.trim() || title.trim(),
+      eventIds: eventIds as Id<"events">[],
+      budget: Number(budget) || 0,
+    }).finally(() => {
+      setBusy(false);
+      setOpen(false);
+      setTitle("");
+      setCategory("");
+    });
+  }
+
+  if (!open) {
+    return (
+      <button type="button" className="btn-quiet btn-sm mt-4 w-full" onClick={() => setOpen(true)}>
+        <Icon name="plus" size={15} /> Add a vendor need
+      </button>
+    );
+  }
+
   return (
-    <form
-      className="card mt-3 space-y-2 p-3"
-      onSubmit={(e) => {
-        e.preventDefault();
-        void add({ weddingId, title: title.trim(), category: category.trim() || title.trim(), eventIds: eventIds as Id<"events">[], budget }).then(() => {
-          setOpen(false);
-          setTitle("");
-          setCategory("");
-        });
-      }}
-    >
-      <input className="input" placeholder="Title, e.g. Dhol player" value={title} onChange={(e) => setTitle(e.target.value)} required aria-label="Slot title" />
-      <input className="input" placeholder="Category, e.g. Music" value={category} onChange={(e) => setCategory(e.target.value)} aria-label="Category" />
-      <input className="input" type="number" min={0} step={100} value={budget} onChange={(e) => setBudget(Number(e.target.value))} aria-label="Budget" />
-      <fieldset className="text-xs">
-        <legend className="label">Events</legend>
-        {events.map((ev) => (
-          <label key={ev._id} className="mr-2 inline-flex items-center gap-1">
-            <input type="checkbox" checked={eventIds.includes(ev._id)} onChange={(e) => setEventIds(e.target.checked ? [...eventIds, ev._id] : eventIds.filter((x) => x !== ev._id))} />
-            {ev.name}
-          </label>
+    <section className="card mt-4 p-4" aria-label="Add a vendor need">
+      <p className="label">Common needs</p>
+      <ul className="flex flex-wrap gap-1.5">
+        {SUGGESTED_CATEGORIES.filter((c) => !taken.has(c.title)).map((c) => (
+          <li key={c.title}>
+            <button
+              type="button"
+              title={c.hint}
+              onClick={() => { setTitle(c.title); setCategory(c.category); }}
+              className={`rounded-full px-3 py-1.5 text-xs transition ${
+                title === c.title ? "bg-accent text-paper" : "bg-cream text-ink shadow-[inset_0_0_0_1px_var(--color-line)] hover:bg-accent-soft"
+              }`}
+            >
+              {c.title}
+            </button>
+          </li>
         ))}
-      </fieldset>
-      <div className="flex gap-2">
-        <button className="btn-primary btn-sm">Add</button>
-        <button type="button" className="btn-ghost btn-sm" onClick={() => setOpen(false)}>Cancel</button>
+      </ul>
+
+      <div className="mt-4 grid gap-3">
+        <div>
+          <label className="label" htmlFor="slot-title">What do you need?</label>
+          <input id="slot-title" className="input" placeholder="Dhol player" value={title} onChange={(e) => setTitle(e.target.value)} />
+        </div>
+        <div>
+          <label className="label" htmlFor="slot-budget">Budget ({currency})</label>
+          <input id="slot-budget" className="input" type="number" min={0} step={100} value={budget} onChange={(e) => setBudget(Number(e.target.value))} />
+        </div>
+        <fieldset>
+          <legend className="label">Which days?</legend>
+          <div className="flex flex-wrap gap-1.5">
+            {events.map((ev) => {
+              const on = eventIds.includes(ev._id);
+              return (
+                <button
+                  key={ev._id}
+                  type="button"
+                  aria-pressed={on}
+                  onClick={() => setEventIds(on ? eventIds.filter((x) => x !== ev._id) : [...eventIds, ev._id])}
+                  className={`rounded-full px-3 py-1.5 text-xs transition ${on ? "bg-accent text-paper" : "bg-cream text-ink shadow-[inset_0_0_0_1px_var(--color-line)] hover:bg-accent-soft"}`}
+                >
+                  {ev.name}
+                </button>
+              );
+            })}
+          </div>
+        </fieldset>
       </div>
-    </form>
+
+      <div className="mt-4 flex gap-2">
+        <button type="button" className="btn-primary btn-sm" onClick={submit} disabled={busy || !title.trim() || eventIds.length === 0}>
+          {busy ? "Adding…" : "Add it"}
+        </button>
+        <button type="button" className="btn-quiet btn-sm" onClick={() => setOpen(false)}>Cancel</button>
+      </div>
+    </section>
   );
 }

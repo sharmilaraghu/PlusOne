@@ -1,9 +1,17 @@
+import { Link } from "react-router-dom";
+import { PageHeader } from "../components/ui/PageHeader";
+import { EmptyState } from "../components/ui/EmptyState";
+
 export function AssistantPage() {
   return (
-    <div className="mx-auto max-w-3xl">
-      <h1 className="text-3xl">Assistant</h1>
-      <p className="mt-1 text-sm text-muted">Ask anything about your plan. The assistant can research vendors and draft emails for you.</p>
-      <div className="card mt-6 p-6 text-sm text-muted">The assistant arrives here next.</div>
+    <div className="mx-auto w-full max-w-[46rem]">
+      <PageHeader title="Assistant" meta="Ask anything about your plan, from what's left to book to what a Haldi usually costs." />
+      <EmptyState
+        icon="heart"
+        title="The assistant is on its way"
+        body="It will know your dates, guests and budget, answer questions about the traditions you're planning, and start a vendor search or draft an email when you ask it to."
+        action={<Link to="../vendors" className="btn-ghost">Research vendors yourself</Link>}
+      />
     </div>
   );
 }

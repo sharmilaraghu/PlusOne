@@ -3,48 +3,56 @@ import { Link } from "react-router-dom";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
 import { longDate, money } from "../lib/format";
+import { EmptyState } from "../components/ui/EmptyState";
+import { Icon } from "../components/ui/Icon";
 
 export function HomePage() {
   const mine = useQuery(api.weddings.listMine);
   const { signOut } = useAuthActions();
 
   return (
-    <main id="main" className="mx-auto max-w-3xl px-4 py-10">
-      <header className="flex items-center justify-between">
-        <p className="display text-2xl tracking-tight">
-          Plus<span className="text-accent">One</span>
-        </p>
-        <div className="flex items-center gap-3 text-sm">
-          <Link to="/how-it-works" className="text-muted hover:text-ink">How it works</Link>
-          <button onClick={() => void signOut()} className="text-muted hover:text-ink">Sign out</button>
-        </div>
+    <main id="main" className="mx-auto w-full max-w-[46rem] px-5 py-10">
+      <header className="flex items-center justify-between gap-4">
+        <Link to="/" className="display text-2xl tracking-tight text-accent" aria-label="PlusOne home">
+          Plus<em>One</em>
+        </Link>
+        <button onClick={() => void signOut()} className="text-sm text-muted hover:text-accent">Sign out</button>
       </header>
 
       <section className="mt-10">
-        <div className="flex items-end justify-between gap-4">
-          <h1 className="text-3xl">Your weddings</h1>
-          <Link to="/new" className="btn-primary">Plan a wedding</Link>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <h1 className="text-[2.2rem] leading-tight">Your weddings</h1>
+          {mine && mine.length > 0 && (
+            <Link to="/new" className="btn-primary">
+              Plan another <Icon name="arrow" size={17} />
+            </Link>
+          )}
         </div>
 
         {mine === undefined ? (
-          <p className="mt-6 text-muted">Loading…</p>
+          <p className="mt-6 text-sm text-muted">Loading…</p>
         ) : mine.length === 0 ? (
-          <div className="card mt-6 p-8 text-center">
-            <p className="display text-2xl">Nothing here yet.</p>
-            <p className="mt-2 text-muted">Tell us about the celebration and PlusOne will lay out the days, the budget and the vendors to find.</p>
-            <Link to="/new" className="btn-primary mt-6">Plan our wedding</Link>
+          <div className="mt-6">
+            <EmptyState
+              icon="heart"
+              title="Nothing here yet"
+              body="Tell PlusOne about your celebration and it lays out every day, splits the budget and lists the vendors to find."
+              action={<Link to="/new" className="btn-primary">Start planning</Link>}
+            />
           </div>
         ) : (
           <ul className="mt-6 grid gap-4 sm:grid-cols-2">
             {mine.map(({ wedding, role }) => (
-              <li key={wedding._id} className="card rise p-5">
-                <Link to={`/w/${wedding._id}`} className="block">
+              <li key={wedding._id} className="card rise">
+                <Link to={`/w/${wedding._id}`} className="block p-5 transition hover:bg-accent-soft/40">
                   <p className="display text-xl">{wedding.name}</p>
                   <p className="mt-1 text-sm text-muted">
                     {longDate(wedding.startDate)} · {wedding.city}
                   </p>
-                  <p className="mt-3 text-sm">Budget {money(wedding.totalBudget, wedding.currency)}</p>
-                  <span className="chip mt-3 bg-sand text-muted">{role}</span>
+                  <p className="mt-4 text-sm text-muted">
+                    Budget <span className="text-ink">{money(wedding.totalBudget, wedding.currency)}</span>
+                  </p>
+                  <span className="chip-quiet mt-3">{role}</span>
                 </Link>
               </li>
             ))}
