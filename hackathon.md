@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-18T22:30:00Z
+- **Last updated:** 2026-09-18T23:05:00Z
 
 ## Log
 
@@ -179,3 +179,21 @@ the budget, and one next step derived from where the needs actually are
 (`convex/weddings.ts`, `src/pages/HomePage.tsx`).
 
 All of the above is merged to `main` and deployed; the earlier gap is closed.
+
+### 2026-09-18 - 438620b
+Put the product in the README: nine screenshots of a real wedding built in the app,
+walking the flow a couple takes, from the landing page through onboarding, the day plan,
+the ranked vendors, the inbox with a forwarded contract flagged clause by clause, the
+decision board, the guest list and the assistant (`README.md`, `docs/screenshots/`).
+
+Every mailbox in the images is masked. The wedding's own address keeps its shape so the
+per-wedding-inbox idea still reads; our test accounts, a guest, and the real contact
+addresses of the businesses the pipeline found are all replaced with placeholders. Those
+last ones are small firms whose addresses were scraped from their own sites, and they do
+not belong in a public repository.
+
+Two things were corrected before shooting rather than shipped: the guest row showed a
+stale attendee count left over from the RSVP bug, and the catering screen still carried a
+rating sourced from a food-delivery site, captured before those hosts were refused. The
+vendors screenshot uses photography instead, so the images show behaviour the code
+actually has.
