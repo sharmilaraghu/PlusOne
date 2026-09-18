@@ -19,34 +19,34 @@ colors:
   rule-strong: "#d9cfc8"
 typography:
   display:
-    fontFamily: "Libre Caslon Display, Libre Caslon Text, Georgia, serif"
+    fontFamily: "EB Garamond Variable, EB Garamond, Georgia, serif"
     fontSize: "calc(94 / 20.48 * 1cqw)"
     fontWeight: 400
     lineHeight: 1.02
     letterSpacing: "0.012em"
   headline:
-    fontFamily: "Libre Caslon Display, Libre Caslon Text, Georgia, serif"
+    fontFamily: "EB Garamond Variable, EB Garamond, Georgia, serif"
     fontSize: "clamp(2.1rem, 3.6vw, 3.2rem)"
     fontWeight: 400
     lineHeight: 1.08
     letterSpacing: "-0.01em"
   title:
-    fontFamily: "Libre Caslon Display, Libre Caslon Text, Georgia, serif"
+    fontFamily: "EB Garamond Variable, EB Garamond, Georgia, serif"
     fontSize: "1.55rem"
     fontWeight: 400
     lineHeight: 1.15
   accent-italic:
-    fontFamily: "Libre Caslon Text, Georgia, serif"
+    fontFamily: "EB Garamond Variable, EB Garamond, Georgia, serif"
     fontSize: "inherit"
     fontWeight: 400
   body:
-    fontFamily: "Assistant Variable, Assistant, system-ui, sans-serif"
+    fontFamily: "Work Sans Variable, Work Sans, system-ui, sans-serif"
     fontSize: "clamp(1.05rem, 1.3vw, 1.2rem)"
     fontWeight: 400
     lineHeight: 1.65
     fontFeature: "'tnum' 1"
   label:
-    fontFamily: "Assistant Variable, Assistant, system-ui, sans-serif"
+    fontFamily: "Work Sans Variable, Work Sans, system-ui, sans-serif"
     fontSize: "0.9rem"
     fontWeight: 400
     lineHeight: 1.45
@@ -103,7 +103,7 @@ components:
 
 **Creative North Star: "The Wedding Stationer's Desk"**
 
-PlusOne reads like good wedding stationery laid next to a working planner: warm ivory paper, a single deep wine ink for the brand and every decision point, and soft blush and sage washes that separate sections the way tissue separates cards in an invitation suite. Headlines are set in Libre Caslon Display, with one italic Caslon word per headline carried in wine. Everything you read or operate is set in Assistant.
+PlusOne reads like good wedding stationery laid next to a working planner: warm ivory paper, a single deep wine ink for the brand and every decision point, and soft blush and sage washes that separate sections the way tissue separates cards in an invitation suite. Headlines are set in EB Garamond, with one italic word per headline carried in wine. Everything you read or operate is set in Work Sans.
 
 The density is calm and editorial. Sections breathe (72 to 128px of block padding), content sits in a 1180px column, and proof is shown rather than described: the product's own vendor table, quotes, day list and shared plan appear as quiet cards with hairline borders and soft, diffused, warm-tinted shadows. Motion is one gentle settle, used when something in the plan actually changes.
 
@@ -112,7 +112,7 @@ The world refuses the couple-photo marketplace hero and the generic SaaS feature
 **Key Characteristics:**
 - Warm ivory ground with full-width blush and sage section washes.
 - One wine accent: brand, primary pills, the italic headline word, active states, focus.
-- Caslon Display headlines with a single wine italic accent word.
+- EB Garamond headlines with a single wine italic accent word.
 - Pill buttons only: filled wine or thin wine outline.
 - Rounded cards (12 to 18px) with hairline borders and soft diffused shadows.
 - Status as soft pills (sage for good news, blush for pending); people and vendors as round thumbnails.
@@ -150,9 +150,9 @@ A warm, low-chroma paper palette with one saturated ink.
 
 ## Typography
 
-**Display Font:** Libre Caslon Display (with Libre Caslon Text, Georgia)
-**Accent Italic:** Libre Caslon Text Italic 400
-**Body Font:** Assistant Variable (with Assistant, system-ui)
+**Display Font:** EB Garamond (with Georgia)
+**Accent Italic:** EB Garamond Italic 500
+**Body Font:** Work Sans Variable (with system-ui)
 
 **Character:** A high-contrast bookish serif for promises and names, paired with a plain, friendly humanist sans for everything functional.
 

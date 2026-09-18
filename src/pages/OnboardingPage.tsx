@@ -20,14 +20,14 @@ import { Icon } from "../components/ui/Icon";
 /** Named, so the couple can see where they are and how much is left. */
 const STEPS = ["The couple", "The days", "Your guests", "The budget", "Who you need", "The feel"];
 
-/** One photograph per step, so the form feels like a wedding and not a tax return. */
+/** One illustration per step: ink line drawings of the couple, then scenes. */
 const PLATES = [
-  { src: "/onboarding-1.jpg", alt: "A couple laughing together in a courtyard before their ceremony" },
-  { src: "/onboarding-1.jpg", alt: "A couple laughing together in a courtyard before their ceremony" },
-  { src: "/onboarding-2.jpg", alt: "A long banquet table laid with linen and garden roses" },
-  { src: "/onboarding-2.jpg", alt: "A long banquet table laid with linen and garden roses" },
-  { src: "/onboarding-3.jpg", alt: "Guests dancing under string lights at a reception" },
-  { src: "/onboarding-3.jpg", alt: "Guests dancing under string lights at a reception" },
+  { src: "/plate-1.jpg", alt: "A line drawing of a couple laughing together, garlands around their necks" },
+  { src: "/plate-2.jpg", alt: "A line drawing of a mandap with hanging flower strands" },
+  { src: "/plate-3.jpg", alt: "Guests along one long table at dusk, someone standing to give a toast" },
+  { src: "/plate-4.jpg", alt: "A reception hall being finished before the guests arrive" },
+  { src: "/plate-5.jpg", alt: "A photographer, a florist, two musicians and a caterer at work" },
+  { src: "/plate-6.jpg", alt: "Guests dancing under strings of warm lights" },
 ];
 
 const FEEL_STEP = 5;
@@ -161,11 +161,12 @@ export function OnboardingPage() {
   return (
     <main id="main" className="mx-auto grid w-full max-w-[86rem] gap-8 px-5 py-8 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:py-10">
       {/* The photograph carries the feeling; the form carries the work. */}
-      <figure className="relative hidden overflow-hidden rounded-[20px] bg-line lg:block">
+      <figure className="relative hidden overflow-hidden rounded-[20px] bg-cream lg:block">
         <img
+          key={step}
           src={PLATES[step].src}
           alt={PLATES[step].alt}
-          className="h-full w-full object-cover"
+          className="plate-img h-full w-full object-cover"
           loading="eager"
         />
       </figure>
