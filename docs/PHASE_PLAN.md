@@ -186,6 +186,10 @@ Where each technology is used:
 
 **Done when:** the twenty replies pass, and a real reply from a team member's address updates the guest list live.
 
+**Done, 18 September 2026.** The Guests screen was the last one calling no backend at all. It now adds people, counts who is coming against who has not answered, and invites everyone with an address in one press. Verified end to end: an invitation went out from the wedding inbox, a guest replied in plain words — "there will be two of us, me and my husband David, I'm gluten free" — the webhook routed it as a guest reply and the list updated itself, dietary note included.
+
+The round trip found a real defect. The parser anchored on the number the guest was *invited* for and recorded one attendee where the reply plainly said two; it now counts the people the reply itself names and lets that override the invitation.
+
 ## Phase 7: The inbox assistant (forward anything)
 
 **Goal:** the couple forwards any wedding email, receipt, proposal or contract, and PlusOne files it.
@@ -205,6 +209,12 @@ Where each technology is used:
 - Target: correctly filed or safely set aside, no invented contract terms, and every red flag points to the sentence it came from.
 
 **Done when:** the ten items pass, and a forwarded PDF contract shows its red flags on the vendor.
+
+**Done, 18 September 2026.** A forwarded PDF was being stored and a `contractChecks` row created, but nothing ever read it. It is now read as it lands, and every flag must quote the sentence it came from — a warning nobody can trace back to the page is worse than no warning, because the couple cannot check it. The result appears under "Documents you forwarded" in the Inbox, ranked by severity.
+
+Tested with a real photography agreement: eight flags, correctly ranked, nothing invented — the non-refundable half deposit, owing the full fee inside ninety days, liability capped at a refund if the supplier cannot attend, and the reschedule trap where the supplier being unavailable on the new date counts as the couple cancelling.
+
+That test exposed a worse bug than the missing feature: a known guest who forwarded anything had it parsed as an RSVP, so forwarding the contract reset a guest from "coming, two of us" back to one. An email carrying a document is now routed as a forward whoever sent it, and the parser answers "pending" when a message does not address attendance at all.
 
 ## Phase 8: Planning together
 
@@ -242,6 +252,10 @@ Where each technology is used:
 - Run the assistant on twenty common questions and five action requests.
 - Confirm it never sends email without the couple's approval.
 - Read five inspiration links and check the style brief matches the page.
+
+**Done, 18 September 2026.** The assistant answers from the couple's own plan and can do exactly two things: start a vendor search, and add a vendor need. It is given no way to send an email, which is the point — asked to write to vendors it explains that outreach goes through the screen where the couple confirms once.
+
+Verified: asked what was left of the budget it answered $38,150 of $40,000 with $1,850 committed, and noticed unprompted that the DJ quote sits above its planned figure. Asked to find a photographer it started a real research run and said so on the message. Asked to email them it declined and pointed at the right screen. The inspiration half was already done in Phase I.
 
 ## Phase 10: Launch and submission
 
