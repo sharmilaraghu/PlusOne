@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-18T19:30:00Z
+- **Last updated:** 2026-09-18T20:05:00Z
 
 ## Log
 
@@ -111,7 +111,14 @@ correspondence or the fallback, and clears the address on the wedding that gives
 (`convex/agentmail.ts`, `convex/weddings.ts`). Verified on the live account — three weddings
 created back to back each got their own address and the count held at the cap.
 
-### 2026-09-18 - working tree
-Production is still serving the build from earlier today; everything from the redesign onward is
-on the `feat/functionality` branch and not yet deployed. Also researched what four other planning
-products actually do, marking each feature seen or claimed (`docs/COMPETITOR_FEATURES.md`).
+### 2026-09-18 - aa597c5
+Brought the build log back in line with the repo, then deployed everything to production:
+Convex functions pushed, the `threads.by_slotId` index added, and the site published to
+Convex static hosting. Checked the live URL afterwards by signing up as a new account and
+walking the whole flow — the six-step onboarding completed, the wedding was created and it
+was given its own AgentMail inbox, with no page errors. The AgentMail webhook is registered
+against both the production and dev deployments, so replies route to whichever holds the
+thread. Also researched what four other planning products actually do, marking each feature
+seen or claimed (`docs/COMPETITOR_FEATURES.md`).
+
+Known gap: `main` is still behind; the work described above sits on `feat/functionality`.
