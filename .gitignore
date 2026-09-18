@@ -13,3 +13,6 @@ dist
 .impeccable/review/
 .impeccable/mocks/test/
 .impeccable/mocks/landing/
+
+# TypeScript incremental build info
+*.tsbuildinfo
