@@ -9,13 +9,13 @@ import { money, statusLabel, timeAgo } from "../lib/format";
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
 const statusStyle: Record<string, string> = {
-  draft: "bg-sand text-muted",
-  sent: "bg-lilac text-ink",
-  replied: "bg-sky text-ink",
-  quoted: "bg-sky text-ink",
-  booked: "bg-sage text-ok",
-  declined: "bg-sand text-muted",
-  needs_attention: "bg-rose text-bad",
+  draft: "bg-line/60 text-muted",
+  sent: "bg-accent-soft text-accent",
+  replied: "bg-ok-bg text-ok",
+  quoted: "bg-ok-bg text-ok",
+  booked: "bg-ok-bg text-ok",
+  declined: "bg-line/60 text-muted",
+  needs_attention: "bg-warn-bg text-warn",
 };
 
 export function InboxPage() {
@@ -40,7 +40,7 @@ export function InboxPage() {
         <p className="truncate font-mono text-[11px] text-muted">{wedding.inboxAddress ?? "inbox being created…"}</p>
         <div className="mt-3 flex flex-wrap gap-1 text-xs">
           {["all", "sent", "quoted", "needs_attention", "booked"].map((f) => (
-            <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-2.5 py-1 ${filter === f ? "bg-accent text-white" : "bg-sand text-muted"}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1 ${filter === f ? "bg-accent text-paper" : "bg-line/60 text-muted"}`}>
               {statusLabel(f)}
             </button>
           ))}
@@ -123,16 +123,16 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
       </header>
 
       {thread.attentionReason && (
-        <p className="rounded-xl bg-rose px-4 py-3 text-sm text-bad">Needs you: {statusLabel(thread.attentionReason)}</p>
+        <p className="rounded-xl bg-warn-bg px-4 py-3 text-sm text-warn">Needs you: {statusLabel(thread.attentionReason)}</p>
       )}
 
       {latestQuote && (
         <section className="card p-4" aria-label="Extracted quote">
           <p className="text-xs uppercase tracking-wide text-muted">Extracted from their reply</p>
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
-            <span className="chip bg-sky text-ink">Total {money(latestQuote.total, latestQuote.currency || currency)}</span>
-            {latestQuote.deposit ? <span className="chip bg-sand text-muted">Deposit {money(latestQuote.deposit, latestQuote.currency || currency)}</span> : null}
-            {latestQuote.validUntil && <span className="chip bg-sand text-muted">Valid until {latestQuote.validUntil}</span>}
+            <span className="chip-ok">Total {money(latestQuote.total, latestQuote.currency || currency)}</span>
+            {latestQuote.deposit ? <span className="chip-quiet">Deposit {money(latestQuote.deposit, latestQuote.currency || currency)}</span> : null}
+            {latestQuote.validUntil && <span className="chip-quiet">Valid until {latestQuote.validUntil}</span>}
           </div>
           {latestQuote.summary && <p className="mt-2 text-sm">{latestQuote.summary}</p>}
           {latestQuote.includes.length > 0 && <p className="mt-1 text-xs text-muted">Includes: {latestQuote.includes.join(", ")}</p>}
@@ -161,7 +161,7 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
             {m.attachments.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-2 text-xs">
                 {m.attachments.map((a, i) => (
-                  <li key={i} className="chip bg-sand text-muted">📎 {a.filename}</li>
+                  <li key={i} className="chip-quiet">{a.filename}</li>
                 ))}
               </ul>
             )}

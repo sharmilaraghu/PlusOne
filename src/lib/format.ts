@@ -42,8 +42,6 @@ export function pct(part: number, whole: number) {
   return Math.min(100, Math.round((part / whole) * 100));
 }
 
-export const eventPalette = ["#f5e6eb", "#e6e1f5", "#f8f4e8", "#e8f1e6", "#e3edf5", "#f3e9df"];
-
 export function statusLabel(s: string) {
   return s.replace(/_/g, " ");
 }

@@ -7,7 +7,7 @@ import { researchRunDoc } from "./lib/docs";
 import { workflow } from "./workflows";
 
 export const start = mutation({
-  args: { slotId: v.id("vendorSlots"), query: v.string() },
+  args: { slotId: v.id("vendorSlots"), query: v.string(), area: v.optional(v.string()) },
   returns: v.id("researchRuns"),
   handler: async (ctx, args): Promise<Id<"researchRuns">> => {
     const slot = await ctx.db.get(args.slotId);
@@ -26,10 +26,13 @@ export const start = mutation({
       throw new ConvexError("Research is already running for this slot. Give it a minute.");
     }
 
+    // An explicit area overrides the wedding's own neighbourhood for this search only.
+    const area = args.area?.trim().slice(0, 120) || wedding.area;
     const researchRunId = await ctx.db.insert("researchRuns", {
       weddingId: slot.weddingId,
       slotId: args.slotId,
       query: q,
+      area: area || undefined,
       status: "running",
       step: "Queued",
       foundCount: 0,
@@ -64,6 +67,31 @@ export const latestForSlot = query({
 });
 
 // ---- internal ---------------------------------------------------------------
+
+/** Start a research run without a signed-in caller (CLI checks, scheduled re-research). */
+export const startForSlot = internalMutation({
+  args: { slotId: v.id("vendorSlots"), query: v.string(), area: v.optional(v.string()) },
+  returns: v.union(v.id("researchRuns"), v.null()),
+  handler: async (ctx, args): Promise<Id<"researchRuns"> | null> => {
+    const slot = await ctx.db.get(args.slotId);
+    if (!slot) return null;
+    const q = args.query.trim().slice(0, 300);
+    if (q.length < 3) return null;
+    const wedding = await ctx.db.get(slot.weddingId);
+    const researchRunId = await ctx.db.insert("researchRuns", {
+      weddingId: slot.weddingId,
+      slotId: args.slotId,
+      query: q,
+      area: args.area?.trim().slice(0, 120) || wedding?.area,
+      status: "running",
+      step: "Queued",
+      foundCount: 0,
+      startedAt: Date.now(),
+    });
+    await workflow.start(ctx, internal.workflows.researchWorkflow, { researchRunId });
+    return researchRunId;
+  },
+});
 
 export const getRun = internalQuery({
   args: { researchRunId: v.id("researchRuns") },

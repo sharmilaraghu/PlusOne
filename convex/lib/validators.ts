@@ -161,6 +161,7 @@ export const vendorCardValidator = v.object({
   phone: v.optional(v.string()),
   city: v.optional(v.string()),
   startingPrice: v.optional(v.number()),
+  priceCurrency: v.optional(v.string()),
   priceNotes: v.optional(v.string()),
   packages: v.array(packageValidator),
   capacity: v.optional(v.string()),
@@ -168,5 +169,46 @@ export const vendorCardValidator = v.object({
   highlights: v.array(v.string()),
   sourceUrls: v.array(v.string()),
   summary: v.string(),
+  // Phase 2b evidence merged in by the research workflow (never invented by the LLM).
+  rating: v.optional(v.number()),
+  reviewCount: v.optional(v.number()),
+  reviewSource: v.optional(v.string()),
+  reviewHighlights: v.optional(v.array(v.string())),
+  contactFormUrl: v.optional(v.string()),
+  hasContactFormOnly: v.optional(v.boolean()),
+  pagesRead: v.optional(v.array(v.string())),
+  /** The service area / address exactly as the scraped pages state it. No geocoding. */
+  serviceArea: v.optional(v.string()),
 });
 export type VendorCard = Infer<typeof vendorCardValidator>;
+
+/** What `firecrawl.researchVendorDetail` returns for one vendor. */
+export const vendorDetailValidator = v.object({
+  url: v.string(),
+  title: v.optional(v.string()),
+  businessName: v.optional(v.string()),
+  emails: v.array(v.string()),
+  phone: v.optional(v.string()),
+  startingPrice: v.optional(v.number()),
+  priceText: v.optional(v.string()),
+  currency: v.optional(v.string()),
+  packages: v.array(packageValidator),
+  servesCity: v.optional(v.string()),
+  address: v.optional(v.string()),
+  hasContactFormOnly: v.optional(v.boolean()),
+  contactFormUrl: v.optional(v.string()),
+  pagesRead: v.array(v.string()),
+  markdown: v.string(),
+  ms: v.number(),
+});
+export type VendorDetail = Infer<typeof vendorDetailValidator>;
+
+/** What `firecrawl.lookupReviews` returns. Every field is null when nothing was found. */
+export const vendorReviewValidator = v.object({
+  rating: v.optional(v.number()),
+  reviewCount: v.optional(v.number()),
+  reviewSource: v.optional(v.string()),
+  highlights: v.array(v.string()),
+  ms: v.number(),
+});
+export type VendorReview = Infer<typeof vendorReviewValidator>;

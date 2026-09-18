@@ -37,6 +37,8 @@ export const weddingFields = {
   startDate: v.string(), // YYYY-MM-DD
   endDate: v.string(),
   city: v.string(),
+  /** Optional neighbourhood / district inside the city, e.g. "Bandra West", "Park Slope". */
+  area: v.optional(v.string()),
   country: v.optional(v.string()),
   currency: v.string(),
   totalBudget: v.number(),
@@ -98,21 +100,38 @@ export const vendorFields = {
   city: v.optional(v.string()),
   category: v.string(),
   startingPrice: v.optional(v.number()),
+  /** Currency of `startingPrice` as found on the vendor's own page — NOT the wedding's currency. */
+  priceCurrency: v.optional(v.string()),
   priceNotes: v.optional(v.string()),
   packages: v.array(packageValidator),
   capacity: v.optional(v.string()),
   ratingText: v.optional(v.string()),
+  /** Service area / address exactly as the vendor's own pages state it. Never geocoded. */
+  serviceArea: v.optional(v.string()),
   highlights: v.array(v.string()),
   sourceUrls: v.array(v.string()),
   summary: v.optional(v.string()),
   shortlisted: v.boolean(),
   scrapedAt: v.number(),
+  // Phase 2b: evidence gathered from review directories, contact pages and ranking.
+  rating: v.optional(v.number()), // out of 5, only ever from a scraped review page
+  reviewCount: v.optional(v.number()),
+  reviewSource: v.optional(v.string()),
+  reviewHighlights: v.array(v.string()),
+  contactFormUrl: v.optional(v.string()),
+  hasContactFormOnly: v.optional(v.boolean()),
+  score: v.optional(v.number()), // 0-100, written by openai.rankVendors
+  rankReason: v.optional(v.string()),
+  isTopPick: v.optional(v.boolean()),
+  pagesRead: v.array(v.string()), // the urls actually scraped for this vendor
 };
 
 export const researchRunFields = {
   weddingId: v.id("weddings"),
   slotId: v.id("vendorSlots"),
   query: v.string(),
+  /** Neighbourhood to bias this one search towards; overrides the wedding's area. */
+  area: v.optional(v.string()),
   status: researchStatus,
   step: v.string(),
   foundCount: v.number(),
@@ -294,6 +313,7 @@ export default defineSchema({
   vendors: defineTable(vendorFields)
     .index("by_weddingId", ["weddingId"])
     .index("by_slotId", ["slotId"])
+    .index("by_slotId_and_score", ["slotId", "score"])
     .index("by_weddingId_and_website", ["weddingId", "website"]),
 
   researchRuns: defineTable(researchRunFields)

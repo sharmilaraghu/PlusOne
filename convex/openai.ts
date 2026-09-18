@@ -50,13 +50,30 @@ export const summariseStyle = internalAction({
 // ---- research ---------------------------------------------------------------
 
 export const planSearch = internalAction({
-  args: { weddingId: v.id("weddings"), slotId: v.id("vendorSlots"), query: v.string() },
-  returns: v.object({ queries: v.array(v.string()), category: v.string(), city: v.string(), budgetHint: v.string() }),
-  handler: async (ctx, args): Promise<{ queries: string[]; category: string; city: string; budgetHint: string }> => {
+  args: {
+    weddingId: v.id("weddings"),
+    slotId: v.id("vendorSlots"),
+    query: v.string(),
+    /** Neighbourhood to bias the search towards; defaults to the wedding's own area. */
+    area: v.optional(v.string()),
+  },
+  returns: v.object({
+    queries: v.array(v.string()),
+    category: v.string(),
+    /** The full search location used in every query: "<area> <city>" when an area is set. */
+    city: v.string(),
+    area: v.optional(v.string()),
+    budgetHint: v.string(),
+  }),
+  handler: async (
+    ctx,
+    args,
+  ): Promise<{ queries: string[]; category: string; city: string; area?: string; budgetHint: string }> => {
     const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
     const slot = await ctx.runQuery(internal.slots.getInternal, { slotId: args.slotId });
     if (!context || !slot) throw new Error("Wedding or slot not found");
     const { wedding, events } = context;
+    const area = (args.area ?? wedding.area)?.trim().slice(0, 120) || undefined;
     const { object } = await generateObject({
       model: openai(MODEL_FAST),
       schema: z.object({
@@ -66,17 +83,41 @@ export const planSearch = internalAction({
         budgetHint: z.string(),
       }),
       prompt:
-        "You turn a couple's request into web search queries that find INDIVIDUAL wedding vendor websites " +
-        "(not directories like The Knot, WeddingWire, Yelp). Return 2-3 short queries that combine the vendor type, the city, " +
-        "and one distinguishing detail (style, cuisine, budget). Also return the normalised vendor category, the city to search, " +
-        "and a one-line budget hint the couple can afford for this slot.\n\n" +
+        "You turn a couple's request into web search queries that land on an INDIVIDUAL wedding vendor's OWN website " +
+        "(not a directory, marketplace or listicle like The Knot, WeddingWire, Yelp, Zola, wedmegood). " +
+        "Return exactly 3 short queries. Every query must name the city. Bias them towards a vendor's own site by using the " +
+        "words a vendor writes on their own pages (e.g. \"studio\", \"packages\", \"book\", \"portfolio\") rather than " +
+        "listing words (\"best\", \"top 10\", \"near me\"). Make the queries different from each other: one plain " +
+        "\"<vendor type> <city>\", one with a distinguishing detail (style, cuisine, tradition), and one that includes " +
+        "\"packages\" or \"pricing\" so the result page is likely to show numbers. " +
+        "Also return the normalised vendor category, the city to search, and a one-line budget hint for this slot.\n\n" +
+        (area
+          ? `Every query MUST place the neighbourhood "${area}" immediately before the city, like ` +
+            `"<vendor type> ${area} ${wedding.city}" — searching the neighbourhood returns genuinely local vendors, ` +
+            `while the city alone returns mostly directories.\n`
+          : "") +
         `${weddingBrief(wedding, events)}\n\nSlot: ${slot.title} (${slot.category}), budget ${formatMoney(slot.budget, wedding.currency)}\n` +
+        (area ? `Neighbourhood to search: ${area}\n` : "") +
         `Couple's request: "${args.query}"`,
     });
+    // The location string every query must contain: neighbourhood first, then city.
+    const city = area ? `${area} ${object.city || wedding.city}` : object.city || wedding.city;
+    // Guarantee the two properties the eval showed matter: the city, and one pricing-shaped query.
+    const queries = object.queries
+      .map((q) => q.trim().slice(0, 200))
+      .filter((q) => q.length > 0)
+      .map((q) => (q.toLowerCase().includes(city.toLowerCase()) ? q : `${q} ${city}`.slice(0, 200)));
+    while (queries.length < 3) queries.push(`${slot.category} ${city}`.slice(0, 200));
+    const top3 = [...new Set(queries)].slice(0, 3);
+    // Replace the last query rather than appending, or the slice below would drop it.
+    if (!top3.some((q) => /packages|pricing|price/i.test(q))) {
+      top3[top3.length - 1] = `${slot.category} ${city} wedding packages pricing`.slice(0, 200);
+    }
     return {
-      queries: object.queries.map((q) => q.slice(0, 200)),
+      queries: top3,
       category: object.category || slot.category,
-      city: object.city || wedding.city,
+      city,
+      area,
       budgetHint: object.budgetHint,
     };
   },
@@ -124,14 +165,21 @@ export const buildCards = internalAction({
         schema: cardSchema,
         prompt:
           `Read this web page and extract a vendor card for a couple looking for: ${slot.title} (${slot.category}) ` +
-          `in ${context.wedding.city}. If the page is a directory, listicle, blog, marketplace or otherwise not a single vendor's own site, ` +
-          `set isVendor=false. Use null for anything not on the page. Prices must be numbers only (no currency symbols).\n\n` +
+          `in ${context.wedding.city}.\n` +
+          `Set isVendor=false — and extract nothing else — when the page is any of: a directory or marketplace listing ` +
+          `(The Knot, WeddingWire, Zola, Yelp, WedMeGood, Hitched), a blog post, a listicle ("best 10 ..."), a news or ` +
+          `magazine article, a social media profile, a government, university or tourism page, or a business that does not ` +
+          `itself offer ${slot.category} for weddings. Set isVendor=true only when this is one real business's own website ` +
+          `offering this service.\n` +
+          `Every field must be supported by the page text: use null for anything the page does not state, never guess a ` +
+          `price, email or rating. Prices must be numbers only (no currency symbols).\n\n` +
           `URL: ${page.url}\nTitle: ${page.title ?? ""}\n` +
           (page.json ? `Structured extraction: ${JSON.stringify(page.json).slice(0, 3000)}\n` : "") +
           `Page content:\n${truncate(page.markdown, PAGE_CHARS)}`,
       });
       if (!object.isVendor) continue;
-      const email = nn(object.email)?.toLowerCase() ?? page.emails?.[0];
+      // Scraped addresses (mailto links, page text, own-domain first) beat the model's guess.
+      const email = page.emails?.[0] ?? nn(object.email)?.toLowerCase();
       cards.push({
         name: object.name.slice(0, 120),
         website: nn(object.website) ?? page.url,
@@ -149,6 +197,113 @@ export const buildCards = internalAction({
       });
     }
     return { cards };
+  },
+});
+
+// ---- ranking ----------------------------------------------------------------
+
+const rankingSchema = z.object({
+  rankings: z
+    .array(
+      z.object({
+        index: z.number().int().describe("the 1-based number of the vendor in the list"),
+        score: z.number().min(0).max(100),
+        reason: z
+          .string()
+          .describe("one sentence naming the actual evidence, e.g. 'highest rated of the six found and $400 under your budget'"),
+      }),
+    )
+    .max(30),
+});
+
+/**
+ * Score every vendor on a slot from the evidence we actually scraped: rating and review
+ * count, price against the slot budget, and fit with the couple's request. Writes
+ * `score`, `rankReason` and marks the top three `isTopPick`.
+ */
+export const rankVendors = internalAction({
+  args: { slotId: v.id("vendorSlots") },
+  returns: v.number(),
+  handler: async (ctx, args): Promise<number> => {
+    const slot = await ctx.runQuery(internal.slots.getInternal, { slotId: args.slotId });
+    if (!slot) return 0;
+    const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: slot.weddingId });
+    if (!context) return 0;
+    const vendors = await ctx.runQuery(internal.vendors.listForRanking, { slotId: args.slotId });
+    if (vendors.length === 0) return 0;
+
+    const currency = context.wedding.currency;
+    const lines = vendors.map((vendor, i) => {
+      const price =
+        vendor.startingPrice !== undefined
+          ? `from ${formatMoney(vendor.startingPrice, vendor.priceCurrency ?? currency)}` +
+            (vendor.priceCurrency && vendor.priceCurrency !== currency ? ` (quoted in ${vendor.priceCurrency}, not ${currency})` : "")
+          : (vendor.priceNotes ?? "no price published");
+      const rating =
+        vendor.rating !== undefined
+          ? `${vendor.rating}/5 from ${vendor.reviewCount ?? "?"} reviews (${vendor.reviewSource ?? "directory"})`
+          : "no public rating found";
+      return [
+        `${i + 1}. ${vendor.name}${vendor.city ? ` — ${vendor.city}` : ""}${vendor.serviceArea ? ` (serves: ${vendor.serviceArea})` : ""}`,
+        `   price: ${price}`,
+        `   rating: ${rating}`,
+        vendor.reviewHighlights.length ? `   reviewers say: ${vendor.reviewHighlights.slice(0, 4).join("; ")}` : "",
+        vendor.highlights.length ? `   site says: ${vendor.highlights.slice(0, 5).join("; ")}` : "",
+        vendor.packages.length
+          ? `   packages: ${vendor.packages.slice(0, 4).map((p) => `${p.name}${p.price !== undefined ? ` (${p.price})` : ""}`).join(", ")}`
+          : "",
+        vendor.summary ? `   summary: ${truncate(vendor.summary, 400)}` : "",
+        `   contactable: ${vendor.email ? "email found" : vendor.hasContactFormOnly ? "contact form only" : "no contact found"}`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+    });
+
+    const { object } = await generateObject({
+      model: openai(MODEL_SMART),
+      schema: rankingSchema,
+      prompt:
+        `Rank these ${vendors.length} vendors for a couple's "${slot.title}" (${slot.category}) slot, budget ` +
+        `${formatMoney(slot.budget, currency)}, for this wedding:\n${weddingBrief(context.wedding, context.events)}\n\n` +
+        `Score each one 0-100 using, in order of weight: (a) rating and how many reviews back it up, ` +
+        `(b) price against the ${formatMoney(slot.budget, currency)} budget — under budget is good, no published price is a ` +
+        `mild unknown, well over budget is bad, (c) how well what they offer fits the couple's request and style.\n` +
+        `A vendor with no public rating must NOT be pushed to the bottom for that alone — judge it on price and fit and say ` +
+        `"no public rating found" in its reason.\n` +
+        `Every reason must be one sentence that names the real evidence above (a rating, a review count, a price versus the ` +
+        `budget, or a specific thing they offer). Never invent a number that is not in the list, and when a rating appears ` +
+        `only in the vendor's own summary or highlights rather than on the "rating:" line, call it self-reported. ` +
+        `Return one entry per vendor.\n\n` +
+        lines.join("\n"),
+    });
+
+    const byIndex = new Map<number, { score: number; reason: string }>();
+    for (const r of object.rankings) {
+      if (!Number.isFinite(r.score) || r.index < 1 || r.index > vendors.length) continue;
+      byIndex.set(Math.floor(r.index), { score: Math.max(0, Math.min(100, Math.round(r.score))), reason: r.reason });
+    }
+    const scored = vendors.map((vendor, i) => {
+      const r = byIndex.get(i + 1);
+      return {
+        vendorId: vendor._id,
+        score: r?.score ?? 0,
+        rankReason: truncate(r?.reason ?? "Not enough information to rank this vendor yet.", 300),
+        ranked: r !== undefined && r.score > 0,
+      };
+    });
+    // Only a vendor the model actually scored can be a top pick — never three arbitrary rows.
+    const topThree = new Set(
+      scored
+        .filter((s) => s.ranked)
+        .sort((a, b) => b.score - a.score)
+        .slice(0, 3)
+        .map((s) => s.vendorId),
+    );
+    await ctx.runMutation(internal.vendors.applyRanking, {
+      slotId: args.slotId,
+      rankings: scored.map(({ ranked: _ranked, ...s }) => ({ ...s, isTopPick: topThree.has(s.vendorId) })),
+    });
+    return scored.length;
   },
 });
 

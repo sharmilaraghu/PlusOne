@@ -267,6 +267,124 @@ What we do:
 
 ---
 
+## Revision, 18 September 2026: the five-step flow
+
+The requested flow is: enter wedding details → list everything the wedding needs → rank the top three vendors per need using reviews and prices → send the quote requests automatically → the bride confirms on one dashboard that shows who has replied, the quoted prices, availability and the comparison.
+
+How that maps to the phases above:
+
+| Requested step | In the plan? | Where |
+|---|---|---|
+| 1. Enter the wedding details | Yes | Phase 1 |
+| 2. List every vendor the wedding needs | Yes | Phase 1 (a vendor need per day, from the tradition template) |
+| 3. Find vendors with prices | Yes | Phase 2 |
+| 3a. Read reviews and rank the top three | **No, missing** | new Phase 2b below |
+| 4. Send the quote requests | Partly | Phase 3, but it asked the couple to approve every draft |
+| 5. Replies read into structured quotes | Yes | Phase 4 (AgentMail delivers, the LLM extracts) |
+| 5a. One decision dashboard with reply status, price and availability KPIs | **No, missing** | new Phase 4b below |
+| 5b. The couple confirms and books | Yes | Phase 4 |
+
+Three changes follow.
+
+### Phase 2b (new): Reviews and the top three
+
+**Goal:** for each vendor need, the couple sees a ranked shortlist of three, with a reason for the ranking.
+
+What we do:
+- Alongside each vendor's own website, PlusOne gathers what the web says about them: review scores, review counts and recurring praise or complaints.
+- Each vendor gets a simple score from three things: what reviewers say, price against the budget for that need, and how well the vendor fits the request (style, city, dates).
+- The three best are shown first, each with its price, its rating and a one-line reason, such as "highest rated of the six found, and $400 under your budget". The rest stay available below.
+- Every rating links to where it came from, like every price does.
+
+Where each technology is used:
+- **Firecrawl** reads review pages and listing pages as well as the vendor's own site.
+- **The LLM** turns those pages into a rating, a review count and a short summary, then writes the ranking reason. It never invents a rating that no page shows.
+- **Convex** stores the scores so the shortlist is the same for everyone on the plan.
+
+**Verify independently:** run the review gathering alone on at least ten vendors whose public ratings you can check by hand. Compare the recorded rating and review count against the source page. Target: no rating without a source, and ranked order that a person agrees with for at least eight of ten.
+
+### Phase 3, amended: hands-off sending
+
+The couple confirms the shortlist once, and PlusOne sends every email itself. There is no per-email approval step.
+- The confirm screen shows exactly who will be emailed and one draft as a sample, so nothing is a surprise.
+- A setting keeps the old behaviour ("let me read each email first") for couples who want it.
+- After confirmation the couple does nothing: sending, follow-ups and reply reading all run on their own.
+
+**Verify independently:** confirm a shortlist of three test addresses and check that exactly three emails go out, each personal to its vendor, with no duplicates.
+
+### Phase 4b (new): The decision dashboard
+
+**Goal:** one screen where the couple decides, without opening an inbox.
+
+What we do:
+- A status line per vendor: emailed, replied, quoted, nudged, no answer yet.
+- KPIs across the wedding: how many vendors were contacted, how many replied, how many quotes are in, the cheapest and most expensive quote per need, and the total committed against the budget.
+- A comparison table per need: price, deposit, what is included, what is not, availability on your dates, and the response time.
+- One button per row to book, and one to pass.
+
+Where each technology is used:
+- **Convex** keeps the whole board live, so a reply that arrives while the couple is looking updates it in place.
+- **AgentMail** delivers the replies that drive every status.
+- **The LLM** turns each reply into the structured fields the table compares, including whether the vendor is free on the dates.
+
+**Verify independently:** with three test vendors, reply from three different email accounts with different prices and one "not available". Check the dashboard shows three statuses correctly, the right cheapest quote, and the unavailable vendor marked, within a minute of each reply.
+
+## Revision 2, 18 September 2026: the app redesign and detailed onboarding
+
+Reviewing the live app, three problems with the signed-in screens:
+
+1. **The overview is overcrowded**, reading as three competing panes, with a day board that scrolls sideways.
+2. **The colour scheme is unprofessional.** Day cards use saturated primaries (red, amber, green, blue) stored per event, clashing with the rest of the product.
+3. **Too much white space**, because the main area has no maximum width and spreads across the screen.
+
+Onboarding is also too thin. It never asks how many functions there are, which day each falls on, how many guests each has, how the budget splits per function, or anything about the couple's taste. Template defaults invent those numbers silently.
+
+Decisions taken: one calm palette with quiet tints per day; a two-column overview with the days leading; five-step onboarding capturing per-function detail; a style step capturing vibe words, palette, formality and an inspiration link; every screen redesigned, not just the landing page; and the existing test wedding deleted so nothing looks like real data the couple chose.
+
+Two findings make this cheaper than it looks. The signed-in design system is one 42-line file that every screen renders through, so rewriting its tokens re-skins the whole app at once. And the correct fonts are already downloaded but never referenced, so the app renders in fallback faces because of two wrong values.
+
+### Phase B: the design tokens (about 1.5 hours)
+Rewrite the signed-in theme to the approved world: ivory ground, wine accent, blush and sage tints, Libre Caslon headings, Assistant body, pill buttons, softer cards, a page container and aligned numerals. Token names stay the same so no screen needs editing.
+**Verify:** every page loads with nothing brown, headings in Caslon, body in Assistant.
+
+### Phase C: the shell (about 2 hours)
+Cap the content at a readable width, which is the actual fix for the white space. Rebuild the sidebar in the approved style with line icons. Add three shared pieces: a page header, a status chip and an empty state. Replace the activity feed's emoji with line icons.
+**Verify:** navigation highlights correctly, the sidebar still collapses on a phone, and no screen hand-rolls its own status colours.
+
+### Phase D: day colours (about 45 minutes)
+Derive each day's tint from its order rather than reading a stored colour, which fixes existing weddings instantly with no migration. The tint appears as a left rule and a tinted strip behind the day name, never as the whole card.
+**Verify:** a five-function wedding reads blush, sage, sand, sky, blush, with no saturated colour anywhere except the wine accent.
+
+### Phase E: the new overview (about 3 hours)
+A full-width header carrying the budget, the days as the main column, and guests and activity in a narrow rail that drops beneath the days on smaller screens. Cut the vendor-needs list that repeats the days, the dead "last change" line, the separate budget card and the sideways scroll.
+**Verify:** at laptop width nothing is stranded at the screen edges; at phone width nothing scrolls sideways.
+
+### Phase F: the backend accepts a real plan (about 2.5 hours)
+Wedding creation takes per-function names, dates, guest counts and budgets for every tradition, not just custom. Style fields are stored. The two budget calculations are reconciled so per-function budgets, per-vendor budgets and the total agree exactly; today they cannot. Default dates stop putting two functions on the same day.
+**Verify:** create one wedding per tradition, then confirm the three budget totals match.
+
+### Phase G: five-step onboarding (about 4 hours)
+1. Couple, dates, city, neighbourhood. 2. Tradition, how many functions and which day each falls on, editable. 3. Guests per function. 4. Total budget with an editable split per function. 5. Style and feel: vibe words, palette, formality, inspiration link.
+Everything is prefilled once a tradition is chosen, so the defaults path still takes two minutes.
+**Verify:** one wedding per tradition; what the couple typed is what gets created; the defaults path is under two minutes.
+
+### Phase H: editing it all later (about 3.5 hours)
+Add the missing operations: remove a function, re-split the budget, remove a vendor need. Inline editing on each day card, a settings screen for the wedding details and style, and an "add a vendor need" panel using the suggestions list that already exists.
+**Verify:** rename, move, re-budget and delete days; deleting a day with a booked vendor is refused; the budget totals still agree afterwards.
+
+### Phase I: style reaches the machine (about 45 minutes)
+Feed the vibe, palette and formality into the one place that builds context for searches, vendor cards and emails, and let formality set the tone of the emails PlusOne writes.
+**Verify:** two weddings differing only in formality produce recognisably different emails.
+
+### Order
+B, C, D and E first, about seven hours, because together they close all three complaints and can ship on their own. Then F and G for onboarding, H for editing, I for style. None of this touches the vendor ranking screen or the decision dashboard still to come.
+
+## Where we are now (18 September 2026)
+
+- **Phase 0: done.** The landing page is rebuilt in the approved design, the 1-minute tour is live, and the demo wedding is gone from the code and the database. The "watch two people use it" check has not been run.
+- **Phases 1 to 6 and 8: code written, not verified.** Onboarding, vendor research, outreach, reply reading, follow-ups, guests and collaboration all exist in `convex/` and in the app screens, from an earlier single sitting. None of it has been through the independent checks above, and the app screens still use the older look.
+- **Next: Phase 1 verification**, then Phase 2 and the new Phase 2b, which is where the ranking work starts.
+
 ## Status of existing work
 
 Much of the backend for phases 1 to 6 and 8 was written earlier. It is not yet verified, and it still contains the demo wedding. Following this plan means treating that code as a draft:

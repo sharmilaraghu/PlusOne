@@ -174,7 +174,7 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
                       </p>
                     </div>
                     {canEdit && (
-                      <button className={`chip ${v.shortlisted ? "bg-rose text-accent" : "bg-sand text-muted"}`} onClick={() => void toggleShortlist({ vendorId: v._id })} aria-pressed={v.shortlisted}>
+                      <button className={v.shortlisted ? "chip-pending" : "chip-quiet"} onClick={() => void toggleShortlist({ vendorId: v._id })} aria-pressed={v.shortlisted}>
                         {v.shortlisted ? "♥ Shortlisted" : "♡ Shortlist"}
                       </button>
                     )}
@@ -182,7 +182,7 @@ function SlotPanel({ slot, wedding, canEdit }: { slot: Slot; wedding: WeddingDat
                   {v.summary && <p className="mt-2 text-sm">{v.summary}</p>}
                   {v.highlights?.length > 0 && (
                     <ul className="mt-2 flex flex-wrap gap-1">
-                      {v.highlights.slice(0, 4).map((h, i) => <li key={i} className="chip bg-sand text-muted">{h}</li>)}
+                      {v.highlights.slice(0, 4).map((h, i) => <li key={i} className="chip-quiet">{h}</li>)}
                     </ul>
                   )}
                   {v.packages?.length > 0 && (

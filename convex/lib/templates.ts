@@ -77,13 +77,15 @@ export function defaultSlotsFor(template: CultureTemplate): TemplateSlot[] {
     { category: "Catering", title: "Catering", pct: 22 },
     { category: "Photographer", title: "Photography & Video", pct: 10 },
     { category: "Decor & Florals", title: "Decor & Florals", pct: 10 },
-    { category: "Music/DJ", title: "Music / DJ", pct: 5, eventNames: PARTY_EVENTS },
+    { category: "Music/DJ", title: "Music / DJ", pct: 4, eventNames: PARTY_EVENTS },
+    { category: "Live band", title: "Live band", pct: 4, eventNames: PARTY_EVENTS },
     { category: "Attire", title: "Attire", pct: 7 },
     { category: "Makeup & Hair", title: "Makeup & Hair", pct: 3 },
     { category: "Officiant", title: "Officiant", pct: 1, eventNames: ["Ceremony", "Nikah", "Anand Karaj", "Ceremony 1", "Ceremony 2", "Ceremony & Reception (Chuppah)"] },
   ];
   if (SOUTH_ASIAN.includes(template) || template === "fusion") {
     base.splice(5, 0, { category: "Mehndi artist", title: "Mehndi Artist", pct: 2, eventNames: ["Mehndi", "Welcome Party"] });
+    base.push({ category: "Live band", title: "Dhol & baraat band", pct: 2, eventNames: ["Baraat", "Ceremony", "Sangeet", "Ceremony 1"] });
   }
   return base;
 }
@@ -102,3 +104,22 @@ export function splitByWeights(total: number, weights: number[]): number[] {
   for (let i = 0; remainder > 0 && i < raw.length; i++, remainder--) raw[i] += 1;
   return raw;
 }
+
+/**
+ * Extra vendor needs a couple can add themselves, beyond what their tradition
+ * creates. Shown as suggestions on the vendors screen.
+ */
+export const SUGGESTED_CATEGORIES: { category: string; title: string; hint: string }[] = [
+  { category: "Live band", title: "Live band", hint: "A band for the reception or party" },
+  { category: "Live band", title: "Ceremony musicians", hint: "Strings, harp, choir or a singer for the ceremony" },
+  { category: "Music/DJ", title: "DJ", hint: "A DJ for dancing" },
+  { category: "Cake", title: "Cake & desserts", hint: "Wedding cake, dessert table" },
+  { category: "Transport", title: "Transport", hint: "Cars or coaches for you and your guests" },
+  { category: "Stationery", title: "Invitations & stationery", hint: "Invites, menus, signage" },
+  { category: "Celebrant", title: "Celebrant or officiant", hint: "Who leads the ceremony" },
+  { category: "Videographer", title: "Videographer", hint: "Film of the day, separate from photography" },
+  { category: "Bar", title: "Bar & drinks", hint: "Bar service, bartenders, drinks packages" },
+  { category: "Lighting", title: "Lighting & sound", hint: "Uplighting, dance floor, PA" },
+  { category: "Childcare", title: "Childcare", hint: "Someone to mind the little ones" },
+  { category: "Fireworks", title: "Fireworks or sparklers", hint: "A send-off moment" },
+];
