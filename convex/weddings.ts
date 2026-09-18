@@ -19,7 +19,22 @@ import { workflow } from "./workflows";
 
 export const listMine = query({
   args: {},
-  returns: v.array(v.object({ wedding: weddingDoc, role })),
+  returns: v.array(
+    v.object({
+      wedding: weddingDoc,
+      role,
+      /** Enough for the card to say where this wedding stands without opening it. */
+      summary: v.object({
+        daysToGo: v.number(),
+        needs: v.number(),
+        booked: v.number(),
+        committed: v.number(),
+        quotesToCompare: v.number(),
+        awaiting: v.number(),
+        nextStep: v.string(),
+      }),
+    }),
+  ),
   handler: async (ctx) => {
     const userId = await requireUserId(ctx);
     const memberships = await ctx.db
@@ -27,9 +42,53 @@ export const listMine = query({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .take(50);
     const out = [];
+    const today = new Date().toISOString().slice(0, 10);
+
     for (const m of memberships) {
       const wedding = await ctx.db.get(m.weddingId);
-      if (wedding) out.push({ wedding, role: m.role });
+      if (!wedding) continue;
+
+      const slots = await ctx.db
+        .query("vendorSlots")
+        .withIndex("by_weddingId", (q) => q.eq("weddingId", wedding._id))
+        .take(200);
+      const lines = await ctx.db
+        .query("budgetLines")
+        .withIndex("by_weddingId", (q) => q.eq("weddingId", wedding._id))
+        .take(200);
+
+      const booked = slots.filter((s) => s.status === "booked").length;
+      const quotesToCompare = slots.filter((s) => s.status === "quoted").length;
+      const awaiting = slots.filter((s) => s.status === "contacted").length;
+      const researched = slots.filter((s) => s.status === "research").length;
+      const committed = lines.reduce((sum, l) => sum + (slots.find((s) => s._id === l.slotId)?.status === "booked" ? l.committed : 0), 0);
+
+      // One honest next step, in the order a couple would actually take them.
+      const nextStep =
+        slots.length === 0
+          ? "Add what you need"
+          : booked === slots.length
+            ? "Everything is booked"
+            : quotesToCompare > 0
+              ? `${quotesToCompare} ${quotesToCompare === 1 ? "need has quotes" : "needs have quotes"} to compare`
+              : awaiting > 0
+                ? `Waiting on ${awaiting} ${awaiting === 1 ? "vendor" : "vendors"}`
+                : researched > 0
+                  ? booked > 0 || slots.length - researched > 0
+                    ? `Find the other ${researched} ${researched === 1 ? "vendor" : "vendors"}`
+                    : "Find your first vendors"
+                  : "Pick who to ask";
+
+      const daysToGo = Math.max(
+        0,
+        Math.round((new Date(wedding.startDate).getTime() - new Date(today).getTime()) / 86_400_000),
+      );
+
+      out.push({
+        wedding,
+        role: m.role,
+        summary: { daysToGo, needs: slots.length, booked, committed, quotesToCompare, awaiting, nextStep },
+      });
     }
     return out;
   },

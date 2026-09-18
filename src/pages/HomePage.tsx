@@ -64,12 +64,16 @@ export function HomePage() {
   }
 
   return (
-    <div className="relative min-h-[100dvh] overflow-hidden bg-paper">
-      <PrintWall count={28} quiet />
+    <div className="min-h-[100dvh] bg-paper">
+      {/* One quiet blush wash at the top, and nothing else behind the prints. */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[260px] bg-[linear-gradient(to_bottom,var(--color-accent-soft)_0%,transparent_92%)] opacity-45"
+      />
       <div className="relative mx-auto w-full max-w-[74rem]">
         <Header onSignOut={() => void signOut()} />
 
-        <main id="main" className="px-5 pb-14 md:px-8">
+        <main id="main" className="px-5 pb-16 md:px-8">
           <h1 className="mt-4 text-[2.4rem] leading-tight">
             Your <em>weddings</em>
           </h1>
@@ -77,12 +81,12 @@ export function HomePage() {
             {mine.length === 1 ? "One celebration on the go." : `${mine.length} celebrations on the go.`}
           </p>
 
-          <ul className="mt-9 grid gap-x-8 gap-y-11 sm:grid-cols-2 lg:grid-cols-3">
-            {mine.map(({ wedding, role }, i) => (
+          <ul className="mt-10 flex flex-wrap items-stretch gap-x-10 gap-y-12">
+            {mine.map(({ wedding, role, summary }, i) => (
               <li key={wedding._id}>
                 <Link
                   to={`/w/${wedding._id}`}
-                  className="polaroid group relative hover:-translate-y-1.5 hover:rotate-0 hover:shadow-[0_26px_50px_-20px_rgba(70,35,35,0.5)]"
+                  className="polaroid group block w-[21rem] hover:-translate-y-1.5 hover:rotate-0 hover:shadow-[0_30px_56px_-22px_rgba(70,35,35,0.5)]"
                   style={{ transform: `rotate(${TILTS[i % TILTS.length]})` }}
                 >
                   <span className="block overflow-hidden rounded-[3px] bg-line">
@@ -90,25 +94,36 @@ export function HomePage() {
                       src={PLATES[i % PLATES.length]}
                       alt=""
                       loading="lazy"
-                      className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-[1.04]"
+                      className="aspect-[4/3] w-full object-cover transition duration-500 group-hover:scale-[1.03]"
                     />
                   </span>
-                  <span className="mt-3 flex items-end justify-between gap-3 px-1">
-                    <span className="min-w-0">
-                      <span className="block truncate display text-[1.2rem] leading-tight">{wedding.name}</span>
-                      <span className="block truncate text-[0.78rem] text-quiet">
-                        {longDate(wedding.startDate)} · {wedding.city}
+
+                  <span className="mt-3.5 block px-1">
+                    <span className="flex items-baseline justify-between gap-3">
+                      <span className="min-w-0 truncate display text-[1.3rem] leading-tight">{wedding.name}</span>
+                      {role !== "owner" && <span className="shrink-0 text-[11px] text-quiet">{role}</span>}
+                    </span>
+                    <span className="mt-0.5 block truncate text-[0.8rem] text-quiet">
+                      {longDate(wedding.startDate)} · {wedding.city}
+                    </span>
+
+                    {/* Where the plan actually stands, so the card is worth reading. */}
+                    <span className="mt-3.5 block border-t border-line pt-3">
+                      <Row
+                        label={summary.daysToGo <= 1 ? "The day" : "Days to go"}
+                        value={summary.daysToGo === 0 ? "Today" : summary.daysToGo === 1 ? "Tomorrow" : `${summary.daysToGo}`}
+                      />
+                      <Row label="Vendors booked" value={`${summary.booked} of ${summary.needs}`} />
+                      <Row
+                        label="Committed"
+                        value={`${money(summary.committed, wedding.currency)} of ${money(wedding.totalBudget, wedding.currency)}`}
+                      />
+                      <span className="mt-2.5 flex items-center gap-1.5 text-[0.82rem] text-accent">
+                        {summary.nextStep}
+                        <Icon name="arrow" size={14} className="transition group-hover:translate-x-0.5" />
                       </span>
                     </span>
-                    <span className="shrink-0 pb-0.5 text-[0.78rem] text-muted">
-                      {money(wedding.totalBudget, wedding.currency)}
-                    </span>
                   </span>
-                  {role !== "owner" && (
-                    <span className="absolute right-3.5 top-3.5 rounded-full bg-cream/90 px-2 py-0.5 text-[11px] text-muted">
-                      {role}
-                    </span>
-                  )}
                 </Link>
               </li>
             ))}
@@ -116,14 +131,14 @@ export function HomePage() {
             <li>
               <Link
                 to="/new"
-                className="group flex h-full min-h-[15rem] flex-col items-center justify-center gap-2 rounded-[6px] border border-dashed border-rule bg-cream/85 p-6 text-center transition hover:border-accent hover:bg-accent-soft/40"
+                className="group flex h-full min-h-[20rem] w-[15rem] flex-col items-center justify-center gap-2 rounded-[6px] border border-dashed border-rule bg-cream/70 p-6 text-center transition hover:border-accent hover:bg-accent-soft/40"
               >
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-accent-soft text-accent transition group-hover:bg-accent group-hover:text-paper">
                   <Icon name="plus" size={19} />
                 </span>
-                <span className="display text-[1.15rem]">Plan another</span>
-                <span className="max-w-[16rem] text-[0.82rem] leading-relaxed text-quiet">
-                  A second celebration, a family member's, or a weekend away.
+                <span className="display text-[1.1rem]">Plan another</span>
+                <span className="max-w-[12rem] text-[0.8rem] leading-relaxed text-quiet">
+                  A second celebration, or a family member's.
                 </span>
               </Link>
             </li>
@@ -131,6 +146,16 @@ export function HomePage() {
         </main>
       </div>
     </div>
+  );
+}
+
+/** One line of the plan's state, label left and figure right. */
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="flex items-baseline justify-between gap-3 text-[0.82rem] leading-6">
+      <span className="text-muted">{label}</span>
+      <span className="shrink-0 text-ink">{value}</span>
+    </span>
   );
 }
 
