@@ -31,6 +31,12 @@ const INBOX_LIMIT = Number(process.env.AGENTMAIL_INBOX_LIMIT ?? 3);
  * when its wedding has never written to or heard from a vendor, and the fallback inbox
  * is never touched. The wedding that gives one up is told, so the app stops pointing at
  * an address that no longer exists.
+ *
+ * Only this deployment's own inboxes are ever candidates. One AgentMail account is
+ * shared by production, every developer's dev deployment and any collaborator, and each
+ * of them can only see its own weddings. An inbox this deployment does not recognise is
+ * not idle — it is someone else's, possibly a real couple's on production — so it is
+ * left alone, and the new wedding shares the fallback instead.
  */
 async function makeRoomForInbox(ctx: ActionCtx): Promise<void> {
   let inboxes: Array<{ inboxId?: string; createdAt?: unknown }> = [];
@@ -50,7 +56,10 @@ async function makeRoomForInbox(ctx: ActionCtx): Promise<void> {
   // Oldest first, so the inbox given up is always the most stale one.
   const candidates = inboxes
     .filter((i): i is { inboxId: string; createdAt?: unknown } => Boolean(i.inboxId) && i.inboxId !== reserved)
-    .filter((i) => byInbox.get(i.inboxId)?.hasTraffic !== true)
+    .filter((i) => {
+      const owner = byInbox.get(i.inboxId);
+      return owner !== undefined && owner.hasTraffic === false;
+    })
     .sort((a, b) => String(a.createdAt ?? "").localeCompare(String(b.createdAt ?? "")));
 
   let held = inboxes.length;
