@@ -1,0 +1,129 @@
+{
+  "title": "Choose the visual world for the PlusOne landing page",
+  "question": "The roll assigned The Departures Board. Keep it, take the pick, or re-roll.",
+  "options": [
+    {
+      "id": "assigned",
+      "label": "The Departures Board",
+      "kicker": "THE ROLL",
+      "lineage": "Solari split-flap boards in station halls",
+      "thesis": "Your wedding as a live departures board: every vendor is a row that flips from searching to sent to quoted while you watch.",
+      "palette": ["#F2B51E", "#10213A", "#F7F3EA", "#2E8B57", "#D9482B"],
+      "materials": ["split-flap modules", "enamel signage", "station-hall daylight"],
+      "viewport": "Marigold field; left: name, promise and inline sign-up; right: a large board titled Priya & Sam departures whose rows flip as emails send and a quote lands.",
+      "risk": "Can read as travel, not wedding, if the board copy is not unmistakably about vendors and days.",
+      "raised": [
+        {"from": "tensegrity-column", "raise": "Every price on the board is pinned by a leader line to the page or email it came from."},
+        {"from": "drum-machine-step-row", "raise": "One sweeping now-line always shows where the plan is, like a chase light."},
+        {"from": "man-machine-identity", "raise": "How-it-works is one orthogonal route map wiring search, email, reply and budget."},
+        {"from": "hand-drawn-zine", "raise": "The single number that just changed gets a marked highlight, nothing else does."}
+      ]
+    },
+    {
+      "id": "model-pick",
+      "label": "The Reply Card",
+      "kicker": "IMPECCABLE’S PICK",
+      "lineage": "wedding stationery suites: invitation, RSVP card, envelope",
+      "thesis": "PlusOne as the correspondence of the wedding: every vendor email and guest reply set like a stationery suite that fills itself in.",
+      "palette": ["#1E3B2F", "#E9DFC9", "#B5452F", "#C9A24A"],
+      "materials": ["heavy cotton card", "letterpress bite", "envelope liner"],
+      "viewport": "A reply card with its +1 line, the couple's inbox address printed on the envelope, replies arriving as filled-in cards.",
+      "risk": "Closest to the wedding-stationery look most sites in this category already use; can feel familiar."
+    },
+    {
+      "id": "man-machine-identity",
+      "label": "Man-Machine Identity",
+      "verdict": "declined",
+      "lineage": "Kraftwerk transit-grid band identity",
+      "thesis": "The planning flow as a neon wiring diagram on a strict signal grid.",
+      "palette": ["#FF2020", "#FFB000", "#00F066", "#000000"],
+      "materials": ["enamel black", "glow line"],
+      "viewport": "A black grid with neon connectors routing search to inbox to budget.",
+      "risk": "Neon on black is the generic AI-startup look.",
+      "case": "Declined: you ruled out the generic SaaS look, and couples do not identify with a machine diagram.",
+      "kept": "Orthogonal route map for how-it-works.",
+      "hero": "https://impeccable.style/worlds/cards/kraftwerk-man-machine-hero.webp"
+    },
+    {
+      "id": "hand-drawn-zine",
+      "label": "Hand-drawn Zine",
+      "verdict": "declined",
+      "lineage": "marker-drawn explainer zines",
+      "thesis": "A friend sketching how PlusOne works on a napkin.",
+      "palette": ["#F4EEDC", "#111111", "#FFE14D", "#FF6FA8"],
+      "materials": ["cream paper", "marker ink", "highlighter"],
+      "viewport": "Doodled arrows from a mascot to the inbox.",
+      "risk": "Cutesy mascots undercut trust around money.",
+      "case": "Declined: breaks the warm-not-cutesy voice and your too-playful red line.",
+      "kept": "One highlighter mark on the number that changed.",
+      "hero": "https://impeccable.style/worlds/cards/hand-drawn-zine-explainer-hero.webp"
+    },
+    {
+      "id": "drum-machine-step-row",
+      "label": "Drum Machine Step Row",
+      "verdict": "declined",
+      "lineage": "early-80s rhythm machines",
+      "thesis": "The wedding timeline as sixteen lit step keys.",
+      "palette": ["#2A2A2A", "#E03C2E", "#F08A24", "#F2D233"],
+      "materials": ["silkscreen panel", "LED keys"],
+      "viewport": "A step row of days with a chase light.",
+      "risk": "Instrument grammar is foreign to couples.",
+      "case": "Declined: low identification and unclear mapping to vendors.",
+      "kept": "A chase-light now-line that always shows where the plan is.",
+      "hero": "https://impeccable.style/worlds/cards/signals-instruments-drum-machine-step-row-hero.webp"
+    },
+    {
+      "id": "tensegrity-column",
+      "label": "Tensegrity Column",
+      "verdict": "declined",
+      "lineage": "kinetic tensegrity sculpture",
+      "thesis": "Budget as balanced forces.",
+      "palette": ["#1A1A1A", "#D8D4CC", "#C8312B"],
+      "materials": ["carbon rods", "red cord"],
+      "viewport": "A floating column annotated with force values.",
+      "risk": "Abstract; hides the emailing.",
+      "case": "Declined: loses on both identification and clarity.",
+      "kept": "Leader-line annotations pinning each figure to its source.",
+      "hero": "https://impeccable.style/worlds/cards/kinetic-sculpture-automata-tensegrity-breathing-column-hero.webp"
+    },
+    {
+      "id": "coiled-earth-tower",
+      "label": "Coiled Earth Tower",
+      "verdict": "declined",
+      "lineage": "coiled clay architecture",
+      "thesis": "The plan rising course by course.",
+      "palette": ["#B5553A", "#6B3E26", "#EFE6D8"],
+      "materials": ["terracotta coils", "slip seams"],
+      "viewport": "A banded tower of planning courses.",
+      "risk": "Earthy craft mood without the product mechanism.",
+      "case": "Declined: loses on both axes.",
+      "kept": "Each row keeps a visible trail of its past states.",
+      "hero": "https://impeccable.style/worlds/cards/clay-ceramics-fracture-coiled-earth-tower-hero.webp"
+    },
+    {
+      "id": "vertical-feed",
+      "label": "Vertical Feed Surface",
+      "verdict": "declined",
+      "lineage": "full-bleed vertical video feeds",
+      "thesis": "One wedding moment per screen.",
+      "palette": ["#000000", "#FFFFFF"],
+      "materials": ["full-bleed media", "scrim"],
+      "viewport": "One vendor per snap.",
+      "risk": "Needs real photography PlusOne does not have.",
+      "case": "Declined: no media to fill it and weak clarity.",
+      "kept": "On phones, one board row owns the screen at a time.",
+      "hero": "https://impeccable.style/worlds/cards/pop-culture-shelf-vertical-video-feed-surface-hero.webp"
+    }
+  ],
+  "reroll": { "registers": ["safer", "bolder"] },
+  "canon": true,
+  "canonCard": {
+    "label": "The category standard",
+    "thesis": "The wedding-platform homepage done at full craft: soft photo hero, app screenshot, feature grid.",
+    "palette": ["#FFFFFF", "#1F2430", "#E8B4B8"],
+    "materials": ["lifestyle photography", "clean card grid"],
+    "viewport": "Couple photo behind a headline and Get started, product screenshot below, five feature cards.",
+    "risk": "Indistinguishable from Joy and Zola by design."
+  },
+  "steer": true
+}

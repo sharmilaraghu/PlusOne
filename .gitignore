@@ -1,0 +1,15 @@
+node_modules
+dist
+.env
+.env.*
+!.env.example
+.auth-keys.json
+*.local
+.DS_Store
+
+# Impeccable: downloaded binary and regenerable build/review artifacts
+.claude/skills/impeccable/scripts/bin/
+.impeccable/build/
+.impeccable/review/
+.impeccable/mocks/test/
+.impeccable/mocks/landing/

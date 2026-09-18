@@ -1,0 +1,37 @@
+{
+  "title": "PlusOne landing: choose a composition",
+  "question": "Three comps in the YourDay + Loverly world. Pick the one to build, or tell me what to combine or change.",
+  "options": [
+    {
+      "id": "comp-a",
+      "label": "A · The app is the hero",
+      "thesis": "Centered serif promise, then the real app working: vendors, quotes, budget and a new-reply notification.",
+      "palette": ["#FBF8F3", "#5E1F33", "#F4E4E1", "#E4EAE0"],
+      "materials": ["ivory ground", "blush band", "app preview window"],
+      "viewport": "Nav, centered headline with Start planning and Take the 1-minute tour, wide app preview below on a blush band.",
+      "risk": "Closest to YourDay's structure; sign-up sits one click away rather than on the page.",
+      "comp": ".impeccable/mocks/landing/view-a.jpg"
+    },
+    {
+      "id": "comp-b",
+      "label": "B · Editorial split",
+      "thesis": "Loverly-style romance: sign-up on the left, a large wedding photograph on the right with a vendor reply card landing on it.",
+      "palette": ["#FBF8F3", "#5E1F33", "#F4E4E1", "#E4EAE0"],
+      "materials": ["editorial photography", "email reply card", "inline sign-up"],
+      "viewport": "Headline and inline sign-up with a tour link on the left, full-height reception photo with an overlapping quote reply on the right.",
+      "risk": "The photo carries the mood, so the emailing mechanism is shown only by one small card.",
+      "comp": ".impeccable/mocks/landing/view-b.jpg"
+    },
+    {
+      "id": "comp-c",
+      "label": "C · The tour is the hero",
+      "thesis": "Minimal: five calm steps from wedding date to booked vendor, with step 3's email draft opened beneath.",
+      "palette": ["#FBF8F3", "#5E1F33", "#F4E4E1", "#E4EAE0"],
+      "materials": ["numbered step cards", "email draft preview", "watercolor eucalyptus"],
+      "viewport": "Headline, a five-step tour line with the active step lifted, an email draft with Approve & send, then Start planning and Play the tour.",
+      "risk": "Explains the flow best but shows less of the app itself; the 'No card needed' caption would need to stay true.",
+      "comp": ".impeccable/mocks/landing/view-c.jpg"
+    }
+  ],
+  "steer": true
+}

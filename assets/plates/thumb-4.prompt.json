@@ -1,0 +1,11 @@
+{
+  "tool": "elevenlabs-flows-image",
+  "model": "gpt-image-2",
+  "aspect_ratio": "1:1",
+  "resolution": "1K",
+  "quality": "medium",
+  "reference": ".impeccable/build/crops/thumb-4.png",
+  "prompt": "Recreate the provided reference image exactly: a circular photograph centered on a flat warm ivory (#F8F6F3) square background, the circle filling about 80 percent of the frame, same position and ivory margins as the reference. Inside the circle: a light neutral arched hall interior with symmetrical arches and warm daylight, matching the reference's composition, soft focus, gentle warm light, low detail and calm, as it appears at thumbnail size. Keep everything outside the circle plain ivory. No border ring, no shadow, no text, no watermark, no added texture or grain.",
+  "generation_id": "yoP2JIIOC5IB4rF6sZCK",
+  "created": "2026-09-17T15:37:33.083Z"
+}
