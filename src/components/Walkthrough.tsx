@@ -34,7 +34,13 @@ const STEPS: Step[] = [
   {
     target: "nav-inbox",
     title: "You confirm once",
-    body: "Say yes to a shortlist and PlusOne emails them all from your own wedding address, chases anyone who goes quiet, and turns each reply into a quote here.",
+    body: "Say yes to a shortlist and PlusOne emails them all from your own wedding address, chases anyone who goes quiet, and reads each reply back into a quote.",
+    place: "right",
+  },
+  {
+    target: "nav-decisions",
+    title: "Then you just choose",
+    body: "Every vendor's price, whether they are free on your dates and what is included, side by side. Book or pass without ever opening an inbox.",
     place: "right",
   },
   {

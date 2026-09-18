@@ -428,7 +428,13 @@ const replySchema = z.object({
   total: z.number().nullable().describe("all-in quoted price as a number, null if none"),
   deposit: z.number().nullable(),
   currency: z.string().nullable().describe("ISO code like USD"),
-  availability: z.string().nullable().describe("what they said about the dates"),
+  availability: z.string().nullable().describe("what they said about the dates, in their own words"),
+  availableOnDates: z
+    .enum(["yes", "no", "unclear"])
+    .describe(
+      "whether this reply says they are free on the couple's dates: 'yes' only if they confirm those dates, " +
+        "'no' if they say they are booked or cannot do them, 'unclear' if they never address the dates",
+    ),
   includes: z.array(z.string()).max(12),
   excludes: z.array(z.string()).max(12),
   deadline: z.string().nullable().describe("any quote validity / hold deadline mentioned"),
@@ -449,6 +455,7 @@ export const extractReply = internalAction({
       schema: replySchema,
       prompt:
         `A wedding vendor replied to a couple's inquiry. Classify the reply and extract pricing details. ` +
+        `The couple's dates are ${wedding.startDate} to ${wedding.endDate}; say whether this reply confirms those dates. ` +
         `Couple's currency is ${wedding.currency}; the slot is ${slot?.title ?? "a vendor slot"} with a budget of ` +
         `${slot ? formatMoney(slot.budget, wedding.currency) : "unknown"}. "quote" = they gave a price; "question" = they need ` +
         `information from the couple before quoting; "declined" = unavailable or not interested; "available" = available but no price yet.\n\n` +
@@ -459,6 +466,7 @@ export const extractReply = internalAction({
       deposit: nn(object.deposit),
       currency: nn(object.currency),
       availability: nn(object.availability),
+      availableOnDates: object.availableOnDates,
       includes: object.includes,
       excludes: object.excludes,
       deadline: nn(object.deadline),

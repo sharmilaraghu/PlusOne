@@ -11,6 +11,7 @@ import { Walkthrough, shouldOfferWalkthrough } from "./Walkthrough";
 const nav = [
   { to: "", label: "Overview", icon: "home" as const, end: true },
   { to: "vendors", label: "Vendors", icon: "search" as const, tour: "nav-vendors" },
+  { to: "decisions", label: "Decisions", icon: "check" as const, tour: "nav-decisions" },
   { to: "inbox", label: "Inbox", icon: "mail" as const, tour: "nav-inbox" },
   { to: "guests", label: "Guests", icon: "guests" as const },
   { to: "assistant", label: "Assistant", icon: "heart" as const },

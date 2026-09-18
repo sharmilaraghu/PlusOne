@@ -13,6 +13,7 @@ import type * as agentmail from "../agentmail.js";
 import type * as auth from "../auth.js";
 import type * as budget from "../budget.js";
 import type * as crons from "../crons.js";
+import type * as dashboard from "../dashboard.js";
 import type * as events from "../events.js";
 import type * as firecrawl from "../firecrawl.js";
 import type * as followups from "../followups.js";
@@ -54,6 +55,7 @@ declare const fullApi: ApiFromModules<{
   auth: typeof auth;
   budget: typeof budget;
   crons: typeof crons;
+  dashboard: typeof dashboard;
   events: typeof events;
   firecrawl: typeof firecrawl;
   followups: typeof followups;

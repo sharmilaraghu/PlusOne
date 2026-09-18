@@ -6,6 +6,7 @@ import { HomePage } from "./pages/HomePage";
 import { OnboardingPage } from "./pages/OnboardingPage";
 import { OverviewPage } from "./pages/OverviewPage";
 import { VendorsPage } from "./pages/VendorsPage";
+import { DecisionsPage } from "./pages/DecisionsPage";
 import { InboxPage } from "./pages/InboxPage";
 import { GuestsPage } from "./pages/GuestsPage";
 import { AssistantPage } from "./pages/AssistantPage";
@@ -41,6 +42,7 @@ export default function App() {
                   <Route path="/new" element={<OnboardingPage />} />
                   <Route path="/w/:weddingId" element={<WeddingLayout />}>
                     <Route index element={<OverviewPage />} />
+                    <Route path="decisions" element={<DecisionsPage />} />
                     <Route path="vendors" element={<VendorsPage />} />
                     <Route path="vendors/:slotId" element={<VendorsPage />} />
                     <Route path="inbox" element={<InboxPage />} />

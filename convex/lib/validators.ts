@@ -138,6 +138,8 @@ export const extractedValidator = v.object({
   deposit: v.optional(v.number()),
   currency: v.optional(v.string()),
   availability: v.optional(v.string()),
+  /** Whether they said they are free on the couple's actual dates. */
+  availableOnDates: v.optional(v.union(v.literal("yes"), v.literal("no"), v.literal("unclear"))),
   includes: v.array(v.string()),
   excludes: v.array(v.string()),
   deadline: v.optional(v.string()),

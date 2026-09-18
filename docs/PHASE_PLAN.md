@@ -340,6 +340,12 @@ Where each technology is used:
 
 **Verify independently:** with three test vendors, reply from three different email accounts with different prices and one "not available". Check the dashboard shows three statuses correctly, the right cheapest quote, and the unavailable vendor marked, within a minute of each reply.
 
+**Done, 18 September 2026.** A "Decisions" screen sits between Vendors and Inbox. Four figures across the top — asked, replied (with how quickly people answer), quotes in, and booked — then one table per need: where each vendor stands, whether they are free on the couple's actual dates, their price against that need's budget with the deposit, what is and is not included, anything worth watching, and Book or Pass on every row. It is one Convex query, so a reply that lands while the couple is reading moves the board under them.
+
+Two things had to change underneath. Replies now carry a structured `availableOnDates` — yes, no or unclear, judged against the couple's real dates — instead of only a sentence of free text, so a comparison table can hold a column for it. And the board reports **booked** money rather than `budgetLines.committed`, which tracks the latest quote until something is booked: showing "$2,400 committed · 0 booked" was a lie the first render made obvious. Where nothing is booked it says what the cheapest quotes would come to instead.
+
+**Measured end to end.** Three replies were sent from AgentMail to the three test vendors' threads: a $1,850 quote free on both dates, a refusal that named the clash ("already booked on 15 February"), and a $2,400 quote free on both. All three routed as `vendor_reply` and were read into the board inside a minute. It showed Quoted / Quoted / They passed, marked the $1,850 as cheapest, marked the third vendor "No" with its reason, and pulled out both deposits ($462 and a non-refundable $1,200) and the red flags. Booking the cheapest from the board moved the slot, the thread and the budget line together — committed $1,850 against $949 planned — and logged it.
+
 ## Revision 2, 18 September 2026: the app redesign and detailed onboarding
 
 Reviewing the live app, three problems with the signed-in screens:
