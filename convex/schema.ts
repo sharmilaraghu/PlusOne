@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { authTables } from "@convex-dev/auth/server";
 import { v } from "convex/values";
 import {
+  styleFormality,
   activityRefsValidator,
   activityType,
   attachmentValidator,
@@ -45,6 +46,10 @@ export const weddingFields = {
   template: cultureTemplate,
   styleSummary: v.optional(v.string()),
   inspirationUrl: v.optional(v.string()),
+  /** How the couple describe the feel they want; shapes vendor searches and email tone. */
+  styleVibes: v.optional(v.array(v.string())),
+  stylePalette: v.optional(v.string()),
+  styleFormality: v.optional(styleFormality),
   inboxId: v.optional(v.string()),
   inboxAddress: v.optional(v.string()),
   createdBy: v.id("users"),

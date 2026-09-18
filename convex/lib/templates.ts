@@ -91,9 +91,37 @@ export function defaultSlotsFor(template: CultureTemplate): TemplateSlot[] {
 }
 
 /** Spread N events across [startDate..endDate] by day index. */
+/**
+ * One function per day where they fit, so a five-function celebration over three
+ * days no longer lands two functions on the same date by accident. When there are
+ * more functions than days, the extras share the last day.
+ */
 export function spreadDayIndexes(count: number, totalDays: number): number[] {
   if (count <= 1) return [0];
-  return Array.from({ length: count }, (_, i) => Math.round((i * totalDays) / (count - 1)));
+  if (count <= totalDays + 1) return Array.from({ length: count }, (_, i) => i);
+  return Array.from({ length: count }, (_, i) => Math.min(totalDays, i));
+}
+
+/**
+ * Splits one event's budget across the vendor needs that serve it, so every
+ * need's budget adds up to its events' budgets and to the wedding total.
+ * Without this, event budgets and slot budgets were two independent guesses.
+ */
+export function allocateSlotBudgets(
+  eventBudgets: number[],
+  slots: { pct: number; eventIndexes: number[] }[],
+): number[] {
+  const alloc = slots.map(() => 0);
+  eventBudgets.forEach((budget, eventIndex) => {
+    const serving = slots
+      .map((slot, slotIndex) => ({ slotIndex, pct: slot.pct, serves: slot.eventIndexes.includes(eventIndex) }))
+      .filter((x) => x.serves);
+    const totalPct = serving.reduce((sum, x) => sum + x.pct, 0);
+    if (serving.length === 0 || totalPct <= 0) return;
+    const shares = splitByWeights(budget, serving.map((x) => x.pct));
+    serving.forEach((x, i) => { alloc[x.slotIndex] += shares[i]; });
+  });
+  return alloc;
 }
 
 /** Split `total` by weights into whole numbers that sum exactly to `total`. */

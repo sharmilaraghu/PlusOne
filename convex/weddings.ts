@@ -7,12 +7,13 @@ import { eventDoc, weddingDoc } from "./lib/docs";
 import {
   EVENT_COLORS,
   TEMPLATE_EVENTS,
+  allocateSlotBudgets,
   defaultSlotsFor,
   spreadDayIndexes,
   splitByWeights,
 } from "./lib/templates";
 import { addDays, daysBetween } from "./lib/text";
-import { cultureTemplate, role } from "./lib/validators";
+import { cultureTemplate, styleFormality, role } from "./lib/validators";
 import { workflow } from "./workflows";
 
 export const listMine = query({
@@ -118,8 +119,24 @@ export const create = mutation({
     totalBudget: v.number(),
     template: cultureTemplate,
     inspirationUrl: v.optional(v.string()),
-    customEvents: v.optional(
-      v.array(v.object({ name: v.string(), dayIndex: v.number(), date: v.string() })),
+    styleVibes: v.optional(v.array(v.string())),
+    stylePalette: v.optional(v.string()),
+    styleFormality: v.optional(styleFormality),
+    /**
+     * The couple's own functions, honoured for every tradition. Omit to take the
+     * tradition's defaults. `budget` is a share of the total, not an amount: the
+     * shares are normalised so they always add up to the wedding's budget.
+     */
+    events: v.optional(
+      v.array(
+        v.object({
+          name: v.string(),
+          date: v.string(),
+          dayIndex: v.optional(v.number()),
+          guestCount: v.number(),
+          budget: v.number(),
+        }),
+      ),
     ),
   },
   returns: v.id("weddings"),
@@ -149,6 +166,9 @@ export const create = mutation({
       totalBudget: args.totalBudget,
       template: args.template,
       inspirationUrl: args.inspirationUrl,
+      styleVibes: args.styleVibes?.filter((t) => t.trim()).slice(0, 12),
+      stylePalette: args.stylePalette?.trim() || undefined,
+      styleFormality: args.styleFormality,
       createdBy: userId,
     });
     await ctx.db.insert("members", { weddingId, userId, role: "owner" });
@@ -156,14 +176,23 @@ export const create = mutation({
     // Events from the template (or the couple's own list for "custom").
     const totalDays = daysBetween(args.startDate, args.endDate);
     let plan: { name: string; dayIndex: number; date: string; weight: number; guestCount: number; description?: string }[];
-    if (args.template === "custom" && args.customEvents && args.customEvents.length > 0) {
-      plan = args.customEvents.slice(0, 20).map((e) => ({
-        name: e.name.trim(),
-        dayIndex: Math.max(0, Math.min(totalDays, Math.floor(e.dayIndex))),
-        date: e.date,
-        weight: 1,
-        guestCount: 100,
-      }));
+    if (args.events && args.events.length > 0) {
+      plan = args.events.slice(0, 20).map((e) => {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(e.date)) throw new ConvexError("Each function needs a date as YYYY-MM-DD.");
+        if (!Number.isFinite(e.guestCount) || e.guestCount < 0) throw new ConvexError("Guest counts must be zero or more.");
+        if (!Number.isFinite(e.budget) || e.budget < 0) throw new ConvexError("Function budgets must be zero or more.");
+        const dayIndex = e.dayIndex ?? daysBetween(args.startDate, e.date);
+        return {
+          name: e.name.trim() || "Celebration",
+          dayIndex: Math.max(0, Math.min(totalDays, Math.floor(dayIndex))),
+          date: e.date,
+          // Budgets are weights here, so a couple's split is honoured exactly and
+          // still adds up to the total even when their numbers do not.
+          weight: e.budget,
+          guestCount: Math.floor(e.guestCount),
+        };
+      });
+      if (plan.every((e) => e.weight === 0)) plan = plan.map((e) => ({ ...e, weight: 1 }));
     } else {
       const tpl = TEMPLATE_EVENTS[args.template];
       const dayIndexes = spreadDayIndexes(tpl.length, totalDays);
@@ -193,16 +222,25 @@ export const create = mutation({
       eventNames.push(e.name);
     }
 
-    // Default vendor slots + one planned budget line per slot.
-    for (const slot of defaultSlotsFor(args.template)) {
-      const matched = slot.eventNames
-        ? eventIds.filter((_, i) => slot.eventNames!.includes(eventNames[i]))
-        : eventIds;
-      const slotEventIds = matched.length > 0 ? matched : eventIds;
-      const budget = Math.round((args.totalBudget * slot.pct) / 100);
+    // Default vendor needs, with their budgets drawn from the functions they serve
+    // so needs, functions and the wedding total all add up to the same number.
+    const templateSlots = defaultSlotsFor(args.template);
+    const slotPlans = templateSlots.map((slot) => {
+      const matchedIndexes = slot.eventNames
+        ? eventNames.map((n, i) => (slot.eventNames!.includes(n) ? i : -1)).filter((i) => i >= 0)
+        : eventIds.map((_, i) => i);
+      const eventIndexes = matchedIndexes.length > 0 ? matchedIndexes : eventIds.map((_, i) => i);
+      return { pct: slot.pct, eventIndexes };
+    });
+    const slotBudgets = allocateSlotBudgets(eventBudgets, slotPlans);
+
+    for (let i = 0; i < templateSlots.length; i++) {
+      const slot = templateSlots[i];
+      const { eventIndexes } = slotPlans[i];
+      const budget = slotBudgets[i];
       const slotId = await ctx.db.insert("vendorSlots", {
         weddingId,
-        eventIds: slotEventIds,
+        eventIds: eventIndexes.map((idx) => eventIds[idx]),
         category: slot.category,
         title: slot.title,
         budget,
@@ -211,6 +249,9 @@ export const create = mutation({
       await ctx.db.insert("budgetLines", {
         weddingId,
         slotId,
+        // A need that serves exactly one function is attributed to it, instead of
+        // being split evenly across guesses when the budget is summarised.
+        eventId: eventIndexes.length === 1 ? eventIds[eventIndexes[0]] : undefined,
         label: slot.title,
         planned: budget,
         committed: 0,
@@ -246,6 +287,9 @@ export const update = mutation({
       totalBudget: v.optional(v.number()),
       styleSummary: v.optional(v.string()),
       inspirationUrl: v.optional(v.string()),
+      styleVibes: v.optional(v.array(v.string())),
+      stylePalette: v.optional(v.string()),
+      styleFormality: v.optional(styleFormality),
     }),
   },
   returns: v.null(),

@@ -212,3 +212,7 @@ export const vendorReviewValidator = v.object({
   ms: v.number(),
 });
 export type VendorReview = Infer<typeof vendorReviewValidator>;
+
+/** How formal the celebration is; sets the tone of the emails PlusOne writes. */
+export const styleFormality = v.union(v.literal("relaxed"), v.literal("smart"), v.literal("formal"));
+export type StyleFormality = "relaxed" | "smart" | "formal";
