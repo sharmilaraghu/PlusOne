@@ -3,9 +3,9 @@
   "model": "gpt-image-2",
   "aspect_ratio": "1:1",
   "resolution": "1K",
-  "quality": "medium",
-  "reference": ".impeccable/build/crops/thumb-2.png",
-  "prompt": "A small circular photograph centered on a flat plain warm ivory (#F8F6F3) square canvas. The circle's diameter is about 75 percent of the canvas width, leaving a clear even ivory margin of about 12 percent on every side (top, bottom, left and right). Inside the circle: a close-up of a terracotta-brown henna design on a hand, warm soft tones, soft focus, low detail, calm, matching the provided reference crop. Everything outside the circle is plain ivory. No border ring, no shadow, no text, no watermark.",
-  "generation_id": "UdtyTis1W1RVJUFFSVd9",
-  "created": "2026-09-17T15:40:40.369Z"
+  "quality": "high",
+  "reference": null,
+  "prompt": "A small circular photograph centred on a flat plain warm ivory (#F8F6F3) square canvas. The circle's diameter is about 75 percent of the canvas width, with generous even ivory margin on all sides and no border, ring or shadow.\nInside the circle: a close, softly focused photograph of a bridal bouquet of garden roses and ranunculus in blush, cream and deep wine, with eucalyptus and trailing ribbon, resting on pale linen in soft daylight.\nGentle depth of field, warm natural light, muted editorial colour. No text, no lettering, no watermark, no people.\n",
+  "generation_id": "AwCV0FAM3uvNVpFYFm1a",
+  "created": "2026-09-18T13:30:58.630Z"
 }

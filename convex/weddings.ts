@@ -398,3 +398,52 @@ export const setStyleSummary = internalMutation({
     return null;
   },
 });
+
+/**
+ * Which AgentMail inboxes this deployment is holding, and whether each one is
+ * still carrying real correspondence.
+ *
+ * The plan allows only a handful of inboxes, so `agentmail.createInbox` has to
+ * decide which one to give up when a new couple needs one. An inbox that has
+ * actually written to or heard from a vendor is never a candidate; an inbox
+ * belonging to a wedding that never got started is.
+ */
+export const inboxUsage = internalQuery({
+  args: {},
+  returns: v.array(
+    v.object({
+      weddingId: v.id("weddings"),
+      inboxId: v.string(),
+      createdAt: v.number(),
+      hasTraffic: v.boolean(),
+    }),
+  ),
+  handler: async (ctx) => {
+    const weddings = await ctx.db.query("weddings").take(500);
+    const out = [];
+    for (const wedding of weddings) {
+      if (!wedding.inboxId) continue;
+      const threads = await ctx.db
+        .query("threads")
+        .withIndex("by_weddingId", (q) => q.eq("weddingId", wedding._id))
+        .take(50);
+      out.push({
+        weddingId: wedding._id,
+        inboxId: wedding.inboxId,
+        createdAt: wedding._creationTime,
+        hasTraffic: threads.some((t) => t.lastOutboundAt !== undefined || t.lastInboundAt !== undefined),
+      });
+    }
+    return out;
+  },
+});
+
+/** Forget an inbox that has been handed to another couple, so nothing points at it. */
+export const clearInbox = internalMutation({
+  args: { weddingId: v.id("weddings") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.weddingId, { inboxId: undefined, inboxAddress: undefined });
+    return null;
+  },
+});

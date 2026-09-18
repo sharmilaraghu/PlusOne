@@ -164,9 +164,9 @@ A warm, low-chroma paper palette with one saturated ink.
 - **Label** (400, 0.8 to 0.95rem): table cells, pill text, meta lines, "Example" disclosures, footer.
 
 ### Named Rules
-**The One Italic Rule.** Each headline carries at most one italic Caslon phrase, in wine (the hero's is also set at 0.88em). Never italicize body text for emphasis.
+**The One Italic Rule.** Each headline carries at most one italic Garamond phrase, in wine (the hero's is also set at 0.88em). Never italicize body text for emphasis.
 
-**The Serif Speaks, Sans Works Rule.** Serif is for headings, names and quoted words; buttons, tables, pills and labels are always Assistant.
+**The Serif Speaks, Sans Works Rule.** Serif is for headings, names and quoted words; buttons, tables, pills and labels are always Work Sans.
 
 ## Layout
 
@@ -196,7 +196,7 @@ Everything interactive is a full pill (999px). Containers are gently rounded: 12
 
 ### Buttons
 - **Shape:** full pill (999px); 52px tall in sections, 46px in the tour, 50px full-width on phones.
-- **Primary:** wine fill, ivory text, Assistant 400.
+- **Primary:** wine fill, ivory text, Work Sans 400.
 - **Outline:** transparent with a 1.5px inset wine stroke and wine text.
 - **Hover / Focus:** primary deepens to wine-deep; outline gains a pale blush fill; 200ms ease. Focus is a 2px wine outline offset 3px, following the pill shape.
 - **Disabled:** 35% opacity.
@@ -214,10 +214,10 @@ Everything interactive is a full pill (999px). Containers are gently rounded: 12
 - Every product illustration card carries a small "Example" disclosure above its top-right corner.
 
 ### Navigation
-Thin top bar on ivory: Caslon wordmark "Plus*One*" in wine (italic "One"), centered text links in ink turning wine on hover, outline Sign in pill and filled Start planning pill, a full-width hairline rule beneath. On phones the links collapse away, Sign in becomes a wine text link, and the rule becomes the bar's bottom border.
+Thin top bar on ivory: Garamond wordmark "Plus*One*" in wine (italic "One"), centered text links in ink turning wine on hover, outline Sign in pill and filled Start planning pill, a full-width hairline rule beneath. On phones the links collapse away, Sign in becomes a wine text link, and the rule becomes the bar's bottom border.
 
 ### App Preview (signature)
-A cream window with a hairline-bordered sidebar (Caslon logo, 1.5px icon rows, active row in pale blush with wine icon) and a main pane: serif title, a soft-paper vendor table (round thumbnail, name, day, status pill, right-aligned price) and a budget card with a pill track filling in wine. A floating notification card (round blush icon ground with a wine unread dot) announces the new reply.
+A cream window with a hairline-bordered sidebar (Garamond logo, 1.5px icon rows, active row in pale blush with wine icon) and a main pane: serif title, a soft-paper vendor table (round thumbnail, name, day, status pill, right-aligned price) and a budget card with a pill track filling in wine. A floating notification card (round blush icon ground with a wine unread dot) announces the new reply.
 
 **Signature motion: the reply lands.** The notification rises 14px and fades in (700ms), the row's pill turns to Quote received with a small scale pop, the row glows pale blush once (1600ms), and the budget bar grows from 90% (1100ms), all on `cubic-bezier(0.16, 1, 0.3, 1)`. Under reduced motion the final state is shown without transitions.
 

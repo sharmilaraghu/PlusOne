@@ -4,7 +4,7 @@ import { AgentMailClient } from "agentmail";
 import { v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalAction } from "./_generated/server";
+import { internalAction, type ActionCtx } from "./_generated/server";
 import { extractEmail, slugify } from "./lib/text";
 import { workflow } from "./workflows";
 
@@ -15,6 +15,57 @@ const MAX_ATTACHMENT_BYTES = 10 * 1024 * 1024;
 
 function fallbackInbox(): string | undefined {
   return process.env.AGENTMAIL_FALLBACK_INBOX_ID || undefined;
+}
+
+/**
+ * How many inboxes this AgentMail plan allows. Every wedding is meant to get its own
+ * address, so on a small plan the only way to keep that promise for the next couple
+ * is to give up an inbox nobody is using.
+ */
+const INBOX_LIMIT = Number(process.env.AGENTMAIL_INBOX_LIMIT ?? 3);
+
+/**
+ * Free a slot, if one can be freed honestly.
+ *
+ * Nothing carrying real correspondence is ever deleted: an inbox is only a candidate
+ * when its wedding has never written to or heard from a vendor, and the fallback inbox
+ * is never touched. The wedding that gives one up is told, so the app stops pointing at
+ * an address that no longer exists.
+ */
+async function makeRoomForInbox(ctx: ActionCtx): Promise<void> {
+  let inboxes: Array<{ inboxId?: string; createdAt?: unknown }> = [];
+  try {
+    const res = (await am.inboxes.list()) as { inboxes?: unknown; data?: unknown };
+    inboxes = ((res.inboxes ?? res.data ?? []) as Array<{ inboxId?: string; createdAt?: unknown }>);
+  } catch (err) {
+    console.warn("agentmail.inboxes.list failed", err instanceof Error ? err.message : err);
+    return; // let the create attempt decide
+  }
+  if (inboxes.length < INBOX_LIMIT) return;
+
+  const reserved = fallbackInbox();
+  const usage = await ctx.runQuery(internal.weddings.inboxUsage, {});
+  const byInbox = new Map(usage.map((u) => [u.inboxId, u]));
+
+  // Oldest first, so the inbox given up is always the most stale one.
+  const candidates = inboxes
+    .filter((i): i is { inboxId: string; createdAt?: unknown } => Boolean(i.inboxId) && i.inboxId !== reserved)
+    .filter((i) => byInbox.get(i.inboxId)?.hasTraffic !== true)
+    .sort((a, b) => String(a.createdAt ?? "").localeCompare(String(b.createdAt ?? "")));
+
+  let held = inboxes.length;
+  for (const candidate of candidates) {
+    if (held < INBOX_LIMIT) break;
+    try {
+      await am.inboxes.delete(candidate.inboxId);
+      const owner = byInbox.get(candidate.inboxId);
+      if (owner) await ctx.runMutation(internal.weddings.clearInbox, { weddingId: owner.weddingId });
+      held -= 1;
+      console.log("released an idle AgentMail inbox", candidate.inboxId);
+    } catch (err) {
+      console.warn("could not release inbox", candidate.inboxId, err instanceof Error ? err.message : err);
+    }
+  }
 }
 
 // ---- inbox ------------------------------------------------------------------
@@ -28,6 +79,11 @@ export const createInbox = internalAction({
     if (wedding.inboxId) return wedding.inboxId; // workflow replay / retry safety
     const shortId = wedding._id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, "");
     const username = `${slugify(wedding.partnerA)}-and-${slugify(wedding.partnerB)}-${shortId}`.replace(/-+/g, "-").slice(0, 60);
+    // On a small plan the limit is reached quickly, and a couple with no inbox cannot be
+    // written to at all — so make room before asking, and share the fallback rather than
+    // fail if there is genuinely nothing to give up.
+    await makeRoomForInbox(ctx);
+
     let inboxId: string | undefined;
     let inboxAddress: string | undefined;
     try {

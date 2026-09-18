@@ -22,12 +22,12 @@ Success for the couple: fewer hours on admin, decisions made with real prices si
 
 ## Positioning
 
-PlusOne does the emailing. Other planners give couples checklists and directories; PlusOne gives each wedding a real inbox, writes and sends the vendor inquiries, reads what comes back, extracts the quote into the budget, and follows up on its own. Its vendor research reads vendor websites directly, so every price links to the page it came from rather than a paid directory listing. The plan is multi-event by design (Mehndi, Sangeet, Nikah, Walima, Anand Karaj, rehearsal dinner, and custom days), for any culture, not a single-day template.
+PlusOne does the emailing. Other planners give couples checklists and directories; PlusOne gives each wedding a real inbox, writes and sends the vendor inquiries, reads what comes back, extracts the quote into the budget, and follows up on its own. Its vendor research reads vendor websites directly, so every price links to the page it came from rather than a paid directory listing. The plan is multi-event by design (rehearsal dinner, ceremony, reception, plus Mehndi, Sangeet, Nikah, Walima, Anand Karaj and custom days), for any culture, not a single-day template.
 
 ## Operating Context
 
 - A wedding is a set of events across one or more days. Each event has a date, guest count, budget and colour. Vendor needs ("slots") attach to one or more events.
-- Cultural templates seed the events and slots: Hindu, Muslim, Sikh, Western, Jewish, Fusion, Custom.
+- Cultural templates seed the events and slots, Western first: Western, Jewish, Hindu, Muslim, Sikh, Fusion, Custom.
 - Each wedding gets its own email address (AgentMail inbox). Vendor replies, guest RSVPs and forwarded contracts all arrive there and are routed by thread or sender.
 - Vendor research is a background job: a plain-language request becomes web searches, vendor sites are read, and cards appear one by one with prices, packages, highlights and source links.
 - Outreach has an approval gate: the couple reviews personalised drafts before anything is sent. Follow-ups after silence are automatic, capped at three.

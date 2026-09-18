@@ -20,14 +20,14 @@ import { Icon } from "../components/ui/Icon";
 /** Named, so the couple can see where they are and how much is left. */
 const STEPS = ["The couple", "The days", "Your guests", "The budget", "Who you need", "The feel"];
 
-/** One illustration per step: ink line drawings of the couple, then scenes. */
+/** One illustration per step: ink line drawings first, then scenes of the day. */
 const PLATES = [
-  { src: "/plate-1.jpg", alt: "A line drawing of a couple laughing together, garlands around their necks" },
-  { src: "/plate-2.jpg", alt: "A line drawing of a mandap with hanging flower strands" },
-  { src: "/plate-3.jpg", alt: "Guests along one long table at dusk, someone standing to give a toast" },
-  { src: "/plate-4.jpg", alt: "A reception hall being finished before the guests arrive" },
-  { src: "/plate-5.jpg", alt: "A photographer, a florist, two musicians and a caterer at work" },
-  { src: "/plate-6.jpg", alt: "Guests dancing under strings of warm lights" },
+  { src: "/plate-1.jpg", alt: "A line drawing of a couple laughing together, the bride holding her bouquet" },
+  { src: "/plate-2.jpg", alt: "A line drawing of a flower-covered ceremony arch with chairs set out in rows" },
+  { src: "/plate-3.jpg", alt: "Guests along one long table at dusk, someone standing to give a speech" },
+  { src: "/plate-4.jpg", alt: "A reception room being finished an hour before the guests arrive" },
+  { src: "/plate-5.jpg", alt: "A photographer, a florist, a string quartet and a caterer at work" },
+  { src: "/plate-6.jpg", alt: "The first dance under strings of warm lights, guests circled around" },
 ];
 
 const FEEL_STEP = 5;
@@ -48,7 +48,7 @@ export function OnboardingPage() {
     city: "",
     area: "",
     country: "",
-    template: "hindu" as CultureTemplate,
+    template: "western" as CultureTemplate,
     currency: "USD",
     totalBudget: 40000,
     inspirationUrl: "",
@@ -159,7 +159,7 @@ export function OnboardingPage() {
   }
 
   return (
-    <main id="main" className="mx-auto grid w-full max-w-[86rem] gap-8 px-5 py-8 lg:grid-cols-[minmax(0,30rem)_minmax(0,1fr)] lg:py-10">
+    <main id="main" className="mx-auto grid w-full max-w-[86rem] gap-8 px-5 py-8 lg:grid-cols-[minmax(17rem,26rem)_minmax(0,1fr)] lg:py-10">
       {/* The photograph carries the feeling; the form carries the work. */}
       <figure className="relative hidden overflow-hidden rounded-[20px] bg-cream lg:block">
         <img
@@ -230,7 +230,7 @@ export function OnboardingPage() {
               </span>
             </label>
             <Field label="City" id="city"><input id="city" className="input" value={form.city} onChange={(e) => set("city", e.target.value)} placeholder="Austin" /></Field>
-            <Field label="Neighbourhood" id="area" hint="Optional. Narrows vendor searches, e.g. Bandra West.">
+            <Field label="Neighbourhood" id="area" hint="Optional. Narrows vendor searches, e.g. Beacon Hill.">
               <input id="area" className="input" value={form.area} onChange={(e) => set("area", e.target.value)} placeholder="East Austin" />
             </Field>
             <Field label="Country" id="country"><input id="country" className="input" value={form.country} onChange={(e) => set("country", e.target.value)} placeholder="United States" /></Field>

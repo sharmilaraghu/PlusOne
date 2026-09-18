@@ -5,11 +5,11 @@ import { addDaysIso, daysBetweenIso } from "../../lib/format";
 export type FunctionRow = { key: string; name: string; date: string; guestCount: number; budget: number };
 
 export const TRADITIONS: { id: CultureTemplate; name: string; days: string; blurb: string }[] = [
+  { id: "western", name: "Western", days: "Rehearsal dinner · Ceremony · Reception", blurb: "The classic wedding weekend, church or garden." },
+  { id: "jewish", name: "Jewish", days: "Shabbat dinner · Chuppah & reception · Sheva Brachot", blurb: "From Friday night through the week of blessings." },
   { id: "hindu", name: "Hindu", days: "Mehndi · Sangeet · Haldi · Ceremony · Reception", blurb: "Gujarati, Punjabi, South Indian, Bengali and more." },
   { id: "muslim", name: "Muslim", days: "Mehndi · Nikah · Walima", blurb: "Officiants and vendors who know Islamic traditions." },
   { id: "sikh", name: "Sikh", days: "Mehndi · Sangeet · Anand Karaj · Reception", blurb: "Gurdwara ceremony plus the celebrations around it." },
-  { id: "western", name: "Western", days: "Rehearsal dinner · Ceremony · Reception", blurb: "Classic three-part weekend." },
-  { id: "jewish", name: "Jewish", days: "Shabbat dinner · Chuppah & reception · Sheva Brachot", blurb: "From Friday night through the week of blessings." },
   { id: "fusion", name: "Fusion", days: "Welcome party · Ceremony 1 · Ceremony 2 · Reception", blurb: "Two families, two traditions, one plan." },
   { id: "custom", name: "Custom", days: "Name your own days", blurb: "Start from one ceremony and add as many as you like." },
 ];
