@@ -127,9 +127,28 @@ export const sendOutbound = internalAction({
       if (!inboxId) throw new Error("No AgentMail inbox for this wedding yet");
       if (!message.toAddress) throw new Error("Recipient has no email address");
       const replyTo = message.kind === "inquiry" ? undefined : thread?.lastInboundMessageId;
-      const result = replyTo
-        ? await am.inboxes.messages.reply(inboxId, replyTo, { text: message.bodyText })
-        : await am.inboxes.messages.send(inboxId, { to: [message.toAddress], subject: message.subject, text: message.bodyText });
+      const fresh = () =>
+        am.inboxes.messages.send(inboxId, { to: [message.toAddress], subject: message.subject, text: message.bodyText });
+
+      // Replying keeps the conversation in one place, but the message being replied to
+      // belongs to whichever inbox held it at the time. A wedding that has since been
+      // given a different address cannot see it, and the reply 404s. Better a nudge in
+      // a new email than a nudge that never arrives.
+      let result;
+      if (replyTo) {
+        try {
+          result = await am.inboxes.messages.reply(inboxId, replyTo, { text: message.bodyText });
+        } catch (replyErr) {
+          const notVisible = /not_found|NotFoundError|404/.test(
+            replyErr instanceof Error ? replyErr.message : String(replyErr),
+          );
+          if (!notVisible) throw replyErr;
+          console.warn("original message not visible to this inbox; sending a fresh one instead");
+          result = await fresh();
+        }
+      } else {
+        result = await fresh();
+      }
       const sentAt = Date.now();
       await ctx.runMutation(internal.messages.markSent, {
         messageId: args.messageId,

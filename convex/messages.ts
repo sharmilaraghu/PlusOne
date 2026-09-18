@@ -39,6 +39,18 @@ export const createOutboundDraft = internalMutation({
       if (existing) {
         if (existing.status === "draft") {
           await ctx.db.patch(existing._id, { subject, bodyText, toAddress: args.toAddress, fromAddress: args.fromAddress });
+        } else if (existing.status === "failed") {
+          // The key is derived from a counter that only advances on a successful send, so
+          // a failed message would otherwise hold its key forever and every retry would
+          // quietly reuse the corpse. Rewrite it and let it be queued again.
+          await ctx.db.patch(existing._id, {
+            subject,
+            bodyText,
+            toAddress: args.toAddress,
+            fromAddress: args.fromAddress,
+            status: args.status,
+            errorMessage: undefined,
+          });
         }
         return existing._id;
       }
