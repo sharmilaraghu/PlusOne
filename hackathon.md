@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-18T23:20:00Z
+- **Last updated:** 2026-09-19T04:30:28Z
 
 ## Log
 
@@ -215,3 +215,26 @@ Only inboxes a deployment created itself and knows are idle are candidates now; 
 it does not recognise is left alone, and the new wedding shares the fallback inbox
 (`convex/agentmail.ts`). Verified on the live account with the cap full: the dev
 deployment asked for an inbox, left production's untouched, and fell back. Deployed.
+
+### 2026-09-19 - working tree
+PlusOne now carries vendor conversations itself instead of handing every reply to the
+couple. A vendor question is answered from the wedding's own facts, turned into one plain
+question for the couple, or left alone (thank-yous, out-of-office). The couple answers in
+the Inbox and PlusOne writes and sends the email. An over-budget quote gets one polite ask
+for something closer, and booking a vendor can confirm with them and thank the others. It
+never agrees to pay, sign or accept a price, hands back after three automatic replies, and
+review mode holds its emails as drafts (`convex/agent.ts`, `convex/workflows.ts`,
+`convex/openai.ts`, `src/pages/InboxPage.tsx`, `src/components/BookButton.tsx`). The
+decision prompt was checked alone on ten sample vendor emails, all routed as expected; the
+full send path was not run on dev, because its vendor records carry real businesses' addresses.
+
+Sign-in gained Google alongside email and password, and the server now rejects anything
+that is not an email address (`convex/auth.ts`). Onboarding saves as the couple goes to a
+per-user draft table, so it resumes on any device and is cleared when the wedding is created
+(`convex/drafts.ts`). The Feel step is optional and takes inspiration as words, a link or up
+to six uploaded pictures, which the style summary reads (file storage, `convex/weddings.ts`).
+The budget step splits equally, by percentage sliders or by amount, and every split now rounds
+to clean numbers (`convex/lib/templates.ts`). Vendors gained one button that researches every
+unresearched need, staggered with scheduled functions (`convex/research.ts`). Mailbox
+addresses are no longer shown anywhere the couple looks. Pushed to the dev deployment only;
+not yet committed or deployed.
