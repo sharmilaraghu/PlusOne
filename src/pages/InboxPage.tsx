@@ -6,6 +6,7 @@ import type { Id } from "../../convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { money, statusLabel, timeAgo } from "../lib/format";
 import { BookButton } from "../components/BookButton";
+import { Icon } from "../components/ui/Icon";
 import { EmptyState } from "../components/ui/EmptyState";
 import { usePrivacy } from "../lib/privacy";
 
@@ -217,7 +218,8 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
 
   if (data === undefined) return <p className="text-muted">Loading…</p>;
   if (data === null) return <p className="text-muted">This conversation is gone.</p>;
-  const { thread, vendor, messages, quotes, slot } = data;
+  const { thread, vendor, messages, quotes, slot, files } = data;
+  const urlOf = (storageId: string) => files.find((f) => f.storageId === storageId)?.url;
   const latestQuote = quotes[0];
 
   return (
@@ -295,7 +297,9 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
 
       {latestQuote && (
         <section className="card p-4" aria-label="Extracted quote">
-          <p className="text-xs uppercase tracking-wide text-muted">Extracted from their reply</p>
+          <p className="text-xs uppercase tracking-wide text-muted">
+            {latestQuote.fromAttachment ? `Read from their attached PDF, ${latestQuote.fromAttachment}` : "Extracted from their reply"}
+          </p>
           <div className="mt-2 flex flex-wrap gap-2 text-sm">
             <span className="chip-ok">Total {money(latestQuote.total, latestQuote.currency || currency)}</span>
             {latestQuote.deposit ? <span className="chip-quiet">Deposit {money(latestQuote.deposit, latestQuote.currency || currency)}</span> : null}
@@ -326,10 +330,27 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
             <p className="mt-2 font-medium">{m.subject}</p>
             <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed">{privacy.text(m.bodyText)}</pre>
             {m.attachments.length > 0 && (
-              <ul className="mt-2 flex flex-wrap gap-2 text-xs">
-                {m.attachments.map((a, i) => (
-                  <li key={i} className="chip-quiet">{a.filename}</li>
-                ))}
+              <ul className="mt-3 flex flex-wrap gap-2 text-xs">
+                {m.attachments.map((a, i) => {
+                  const url = urlOf(a.storageId);
+                  const isPdf = a.contentType.includes("pdf") || a.filename.toLowerCase().endsWith(".pdf");
+                  return (
+                    <li key={i}>
+                      <a
+                        href={url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex items-center gap-2 rounded-[10px] border border-line bg-cream px-3 py-2 text-ink transition hover:border-accent hover:bg-accent-soft"
+                      >
+                        <span className="rounded bg-accent px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-paper">
+                          {isPdf ? "PDF" : "File"}
+                        </span>
+                        <span className="max-w-[16rem] truncate">{a.filename}</span>
+                        <Icon name="external" size={13} className="text-muted" />
+                      </a>
+                    </li>
+                  );
+                })}
               </ul>
             )}
             {m.errorMessage && <p className="mt-2 text-xs text-bad">This one didn't send. Try again, or email them yourself.</p>}

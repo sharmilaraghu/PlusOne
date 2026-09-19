@@ -647,6 +647,79 @@ const replySchema = z.object({
   deadline: z.string().nullable().describe("any quote validity / hold deadline mentioned"),
   summary: z.string().describe("1-2 sentence summary for the couple"),
   redFlags: z.array(z.string()).max(6).describe("non-refundable deposits, vague scope, hidden fees, pressure tactics"),
+  attachmentKind: z
+    .enum(["none", "quote", "contract", "other"])
+    .describe(
+      "what the attached PDF is: 'quote' for a quote, estimate, proposal, price list or invoice; 'contract' for an " +
+        "agreement to sign; 'other' for brochures, menus or portfolios; 'none' when nothing is attached",
+    ),
+  pricesFromAttachment: z.boolean().describe("true when the total came from the attached PDF rather than the email text"),
+});
+
+type ReplyReading = z.infer<typeof replySchema>;
+
+/** Read a vendor reply, and its PDF when there is one: quotes often live in the attachment, not the email. */
+async function readVendorReply(args: {
+  wedding: Doc<"weddings">;
+  slot: Doc<"vendorSlots"> | null;
+  vendorName: string;
+  subject: string;
+  body: string;
+  pdf?: { bytes: ArrayBuffer; filename: string };
+}): Promise<ReplyReading> {
+  const { wedding, slot } = args;
+  const text =
+    `A wedding vendor replied to a couple's inquiry. Classify the reply and extract pricing details. ` +
+    `The couple's dates are ${wedding.startDate} to ${wedding.endDate}; say whether this reply confirms those dates. ` +
+    `Couple's currency is ${wedding.currency}; the slot is ${slot?.title ?? "a vendor slot"} with a budget of ` +
+    `${slot ? formatMoney(slot.budget, wedding.currency) : "unknown"}. "quote" = they gave a price, in the email or in the ` +
+    `attachment; "question" = they need information from the couple before quoting; "declined" = unavailable or not ` +
+    `interested; "available" = available but no price yet.\n` +
+    (args.pdf
+      ? `They attached a PDF (${args.pdf.filename}). Read it as part of the reply: vendors often put the whole quote, ` +
+        `package list or terms in the attachment and write only "please see attached" in the email.\n`
+      : "") +
+    `\nFrom: ${args.vendorName}\nSubject: ${args.subject}\n\n${truncate(args.body, PAGE_CHARS)}`;
+  const { object } = await generateObject({
+    model: openai(MODEL_SMART),
+    schema: replySchema,
+    messages: [
+      {
+        role: "user",
+        content: [
+          { type: "text", text },
+          ...(args.pdf ? [{ type: "file" as const, data: args.pdf.bytes, mediaType: "application/pdf", filename: args.pdf.filename }] : []),
+        ],
+      },
+    ],
+  });
+  return object;
+}
+
+/** The same reading on plain inputs, to check the prompt against sample replies and PDFs. */
+export const readVendorReplySample = internalAction({
+  args: {
+    weddingId: v.id("weddings"),
+    vendorName: v.string(),
+    subject: v.string(),
+    body: v.string(),
+    pdfBase64: v.optional(v.string()),
+    filename: v.optional(v.string()),
+  },
+  returns: v.any(),
+  handler: async (ctx, args): Promise<ReplyReading> => {
+    const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
+    if (!context) throw new Error("Wedding not found");
+    const bytes = args.pdfBase64 ? Uint8Array.from(atob(args.pdfBase64), (c) => c.charCodeAt(0)).buffer : undefined;
+    return await readVendorReply({
+      wedding: context.wedding,
+      slot: null,
+      vendorName: args.vendorName,
+      subject: args.subject,
+      body: args.body,
+      pdf: bytes ? { bytes, filename: args.filename ?? "attachment.pdf" } : undefined,
+    });
+  },
 });
 
 /** Classify + extract a vendor reply, then update quote / thread / budget / activity. */
@@ -657,17 +730,25 @@ export const extractReply = internalAction({
     const context = await ctx.runQuery(internal.messages.getContext, { messageId: args.messageId });
     if (!context || !context.thread) return null;
     const { message, wedding, thread, vendor, slot } = context;
-    const { object } = await generateObject({
-      model: openai(MODEL_SMART),
-      schema: replySchema,
-      prompt:
-        `A wedding vendor replied to a couple's inquiry. Classify the reply and extract pricing details. ` +
-        `The couple's dates are ${wedding.startDate} to ${wedding.endDate}; say whether this reply confirms those dates. ` +
-        `Couple's currency is ${wedding.currency}; the slot is ${slot?.title ?? "a vendor slot"} with a budget of ` +
-        `${slot ? formatMoney(slot.budget, wedding.currency) : "unknown"}. "quote" = they gave a price; "question" = they need ` +
-        `information from the couple before quoting; "declined" = unavailable or not interested; "available" = available but no price yet.\n\n` +
-        `From: ${vendor?.name ?? message.fromAddress}\nSubject: ${message.subject}\n\n${truncate(message.bodyText, PAGE_CHARS)}`,
+    // The first PDF is read with the email; a quote often lives only in the attachment.
+    const attached = message.attachments.find((f) => f.contentType.includes("pdf") || f.filename.toLowerCase().endsWith(".pdf"));
+    const blob = attached ? await ctx.storage.get(attached.storageId) : null;
+    const object = await readVendorReply({
+      wedding,
+      slot,
+      vendorName: vendor?.name ?? message.fromAddress,
+      subject: message.subject,
+      body: message.bodyText,
+      pdf: attached && blob ? { bytes: await blob.arrayBuffer(), filename: attached.filename } : undefined,
     });
+    if (attached && object.attachmentKind === "contract") {
+      await ctx.runMutation(internal.inbound.createContractCheck, {
+        weddingId: thread.weddingId,
+        storageId: attached.storageId,
+        filename: attached.filename,
+        vendorId: thread.vendorId,
+      });
+    }
     const extracted = {
       total: nn(object.total),
       deposit: nn(object.deposit),
@@ -696,6 +777,7 @@ export const extractReply = internalAction({
         validUntil: extracted.deadline,
         redFlags: object.redFlags,
         summary: object.summary,
+        fromAttachment: attached && object.pricesFromAttachment ? attached.filename : undefined,
       });
     }
     return { classification: object.classification, total: extracted.total ?? null };

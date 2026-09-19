@@ -1,5 +1,6 @@
 import { agentSentText } from "./agent";
 import { ConvexError, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { clampLimit, logActivity, requireMember } from "./lib/auth";
 import { eventDoc, messageDoc, quoteDoc, threadDoc, vendorDoc, vendorSlotDoc, weddingDoc } from "./lib/docs";
@@ -80,6 +81,8 @@ export const get = query({
       slot: vendorSlotDoc,
       messages: v.array(messageDoc),
       quotes: v.array(quoteDoc),
+      /** Signed links for every attachment on the thread, so a PDF opens in one click. */
+      files: v.array(v.object({ storageId: v.id("_storage"), url: v.string() })),
     }),
     v.null(),
   ),
@@ -99,7 +102,14 @@ export const get = query({
       .withIndex("by_vendorId", (q) => q.eq("vendorId", thread.vendorId))
       .order("desc")
       .take(20);
-    return { thread, vendor, slot, messages, quotes };
+    const files: { storageId: Id<"_storage">; url: string }[] = [];
+    for (const m of messages) {
+      for (const a of m.attachments) {
+        const url = await ctx.storage.getUrl(a.storageId);
+        if (url) files.push({ storageId: a.storageId, url });
+      }
+    }
+    return { thread, vendor, slot, messages, quotes, files };
   },
 });
 

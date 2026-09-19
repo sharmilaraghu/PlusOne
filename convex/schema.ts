@@ -200,6 +200,8 @@ export const messageFields = {
 };
 
 export const quoteFields = {
+  /** The attachment the prices were read from, when they were in a PDF rather than the email. */
+  fromAttachment: v.optional(v.string()),
   weddingId: v.id("weddings"),
   slotId: v.id("vendorSlots"),
   vendorId: v.id("vendors"),

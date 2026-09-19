@@ -346,16 +346,9 @@ export const ingestInbound = internalAction({
             agentmailThreadId: args.threadId,
             receivedAt,
           });
+          // Any PDF is read with the reply itself: a quote's prices come out of it, and
+          // only a real contract goes on to the contract check (openai.extractReply).
           await workflow.start(ctx, internal.workflows.inboundWorkflow, { messageId });
-          const pdf = stored.find((s) => s.contentType.includes("pdf") || s.filename.toLowerCase().endsWith(".pdf"));
-          if (pdf) {
-            await ctx.runMutation(internal.inbound.createContractCheck, {
-              weddingId: thread.weddingId,
-              storageId: pdf.storageId,
-              filename: pdf.filename,
-              vendorId: thread.vendorId,
-            });
-          }
         }
         await ctx.runMutation(internal.inbound.finish, { inboundEventId: args.inboundEventId, routedAs: "vendor_reply", weddingId: thread.weddingId });
         return null;

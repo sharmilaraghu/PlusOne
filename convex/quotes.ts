@@ -73,6 +73,7 @@ export const upsertFromMessage = internalMutation({
     validUntil: v.optional(v.string()),
     redFlags: v.array(v.string()),
     summary: v.string(),
+    fromAttachment: v.optional(v.string()),
   },
   returns: v.union(v.id("quotes"), v.null()),
   handler: async (ctx, args) => {
@@ -100,6 +101,7 @@ export const upsertFromMessage = internalMutation({
       validUntil: args.validUntil,
       redFlags: args.redFlags.slice(0, 10),
       summary: args.summary,
+      ...(args.fromAttachment ? { fromAttachment: args.fromAttachment } : {}),
     };
     // One quote per message: re-running extraction updates instead of duplicating.
     const existing = (
