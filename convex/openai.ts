@@ -34,7 +34,7 @@ function toneFor(wedding: Doc<"weddings">): string {
   }
 }
 
-function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[]): string {
+function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[], dietary?: string | null): string {
   const lines = events.map((e) => `- ${e.name} on ${e.date} (~${e.guestCount} guests, budget ${formatMoney(e.budget, wedding.currency)})`);
   return [
     `Couple: ${wedding.partnerA} & ${wedding.partnerB}`,
@@ -45,6 +45,7 @@ function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[]): string
     wedding.styleFormality ? `Formality: ${wedding.styleFormality}` : "",
     wedding.styleSummary ? `Style notes: ${wedding.styleSummary}` : "",
     wedding.inspirationNotes ? `In their words: ${truncate(wedding.inspirationNotes, 600)}` : "",
+    dietary ? `Guests' food needs from their RSVPs so far: ${dietary}` : "",
     "Events:",
     ...lines,
   ]
@@ -469,10 +470,19 @@ const AGENT_RULES =
   "headcounts, names or preferences.\n" +
   "- Never agree to book, sign, pay, place a deposit or hold, or accept a price. Never share phone numbers, " +
   "home addresses or payment details.\n" +
-  "- If they ask about budget, you may share the planned budget for this service, given below.\n" +
+  "- Guests' food needs and allergies are for food and drink vendors only (catering, cake, bar). Share the allergens, " +
+  "how many guests and how severe, never a guest's name, and say more RSVPs may still come in.\n" +
+  "- Mention money only if they asked about budget or price; then you may share the rough budget given below. " +
+  "Never volunteer it.\n" +
   "- Write in the couple's own voice (we, us, our), never about them in the third person.\n" +
   "- Plain text, warm and brief, answering their questions in the order they asked. Sign off with both partners' " +
   "first names. No subject line, no placeholders in brackets.";
+
+/** "around $4,600" reads like a person's budget; "$4,614" reads like a spreadsheet's. */
+function roughMoney(amount: number, currency: string): string {
+  const step = amount >= 10_000 ? 500 : amount >= 1_000 ? 100 : 10;
+  return `around ${formatMoney(Math.round(amount / step) * step, currency)}`;
+}
 
 const vendorDecisionSchema = z.object({
   decision: z
@@ -517,14 +527,15 @@ export const decideVendorReply = internalAction({
     const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
     if (!context) throw new Error("Wedding not found");
     const { wedding, events } = context;
+    const dietary = await ctx.runQuery(internal.guests.dietarySummary, { weddingId: args.weddingId });
     const { object } = await generateObject({
       model: openai(MODEL_SMART),
       schema: vendorDecisionSchema,
       prompt:
         `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
         `${args.vendorName} (${args.slotTitle}) has just written back. Decide how to respond.\n\n${AGENT_RULES}\n` +
-        `${toneFor(wedding)}\n\n${weddingBrief(wedding, events)}\n` +
-        `Planned budget for ${args.slotTitle}: ${formatMoney(args.slotBudget, wedding.currency)}\n\n` +
+        `${toneFor(wedding)}\n\n${weddingBrief(wedding, events, dietary)}\n` +
+        `Rough budget for ${args.slotTitle} (only if they asked): ${roughMoney(args.slotBudget, wedding.currency)}\n\n` +
         (args.conversation ? `Earlier in this conversation:\n${truncate(args.conversation, 6000)}\n\n` : "") +
         `Their latest email:\n${truncate(args.latest, PAGE_CHARS)}`,
     });
@@ -552,6 +563,7 @@ export const writeVendorReply = internalAction({
     const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
     if (!context) throw new Error("Wedding not found");
     const { wedding, events } = context;
+    const dietary = await ctx.runQuery(internal.guests.dietarySummary, { weddingId: args.weddingId });
     const { object } = await generateObject({
       model: openai(MODEL_SMART),
       schema: z.object({ bodyText: z.string() }),
@@ -559,8 +571,8 @@ export const writeVendorReply = internalAction({
         `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
         `Reply to ${args.vendorName} (${args.slotTitle}), answering everything they asked. The couple has told you:\n` +
         `"${truncate(args.coupleAnswer, 2000)}"\nPass that on faithfully; it is the couple's decision, so you may state ` +
-        `it, but do not go beyond it.\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n${weddingBrief(wedding, events)}\n` +
-        `Planned budget for ${args.slotTitle}: ${formatMoney(args.slotBudget, wedding.currency)}\n\n` +
+        `it, but do not go beyond it.\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n${weddingBrief(wedding, events, dietary)}\n` +
+        `Rough budget for ${args.slotTitle} (only if they asked): ${roughMoney(args.slotBudget, wedding.currency)}\n\n` +
         (args.conversation ? `Earlier in this conversation:\n${truncate(args.conversation, 6000)}\n\n` : "") +
         `Their latest email:\n${truncate(args.latest, PAGE_CHARS)}`,
     });
@@ -597,9 +609,8 @@ export const writeAgentEmail = internalAction({
     const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
     if (!context) throw new Error("Wedding not found");
     const { wedding, events } = context;
-    // "around $4,600" reads like a person's budget; "$4,614" reads like a spreadsheet's.
-    const step = args.slotBudget >= 10_000 ? 500 : args.slotBudget >= 1_000 ? 100 : 10;
-    const budget = `around ${formatMoney(Math.round(args.slotBudget / step) * step, wedding.currency)}`;
+    const dietary = await ctx.runQuery(internal.guests.dietarySummary, { weddingId: args.weddingId });
+    const budget = roughMoney(args.slotBudget, wedding.currency);
     const task =
       args.purpose === "negotiate"
         ? PURPOSES.negotiate(budget, formatMoney(args.quoteTotal ?? 0, wedding.currency))
@@ -610,7 +621,7 @@ export const writeAgentEmail = internalAction({
       prompt:
         `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
         `Write to ${args.vendorName} (${args.slotTitle}). ${task}\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n` +
-        `${weddingBrief(wedding, events)}\n\n` +
+        `${weddingBrief(wedding, events, dietary)}\n\n` +
         (args.conversation ? `The conversation so far:\n${truncate(args.conversation, 6000)}` : ""),
     });
     return object.bodyText;
@@ -691,53 +702,102 @@ export const extractReply = internalAction({
   },
 });
 
+const rsvpSchema = z.object({
+  rsvp: z
+    .enum(["yes", "no", "maybe", "pending"])
+    .describe(
+      "'pending' whenever the email does not actually answer the invitation — a forwarded document, a question, " +
+        "a thank-you, small talk, or a note that only mentions food needs are all 'pending'",
+    ),
+  attendingCount: z.number().int().min(0).max(20),
+  dietary: z
+    .string()
+    .nullable()
+    .describe("food preferences only, such as vegetarian, vegan, halal, kosher or no pork; never allergies; null if none"),
+  allergies: z
+    .array(
+      z.object({
+        allergen: z.string().describe("the food, in plain words: peanuts, tree nuts, shellfish, gluten, dairy, eggs, sesame…"),
+        severity: z
+          .enum(["severe", "mild", "unknown"])
+          .describe("'severe' for anaphylaxis, EpiPens, 'very allergic', 'can't even be near it'; 'mild' for intolerances"),
+        who: z.string().nullable().describe("who has it, if the reply says: 'me', a name, 'my son'"),
+      }),
+    )
+    .describe("every food allergy or intolerance mentioned anywhere in the email, even in passing or in a P.S."),
+  note: z.string().nullable().describe("anything else the couple should know, one line"),
+});
+
+export type RsvpReading = {
+  rsvp: RsvpStatus;
+  attendingCount: number;
+  dietary?: string;
+  allergies: string[];
+  note?: string;
+};
+
+/** Read one guest reply. Allergies are listed apart, one per entry, so none is lost in a sentence. */
+async function readRsvp(
+  guest: { name: string; partySize: number; attendingCount: number },
+  subject: string,
+  body: string,
+): Promise<RsvpReading> {
+  const { object } = await generateObject({
+    model: openai(MODEL_FAST),
+    schema: rsvpSchema,
+    prompt:
+      `A wedding guest replied to an RSVP email. Guest: ${guest.name}, invited for ${guest.partySize}. ` +
+      `Work out whether they are coming, how many people are actually attending, their food preferences, and ` +
+      `every food allergy or intolerance.\n` +
+      `Count the people the reply itself names or implies, and let that override the number they were invited for: ` +
+      `"two of us", "me and my husband David" or naming a second person all mean 2, even when the invitation was for ` +
+      `one. "Plus one" means 2. Only fall back to the invited number when they say yes without indicating how many. ` +
+      `If they are not coming, the count is 0. If the email does not address attendance at all, answer 'pending' and ` +
+      `leave the count at ${guest.attendingCount}.\n` +
+      `Allergies matter more than anything else here: a missed one can hurt someone. List each one separately, even ` +
+      `when it is mentioned in passing, in a P.S., or about someone else in their party. An allergy is not a ` +
+      `preference: "vegetarian" goes in dietary, "allergic to peanuts" goes in allergies.\n\n` +
+      `Subject: ${subject}\n\n${truncate(body, 6000)}`,
+  });
+  return {
+    rsvp: object.rsvp,
+    attendingCount: object.attendingCount,
+    dietary: nn(object.dietary),
+    allergies: object.allergies.map(
+      (a) =>
+        `${a.allergen.charAt(0).toUpperCase()}${a.allergen.slice(1)}${a.severity === "severe" ? ", severe" : a.severity === "mild" ? ", mild" : ""}` +
+        (a.who && !/^(me|myself|i)$/i.test(a.who.trim()) ? ` (${a.who})` : ""),
+    ),
+    note: nn(object.note),
+  };
+}
+
+const rsvpReadingValidator = {
+  rsvp: rsvpStatus,
+  attendingCount: v.number(),
+  dietary: v.optional(v.string()),
+  allergies: v.array(v.string()),
+  note: v.optional(v.string()),
+};
+
+/** The same reading, given plain text; used to check the prompt against sample replies. */
+export const readRsvpReply = internalAction({
+  args: { guestName: v.string(), partySize: v.number(), subject: v.string(), body: v.string() },
+  returns: v.object(rsvpReadingValidator),
+  handler: async (_ctx, args): Promise<RsvpReading> =>
+    await readRsvp({ name: args.guestName, partySize: args.partySize, attendingCount: 0 }, args.subject, args.body),
+});
+
 export const parseRsvp = internalAction({
   args: { messageId: v.id("messages") },
-  returns: v.object({
-    guestId: v.id("guests"),
-    rsvp: rsvpStatus,
-    attendingCount: v.number(),
-    dietary: v.optional(v.string()),
-    note: v.optional(v.string()),
-  }),
-  handler: async (
-    ctx,
-    args,
-  ): Promise<{ guestId: Id<"guests">; rsvp: RsvpStatus; attendingCount: number; dietary?: string; note?: string }> => {
+  returns: v.object({ guestId: v.id("guests"), ...rsvpReadingValidator }),
+  handler: async (ctx, args): Promise<RsvpReading & { guestId: Id<"guests"> }> => {
     const message = await ctx.runQuery(internal.messages.getInternal, { messageId: args.messageId });
     if (!message || !message.guestId) throw new Error("Message is not a guest reply");
     const context = await ctx.runQuery(internal.guests.getContextForRsvp, { guestId: message.guestId });
     if (!context) throw new Error("Guest not found");
     const { guest } = context;
-    const { object } = await generateObject({
-      model: openai(MODEL_FAST),
-      schema: z.object({
-        rsvp: z
-          .enum(["yes", "no", "maybe", "pending"])
-          .describe(
-            "'pending' whenever the email does not actually answer the invitation — a forwarded document, a question, " +
-              "a thank-you or small talk are all 'pending', and leave the list untouched",
-          ),
-        attendingCount: z.number().int().min(0).max(20),
-        dietary: z.string().nullable(),
-        note: z.string().nullable().describe("anything else the couple should know, one line"),
-      }),
-      prompt:
-        `A wedding guest replied to an RSVP email. Guest: ${guest.name}, invited for ${guest.partySize}. ` +
-        `Work out whether they are coming, how many people are actually attending, and any dietary needs.\n` +
-        `Count the people the reply itself names or implies, and let that override the number they were invited for: ` +
-        `"two of us", "me and my husband David" or naming a second person all mean 2, even when the invitation was for ` +
-        `one. "Plus one" means 2. Only fall back to the invited number when they say yes without indicating how many. ` +
-        `If they are not coming, the count is 0. If the email does not address attendance at all, answer 'pending' and ` +
-        `leave the count at ${guest.attendingCount}.\n\nSubject: ${message.subject}\n\n${truncate(message.bodyText, 6000)}`,
-    });
-    return {
-      guestId: guest._id,
-      rsvp: object.rsvp,
-      attendingCount: object.attendingCount,
-      dietary: nn(object.dietary),
-      note: nn(object.note),
-    };
+    return { guestId: guest._id, ...(await readRsvp(guest, message.subject, message.bodyText)) };
   },
 });
 

@@ -6,6 +6,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Icon } from "../components/ui/Icon";
+import { usePrivacy } from "../lib/privacy";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
@@ -17,6 +18,7 @@ const OPENERS = [
 ];
 
 export function AssistantPage() {
+  const privacy = usePrivacy();
   const { wedding, role } = useOutletContext<WeddingData>();
   const weddingId = wedding._id as Id<"weddings">;
   const history = useQuery(api.assistant.history, { weddingId });
@@ -110,7 +112,7 @@ export function AssistantPage() {
                 </span>
               ) : (
                 <p className={`whitespace-pre-wrap text-[0.95rem] leading-relaxed ${m.role === "user" ? "" : "text-ink"}`}>
-                  {m.content}
+                  {privacy.text(m.content)}
                 </p>
               )}
 

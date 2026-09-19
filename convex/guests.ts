@@ -191,9 +191,11 @@ export const markInvited = internalMutation({
 export const applyRsvp = internalMutation({
   args: {
     guestId: v.id("guests"),
-    rsvp: rsvpStatus,
+    /** Omitted when the reply only told us about food, so their answer stays as it was. */
+    rsvp: v.optional(rsvpStatus),
     attendingCount: v.number(),
     dietary: v.optional(v.string()),
+    allergies: v.optional(v.array(v.string())),
     note: v.optional(v.string()),
   },
   returns: v.null(),
@@ -201,24 +203,72 @@ export const applyRsvp = internalMutation({
     const guest = await ctx.db.get(args.guestId);
     if (!guest) return null;
     const attendingCount = Math.max(0, Math.min(guest.partySize, Math.floor(Number.isFinite(args.attendingCount) ? args.attendingCount : 0)));
+    // Allergies only ever accumulate: a later "see you there!" must not erase "Sam is allergic to shellfish".
+    const known = guest.allergies ?? [];
+    const fresh = (args.allergies ?? []).filter(
+      (a) => !known.some((k) => k.split(",")[0].trim().toLowerCase() === a.split(",")[0].trim().toLowerCase()),
+    );
+    const allergies = [...known, ...fresh].slice(0, 12).map((a) => a.slice(0, 120));
     await ctx.db.patch(args.guestId, {
-      rsvp: args.rsvp,
-      attendingCount: args.rsvp === "no" ? 0 : attendingCount,
+      ...(args.rsvp ? { rsvp: args.rsvp, attendingCount: args.rsvp === "no" ? 0 : attendingCount } : {}),
       ...(args.dietary ? { dietary: args.dietary.slice(0, 300) } : {}),
+      ...(fresh.length ? { allergies } : {}),
       ...(args.note ? { notes: args.note.slice(0, 500) } : {}),
     });
+    const food = fresh.length ? ` Allergy: ${fresh.join("; ")}.` : "";
     await logActivity(ctx, {
       weddingId: guest.weddingId,
       actorLabel: guest.name,
       type: "guest_rsvp",
       text:
-        args.rsvp === "yes"
-          ? `RSVP'd yes${attendingCount > 1 ? ` for ${attendingCount}` : ""}${args.dietary ? ` (${args.dietary})` : ""}.`
-          : args.rsvp === "no"
-            ? "RSVP'd no."
-            : `RSVP'd ${args.rsvp}.`,
+        !args.rsvp
+          ? `told you about their food needs.${food}${args.dietary ? ` ${args.dietary}.` : ""}`
+          : args.rsvp === "yes"
+            ? `RSVP'd yes${attendingCount > 1 ? ` for ${attendingCount}` : ""}${args.dietary ? ` (${args.dietary})` : ""}.${food}`
+            : args.rsvp === "no"
+              ? "RSVP'd no."
+              : `RSVP'd ${args.rsvp}.${food}`,
       refs: { guestId: guest._id },
     });
     return null;
+  },
+});
+
+/**
+ * What the kitchen needs to know, without names: allergens with how many guests and
+ * whether any are severe, then preferences. Null when nobody has said anything.
+ */
+export const dietarySummary = internalQuery({
+  args: { weddingId: v.id("weddings") },
+  returns: v.union(v.string(), v.null()),
+  handler: async (ctx, args) => {
+    const guests = await ctx.db
+      .query("guests")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(1000);
+    const allergens = new Map<string, { count: number; severe: number }>();
+    const prefs = new Map<string, number>();
+    for (const g of guests) {
+      if (g.rsvp === "no") continue;
+      for (const a of g.allergies ?? []) {
+        const [name, ...rest] = a.split(",");
+        const key = name.replace(/\(.*\)/, "").trim().toLowerCase();
+        const entry = allergens.get(key) ?? { count: 0, severe: 0 };
+        entry.count += 1;
+        if (rest.join(",").includes("severe")) entry.severe += 1;
+        allergens.set(key, entry);
+      }
+      if (g.dietary) prefs.set(g.dietary.trim().toLowerCase(), (prefs.get(g.dietary.trim().toLowerCase()) ?? 0) + 1);
+    }
+    if (allergens.size === 0 && prefs.size === 0) return null;
+    const parts: string[] = [];
+    if (allergens.size) {
+      parts.push(
+        "Allergies: " +
+          [...allergens].map(([k, e]) => `${k} (${e.count} ${e.count === 1 ? "guest" : "guests"}${e.severe ? `, ${e.severe} severe` : ""})`).join("; "),
+      );
+    }
+    if (prefs.size) parts.push("Other food needs: " + [...prefs].map(([k, n]) => `${k} (${n})`).join("; "));
+    return parts.join(". ") + ".";
   },
 });

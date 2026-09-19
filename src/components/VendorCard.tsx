@@ -2,6 +2,7 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import { money } from "../lib/format";
 import { Icon } from "./ui/Icon";
+import { usePrivacy } from "../lib/privacy";
 
 type Vendor = FunctionReturnType<typeof api.vendors.listBySlot>[number];
 
@@ -139,6 +140,7 @@ export function VendorCard({
   onToggleShortlist: () => void;
   onSetEmail: (email: string) => void;
 }) {
+  const privacy = usePrivacy();
   return (
     <li className={`card rise flex flex-col p-5 ${selected ? "ring-2 ring-accent/40" : ""}`}>
       <div className="flex items-start gap-3">
@@ -214,7 +216,7 @@ export function VendorCard({
 
       <div className="mt-4 flex items-center justify-between gap-2 border-t border-line pt-3">
         {vendor.email ? (
-          <span className="truncate font-mono text-[11px] text-muted">{vendor.email}</span>
+          <span className="truncate font-mono text-[11px] text-muted">{privacy.email(vendor.email)}</span>
         ) : canEdit ? (
           <form
             className="flex min-w-0 flex-1 gap-1"

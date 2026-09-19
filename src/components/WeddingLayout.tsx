@@ -25,6 +25,18 @@ export function WeddingLayout() {
   const data = useQuery(api.weddings.get, weddingId ? { weddingId: weddingId as Id<"weddings"> } : "skip");
   const { signOut } = useAuthActions();
   const [walking, setWalking] = useState(false);
+  // Only asked once the wedding has loaded, so a non-member never hits the member check.
+  const waiting =
+    useQuery(api.threads.attentionCount, data ? { weddingId: data.wedding._id as Id<"weddings"> } : "skip") ?? 0;
+
+  // The tab says so too, so a reply is noticed from another tab.
+  useEffect(() => {
+    const base = document.title.replace(/^\(\d+\)\s*/, "");
+    document.title = waiting > 0 ? `(${waiting}) ${base}` : base;
+    return () => {
+      document.title = base;
+    };
+  }, [waiting]);
 
   // Shown once, and only once the wedding is actually on screen: a tour that points at
   // empty space explains nothing.
@@ -87,6 +99,14 @@ export function WeddingLayout() {
                 <>
                   <Icon name={n.icon} size={19} className={isActive ? "text-accent" : "text-muted"} />
                   {n.label}
+                  {n.to === "inbox" && waiting > 0 && (
+                    <span
+                      className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-accent px-1.5 text-[11px] font-medium tabular-nums text-paper"
+                      aria-label={`${waiting} ${waiting === 1 ? "conversation needs" : "conversations need"} you`}
+                    >
+                      {waiting}
+                    </span>
+                  )}
                 </>
               )}
             </NavLink>
@@ -104,6 +124,17 @@ export function WeddingLayout() {
       </aside>
 
       <main id="main" className="min-w-0 px-5 py-8 md:px-8 md:py-10">
+        {wedding.demo && (
+          <div className="page mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[14px] bg-accent-soft/70 px-4 py-3 text-sm">
+            <p className="min-w-0">
+              <span className="display text-base">A sample wedding.</span>{" "}
+              <span className="text-muted">
+                Click anything. The vendors are made up, so emails to them are simulated rather than sent.
+              </span>
+            </p>
+            <Link to="/new" className="btn-primary btn-sm shrink-0">Plan your own</Link>
+          </div>
+        )}
         <div className="page">
           <Outlet context={data} />
         </div>

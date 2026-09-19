@@ -230,11 +230,14 @@ function SlotPanel({
         ) : (
           <>
             {topPicks.length > 0 && (
-              <>
-                <div className="mt-4 flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-                  <h4 className="display text-[1.15rem]">
-                    {topPicks.length === 1 ? "The best match" : `The top ${topPicks.length === 2 ? "two" : "three"}`}
-                  </h4>
+              <div className="mt-4 rounded-[20px] bg-accent-soft/55 p-4 md:p-5">
+                <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+                  <div>
+                    <h4 className="display text-[1.15rem]">
+                      {topPicks.length === 1 ? "The best match" : `The top ${topPicks.length === 2 ? "two" : "three"}`}
+                    </h4>
+                    <p className="text-xs text-muted">Ranked on their reviews, their price against your budget, and how well they fit.</p>
+                  </div>
                   {canEdit && topPickable.length > 0 && (
                     <button
                       className="text-xs text-accent underline underline-offset-2"
@@ -244,7 +247,7 @@ function SlotPanel({
                     </button>
                   )}
                 </div>
-                <ul className="mt-3 grid items-start gap-4 xl:grid-cols-2">
+                <ul className="mt-3 grid items-stretch gap-4 md:grid-cols-2 2xl:grid-cols-3">
                   {topPicks.map((v, i) => (
                     <VendorCard
                       key={v._id}
@@ -262,7 +265,7 @@ function SlotPanel({
                     />
                   ))}
                 </ul>
-              </>
+              </div>
             )}
 
             {others.length > 0 && (
@@ -270,7 +273,7 @@ function SlotPanel({
                 <h4 className="mt-7 display text-[1.15rem]">
                   {topPicks.length > 0 ? `Also found (${others.length})` : `Found (${others.length})`}
                 </h4>
-                <ul className="mt-3 grid items-start gap-4 xl:grid-cols-2">
+                <ul className="mt-3 grid items-stretch gap-4 md:grid-cols-2 2xl:grid-cols-3">
                   {others.map((v) => (
                     <VendorCard
                       key={v._id}
@@ -288,6 +291,22 @@ function SlotPanel({
                   ))}
                 </ul>
               </>
+            )}
+
+            {canEdit && slot.status !== "booked" && (
+              <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-line pt-5">
+                <button
+                  type="button"
+                  className="btn-quiet btn-sm"
+                  disabled={researching}
+                  onClick={() => void startResearch({ slotId: slot._id, query: (run?.query ?? query).trim() || defaultQuery, more: true })}
+                >
+                  <Icon name="search" size={15} /> {researching ? "Looking…" : "Find more options"}
+                </button>
+                <p className="text-xs text-quiet">
+                  {vendors.length} found so far. PlusOne searches again and skips everyone already here.
+                </p>
+              </div>
             )}
           </>
         )}

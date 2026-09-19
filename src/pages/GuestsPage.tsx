@@ -8,6 +8,7 @@ import { timeAgo } from "../lib/format";
 import { PageHeader } from "../components/ui/PageHeader";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Icon } from "../components/ui/Icon";
+import { usePrivacy } from "../lib/privacy";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 type Guest = FunctionReturnType<typeof api.guests.list>[number];
@@ -20,6 +21,7 @@ const RSVP: Record<Guest["rsvp"], { label: string; cls: string }> = {
 };
 
 export function GuestsPage() {
+  const privacy = usePrivacy();
   const { wedding, role, events } = useOutletContext<WeddingData>();
   const weddingId = wedding._id as Id<"weddings">;
   const guests = useQuery(api.guests.list, { weddingId });
@@ -169,6 +171,8 @@ export function GuestsPage() {
           />
         </div>
       ) : (
+        <>
+        <KitchenNotes guests={guests} />
         <section className="card mt-6 overflow-hidden" aria-label="Your guests">
           <ul className="divide-y divide-line">
             {guests.map((g) => (
@@ -176,11 +180,23 @@ export function GuestsPage() {
                 <span className="min-w-0 flex-1">
                   <span className="block truncate text-[0.98rem]">{g.name}</span>
                   <span className="block truncate text-xs text-quiet">
-                    {g.email ?? "no email — invite them yourself"}
+                    {privacy.email(g.email) ?? "no email — invite them yourself"}
                     {g.side ? ` · ${g.side}` : ""}
                     {g.partySize > 1 ? ` · party of ${g.partySize}` : ""}
                     {g.dietary ? ` · ${g.dietary}` : ""}
                   </span>
+                  {(g.allergies ?? []).length > 0 && (
+                    <span className="mt-1 flex flex-wrap gap-1">
+                      {(g.allergies ?? []).map((a) => (
+                        <span
+                          key={a}
+                          className={`rounded-full px-2 py-0.5 text-[11px] ${/severe/.test(a) ? "bg-bad/10 text-bad" : "bg-warn-bg text-warn"}`}
+                        >
+                          Allergy: {a}
+                        </span>
+                      ))}
+                    </span>
+                  )}
                 </span>
 
                 <span className={RSVP[g.rsvp].cls}>
@@ -218,6 +234,7 @@ export function GuestsPage() {
             ))}
           </ul>
         </section>
+        </>
       )}
 
       {guests !== undefined && guests.length > 0 && (
@@ -238,5 +255,50 @@ function Stat({ label, value, note, tone }: { label: string; value: string; note
       <p className={`display mt-1 text-[1.8rem] leading-none ${tone === "ok" ? "text-ok" : ""}`}>{value}</p>
       <p className="mt-1.5 text-xs leading-relaxed text-muted">{note}</p>
     </div>
+  );
+}
+
+/**
+ * Everything the caterer must plan around, gathered from the replies: allergies first,
+ * severe ones marked, with who has them so the couple can check.
+ */
+function KitchenNotes({ guests }: { guests: Guest[] }) {
+  const coming = guests.filter((g) => g.rsvp !== "no");
+  const allergies = coming.flatMap((g) => (g.allergies ?? []).map((a) => ({ a, who: g.name })));
+  const prefs = coming.filter((g) => g.dietary).map((g) => ({ d: g.dietary as string, who: g.name }));
+  if (allergies.length === 0 && prefs.length === 0) return null;
+  const severe = allergies.filter((x) => /severe/.test(x.a)).length;
+  return (
+    <section className="card mt-6 p-5 md:p-6" aria-label="Food needs for the caterer">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="display text-xl">For the caterer</h2>
+        <p className="text-xs text-quiet">
+          PlusOne shares these with food vendors when they ask: allergens and numbers, never names.
+        </p>
+      </div>
+      {allergies.length > 0 && (
+        <>
+          <p className="mt-3 text-sm">
+            <strong className="font-medium">{allergies.length} {allergies.length === 1 ? "allergy" : "allergies"}</strong>
+            {severe > 0 && <span className="text-bad">, {severe} severe</span>}
+          </p>
+          <ul className="mt-2 flex flex-wrap gap-2">
+            {allergies.map(({ a, who }) => (
+              <li
+                key={`${who}-${a}`}
+                className={`rounded-full px-3 py-1 text-xs ${/severe/.test(a) ? "bg-bad/10 text-bad" : "bg-warn-bg text-warn"}`}
+              >
+                {a} <span className="opacity-70">· {who}</span>
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+      {prefs.length > 0 && (
+        <p className="mt-3 text-sm text-muted">
+          Also: {prefs.map(({ d, who }) => `${d} (${who})`).join(", ")}.
+        </p>
+      )}
+    </section>
   );
 }

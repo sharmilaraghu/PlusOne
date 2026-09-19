@@ -1,4 +1,5 @@
 import Google from "@auth/core/providers/google";
+import { Anonymous } from "@convex-dev/auth/providers/Anonymous";
 import { convexAuth } from "@convex-dev/auth/server";
 import { Password } from "@convex-dev/auth/providers/Password";
 import { ConvexError } from "convex/values";
@@ -11,6 +12,8 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
   providers: [
     // Reads AUTH_GOOGLE_ID and AUTH_GOOGLE_SECRET from the deployment env.
     Google,
+    // "Try it as a guest": no details asked, lands in a sample wedding (convex/demo.ts).
+    Anonymous,
     Password<DataModel>({
       profile(params) {
         const email = String(params.email ?? "").trim().toLowerCase();

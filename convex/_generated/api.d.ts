@@ -16,6 +16,7 @@ import type * as auth from "../auth.js";
 import type * as budget from "../budget.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
+import type * as demo from "../demo.js";
 import type * as drafts from "../drafts.js";
 import type * as events from "../events.js";
 import type * as firecrawl from "../firecrawl.js";
@@ -61,6 +62,7 @@ declare const fullApi: ApiFromModules<{
   budget: typeof budget;
   crons: typeof crons;
   dashboard: typeof dashboard;
+  demo: typeof demo;
   drafts: typeof drafts;
   events: typeof events;
   firecrawl: typeof firecrawl;

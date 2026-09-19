@@ -1,7 +1,7 @@
-import { ConvexError, v } from "convex/values";
+import { ConvexError, v, type ObjectType } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
-import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
 import { logActivity, requireMember, requireUserId } from "./lib/auth";
 import { rebalanceWeddingBudget } from "./lib/budget";
 import { clearDraft } from "./drafts";
@@ -178,8 +178,7 @@ export const generateInspirationUploadUrl = mutation({
   },
 });
 
-export const create = mutation({
-  args: {
+const createArgs = {
     name: v.string(),
     partnerA: v.string(),
     partnerB: v.string(),
@@ -234,10 +233,31 @@ export const create = mutation({
         }),
       ),
     ),
-  },
+};
+type CreateArgs = ObjectType<typeof createArgs>;
+
+export const create = mutation({
+  args: createArgs,
   returns: v.id("weddings"),
   handler: async (ctx, args): Promise<Id<"weddings">> => {
     const userId = await requireUserId(ctx);
+    const weddingId = await insertWedding(ctx, userId, args);
+    await clearDraft(ctx, userId);
+    await workflow.start(ctx, internal.workflows.onboardingWorkflow, { weddingId });
+    return weddingId;
+  },
+});
+
+/**
+ * The wedding, its owner, its functions, its needs and their budget lines. Shared by
+ * `create` and the guest demo, so a sample wedding is built exactly like a real one.
+ */
+export async function insertWedding(
+  ctx: MutationCtx,
+  userId: Id<"users">,
+  args: CreateArgs,
+  extra: { demo?: boolean } = {},
+): Promise<Id<"weddings">> {
     if (!Number.isFinite(args.totalBudget) || args.totalBudget < 0) {
       throw new ConvexError("Total budget must be a non-negative number.");
     }
@@ -276,9 +296,9 @@ export const create = mutation({
       stylePalette: args.stylePalette?.trim() || undefined,
       styleFormality: args.styleFormality,
       createdBy: userId,
+      ...(extra.demo ? { demo: true } : {}),
     });
     await ctx.db.insert("members", { weddingId, userId, role: "owner" });
-    await clearDraft(ctx, userId);
 
     // Events from the template (or the couple's own list for "custom").
     const totalDays = daysBetween(args.startDate, args.endDate);
@@ -386,11 +406,8 @@ export const create = mutation({
       type: "wedding_created",
       text: `created the wedding "${args.name.trim()}" (${plan.length} events in ${args.city.trim()}).`,
     });
-
-    await workflow.start(ctx, internal.workflows.onboardingWorkflow, { weddingId });
     return weddingId;
-  },
-});
+}
 
 export const update = mutation({
   args: {

@@ -16,6 +16,14 @@ export function LandingPage() {
   return (
     <div className="lp">
       <a href="#main" className="lp-skip">Skip to content</a>
+      {/* Judges should be one click from a working wedding, with nothing to sign up for. */}
+      <Link to="/guest" className="judge-bar">
+        <span className="judge-bar__tag">Hackathon judges</span>
+        <span className="judge-bar__text">
+          Judging the Convex All Gas Hackathon? Open a sample wedding. No sign-up.
+        </span>
+        <span className="judge-bar__go" aria-hidden="true">→</span>
+      </Link>
       <section className="hero" aria-labelledby="hero-title">
         {/* The day itself, drifting behind the promise. Paused for reduced motion. */}
         <div className="hero__reel" aria-hidden="true">
@@ -44,7 +52,7 @@ export function LandingPage() {
             PlusOne finds your vendors, emails them from your own wedding inbox, reads every reply and keeps your budget honest.
           </p>
           <Link to="/signin?new=1" className="pill pill--wine hero__primary">Start planning</Link>
-          <a href="#how" className="pill pill--outline hero__secondary">See how it works</a>
+          <Link to="/guest" className="pill pill--outline hero__secondary">Try it as a guest</Link>
           <span className="hero__band" aria-hidden="true" />
           <AppPreview />
         </main>

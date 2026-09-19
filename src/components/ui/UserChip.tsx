@@ -1,15 +1,17 @@
 import { useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
+import { usePrivacy } from "../../lib/privacy";
 
 /** Who is signed in: their Google photo or initial, and their name (or email when there is no name). */
 export function UserChip({ className = "" }: { className?: string }) {
   const me = useQuery(api.users.me);
+  const privacy = usePrivacy();
   if (!me) return null;
-  const label = me.name?.trim() || me.email || "Signed in";
+  const label = me.name?.trim() || privacy.email(me.email) || "Guest";
   const initial = label.charAt(0).toUpperCase();
   return (
     <div
-      title={me.email ? `Signed in as ${me.email}` : undefined}
+      title={me.email ? `Signed in as ${privacy.email(me.email)}` : undefined}
       className={`inline-flex h-9 min-w-0 items-center gap-2 rounded-full bg-paper/90 py-1 pl-1 pr-3.5 text-xs text-ink shadow-[inset_0_0_0_1px_var(--color-line)] backdrop-blur-sm ${className}`}
     >
       {me.image ? (

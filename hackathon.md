@@ -10,9 +10,9 @@
 - **Components:** @convex-dev/workflow, @convex-dev/workpool, @convex-dev/static-hosting
 - **Convex features:** schema, tables, indexes, queries, mutations, actions, internal functions, HTTP actions, scheduled functions, crons, file storage, realtime queries, workflows, workpool
 - **Auth:** Convex Auth
-- **AI models:** gpt-5.6-luna, gpt-5.6-terra
+- **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-19T04:30:28Z
+- **Last updated:** 2026-09-19T05:26:03Z
 
 ## Log
 
@@ -238,3 +238,21 @@ to clean numbers (`convex/lib/templates.ts`). Vendors gained one button that res
 unresearched need, staggered with scheduled functions (`convex/research.ts`). Mailbox
 addresses are no longer shown anywhere the couple looks. Pushed to the dev deployment only;
 not yet committed or deployed.
+
+### 2026-09-19 - working tree
+Judges can now open the app without signing up. `/guest` signs in with the Convex Auth
+Anonymous provider and builds a sample wedding through the same insert path as a real one,
+with fictional vendors on the reserved `.example` domain; email on a sample wedding is
+recorded as sent but never handed to AgentMail (`convex/demo.ts`, `convex/auth.ts`,
+`convex/agentmail.ts`). The landing page carries a judges' link to it. Checked end to end on
+dev: guest sign-in, every screen, and answering a vendor question into a simulated send.
+
+Guest replies are read for allergies as their own field (allergen, severity, who), kept even
+when a reply says nothing else, and never overwritten by a later one. Checked alone on twelve
+sample replies, all read correctly. The vendor agent shares allergens and counts, never
+names, with food vendors only (`convex/guests.ts`, `convex/openai.ts`). Research reads up to
+nine vendors and can search again past everyone already found, which added six real vendors
+in a dev run (`convex/workflows.ts`, `convex/firecrawl.ts`). The Inbox shows a count of
+conversations waiting on the couple, the activity feed stays short, a per-browser switch
+masks every email address for screen recordings, and six illustrations were redrawn in one
+style with ElevenLabs. Pushed to the dev deployment only; not yet committed or deployed.

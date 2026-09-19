@@ -285,7 +285,8 @@
 /* ---------- Responsive: phones and small tablets reflow the measured hero ---------- */
 @media (max-width: 820px) {
   .hero { aspect-ratio: auto; container-type: normal; padding: 0 20px 40px; background: linear-gradient(var(--ivory) 0 58%, var(--blush) 58%); }
-  .hero__nav, .hero__body { position: static; }
+  /* Relative with a z-index so the header and headline stay above the drifting reel. */
+  .hero__nav, .hero__body { position: relative; z-index: 1; }
   .hero__nav > *, .hero__body > *, .hero__links > * { position: static; }
   .hero__nav { display: flex; align-items: center; gap: 10px; height: 68px; border-bottom: 1px solid var(--hair); margin: 0 -20px; padding: 0 20px; pointer-events: auto; }
   .brand { width: auto; height: auto; font-size: 1.7rem; margin-right: auto; }
@@ -325,3 +326,25 @@
   .ap-notif__icon i { width: 8px; height: 8px; right: 6px; top: 4px; }
   .ap-notif p { font-size: 0.92rem; }
 }
+
+/* A one-click way in for hackathon judges, above everything else. */
+.judge-bar {
+  display: flex; align-items: center; justify-content: center; gap: 12px;
+  padding: 10px 20px; background: var(--wine); color: #fbf8f3;
+  font-size: 14px; line-height: 1.35; text-decoration: none; text-align: center;
+  transition: background .2s ease;
+}
+.judge-bar:hover { background: color-mix(in oklab, var(--wine) 88%, black); }
+.judge-bar:focus-visible { outline: 2px solid #fbf8f3; outline-offset: -4px; }
+.judge-bar__tag {
+  flex-shrink: 0; border-radius: 999px; padding: 2px 10px;
+  background: rgba(251, 248, 243, .16); font-size: 12px; letter-spacing: .02em;
+}
+.judge-bar__text { text-decoration: underline; text-decoration-color: rgba(251, 248, 243, .45); text-underline-offset: 3px; }
+.judge-bar__go { transition: transform .2s ease; }
+.judge-bar:hover .judge-bar__go { transform: translateX(3px); }
+@media (max-width: 560px) {
+  .judge-bar { justify-content: flex-start; text-align: left; font-size: 13px; }
+  .judge-bar__tag { display: none; }
+}
+@media (prefers-reduced-motion: reduce) { .judge-bar, .judge-bar__go { transition: none; } }

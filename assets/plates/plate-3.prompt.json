@@ -1,0 +1,11 @@
+{
+  "tool": "elevenlabs-flows-image",
+  "model": "gpt-image-2",
+  "aspect_ratio": "3:4",
+  "resolution": "1K",
+  "quality": "medium",
+  "reference": "public/plate-1.jpg",
+  "prompt": "Match the reference image's style exactly: a minimal continuous-line ink drawing in a single deep wine-red colour (#7A2233) on a flat warm ivory background (#FBF8F3). Fine hairline strokes of even weight, drawn as if with one fine pen, lots of empty ivory space, no fills, no shading, no gradients, no other colours except the faintest blush wash on a few petals. Elegant editorial wedding-stationery illustration, calm and romantic, the figures drawn realistically (not anime, not cartoon). Portrait composition. No text, no watermark, no border, no frame.\n\nScene: guests seated along one long dinner table under trees at dusk, candles and loose flowers down the middle of the table, one guest standing with a raised glass giving a toast while the others turn to listen.",
+  "generation_id": "5F01g9qgVFcnELgcaurV",
+  "created": "2026-09-19T04:48:56.008Z"
+}

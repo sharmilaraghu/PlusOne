@@ -61,6 +61,8 @@ export const weddingFields = {
   inboxId: v.optional(v.string()),
   inboxAddress: v.optional(v.string()),
   createdBy: v.id("users"),
+  /** A sample wedding for a guest: fictional vendors, and email is simulated rather than sent. */
+  demo: v.optional(v.boolean()),
 };
 
 export const memberFields = {
@@ -145,6 +147,8 @@ export const researchRunFields = {
   weddingId: v.id("weddings"),
   slotId: v.id("vendorSlots"),
   query: v.string(),
+  /** "Find more options": skip every website already found for this need. */
+  more: v.optional(v.boolean()),
   /** Neighbourhood to bias this one search towards; overrides the wedding's area. */
   area: v.optional(v.string()),
   status: researchStatus,
@@ -230,6 +234,12 @@ export const guestFields = {
   rsvp: rsvpStatus,
   attendingCount: v.number(),
   dietary: v.optional(v.string()),
+  /**
+   * Food allergies and intolerances, one per entry: the allergen, how serious, and who,
+   * e.g. "Peanuts, severe (David)". Kept apart from preferences such as vegetarian,
+   * because a caterer has to plan for these.
+   */
+  allergies: v.optional(v.array(v.string())),
   eventIds: v.array(v.id("events")),
   lastInvitedAt: v.optional(v.number()),
   lastRemindedAt: v.optional(v.number()),

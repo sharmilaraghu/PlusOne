@@ -27,7 +27,7 @@ export function BookButton({
 
   if (!open) {
     return (
-      <button type="button" className={className} disabled={disabled} onClick={() => setOpen(true)}>
+      <button type="button" className={`${className} whitespace-nowrap`} disabled={disabled} onClick={() => setOpen(true)}>
         {label}
       </button>
     );

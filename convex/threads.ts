@@ -339,3 +339,17 @@ export const getContext = internalQuery({
     return { thread, vendor, slot, wedding, events, lastOutbound, lastInbound };
   },
 });
+
+/** How many conversations are waiting on the couple, for the badge beside Inbox. */
+export const attentionCount = query({
+  args: { weddingId: v.id("weddings") },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    await requireMember(ctx, args.weddingId);
+    const threads = await ctx.db
+      .query("threads")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(500);
+    return threads.filter((t) => t.status === "needs_attention" || t.pendingQuestion).length;
+  },
+});

@@ -45,8 +45,8 @@ export const onboardingWorkflow = workflow.define({
  * upsert the cards batch by batch -> rank them all -> done.
  * Phase 2b: `researchVendorDetail` + `lookupReviews` replace the single homepage scrape.
  */
-const RESEARCH_BUDGET_MS = 55_000; // per-batch wall time; a slow first batch skips the second so a run stays near two minutes
-const MAX_CANDIDATES = 6;
+const RESEARCH_BUDGET_MS = 100_000; // total read time before the run stops starting batches, so it stays near three minutes
+const MAX_CANDIDATES = 9;
 const BATCH_SIZE = 3; // vendors researched in parallel; a batch's cards land together
 
 export const researchWorkflow = workflow.define({
@@ -66,7 +66,14 @@ export const researchWorkflow = workflow.define({
       const wedding = await step.runQuery(internal.weddings.getInternal, { weddingId: run.weddingId });
 
       await step.runMutation(internal.research.setStep, { researchRunId: run._id, step: `Searching the web: ${plan.queries[0]}` });
-      const candidates = await step.runAction(internal.firecrawl.searchVendors, { queries: plan.queries, city: plan.city, limit: MAX_CANDIDATES });
+      const known = run.more ? await step.runQuery(internal.vendors.hostsForSlot, { slotId: run.slotId }) : [];
+      const candidates = await step.runAction(internal.firecrawl.searchVendors, {
+        queries: plan.queries,
+        city: plan.city,
+        // Asking for more has to look past everyone already found, so search wider.
+        limit: run.more ? 10 : MAX_CANDIDATES,
+        excludeHosts: known,
+      });
       if (candidates.length === 0) {
         await step.runMutation(internal.research.finish, { researchRunId: run._id, status: "done", foundCount: 0 });
         return;
@@ -165,7 +172,7 @@ export const researchWorkflow = workflow.define({
         return { created, upserted: 1, ms };
       };
 
-      // Batches of three in parallel: six vendors researched properly still finishes near two
+      // Batches of three in parallel: nine vendors researched properly finishes in about three
       // minutes. A batch advances only when its slowest member is done, so its three cards
       // land together — the list still fills in visibly while the run continues.
       const shortlist = candidates.slice(0, MAX_CANDIDATES);
@@ -395,12 +402,15 @@ export const rsvpWorkflow = workflow.define({
   args: { messageId: v.id("messages") },
   handler: async (step, args): Promise<void> => {
     const parsed = await step.runAction(internal.openai.parseRsvp, { messageId: args.messageId });
-    if (parsed.rsvp === "pending") return;
+    // A reply that only mentions an allergy still has to be recorded, without touching their answer.
+    const answered = parsed.rsvp !== "pending";
+    if (!answered && !parsed.dietary && parsed.allergies.length === 0) return;
     await step.runMutation(internal.guests.applyRsvp, {
       guestId: parsed.guestId,
-      rsvp: parsed.rsvp,
+      rsvp: answered ? parsed.rsvp : undefined,
       attendingCount: parsed.attendingCount,
       dietary: parsed.dietary,
+      allergies: parsed.allergies,
       note: parsed.note,
     });
   },

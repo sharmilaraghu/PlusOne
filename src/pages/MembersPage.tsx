@@ -4,11 +4,13 @@ import { useOutletContext } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
+import { usePrivacy } from "../lib/privacy";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 type Role = "owner" | "planner" | "viewer";
 
 export function MembersPage() {
+  const privacy = usePrivacy();
   const { wedding, role } = useOutletContext<WeddingData>();
   const weddingId = wedding._id as Id<"weddings">;
   const members = useQuery(api.members.list, { weddingId })?.map((m) => ({ _id: m.member._id, role: m.member.role, name: m.user?.name, email: m.user?.email }));
@@ -71,8 +73,8 @@ export function MembersPage() {
             {members.map((m) => (
               <li key={m._id} className="flex flex-wrap items-center justify-between gap-2 py-3 text-sm">
                 <div>
-                  <p className="font-medium">{m.name ?? m.email ?? "Member"}</p>
-                  {m.name && m.email && <p className="text-xs text-muted">{m.email}</p>}
+                  <p className="font-medium">{m.name ?? privacy.email(m.email) ?? "Member"}</p>
+                  {m.name && m.email && <p className="text-xs text-muted">{privacy.email(m.email)}</p>}
                 </div>
                 <div className="flex items-center gap-2">
                   {role === "owner" && m.role !== "owner" ? (

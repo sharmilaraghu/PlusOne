@@ -133,6 +133,20 @@ export const sendOutbound = internalAction({
     const { message, wedding, thread } = context;
     const inboxId = wedding.inboxId ?? fallbackInbox();
     try {
+      // A guest's sample wedding writes to fictional vendors: record the send, never make it.
+      if (wedding.demo) {
+        const sentAt = Date.now();
+        await ctx.runMutation(internal.messages.markSent, {
+          messageId: args.messageId,
+          agentmailMessageId: `demo-${args.messageId}`,
+          sentAt,
+        });
+        if (thread) {
+          await ctx.runMutation(internal.threads.markSent, { threadId: thread._id, sentAt, kind: message.kind });
+        }
+        if (message.guestId) await ctx.runMutation(internal.guests.markInvited, { guestId: message.guestId, at: sentAt });
+        return null;
+      }
       if (!inboxId) throw new Error("No AgentMail inbox for this wedding yet");
       if (!message.toAddress) throw new Error("Recipient has no email address");
       const replyTo = message.kind === "inquiry" ? undefined : thread?.lastInboundMessageId;
@@ -193,7 +207,7 @@ export const sendInvite = internalAction({
     if (!context) return null;
     const { invite, wedding, inviterLabel } = context;
     const email = invite.email;
-    if (!email) return null;
+    if (!email || wedding.demo) return null; // a sample wedding's invites are shared by link only
     const inboxId = wedding.inboxId ?? fallbackInbox();
     if (!inboxId) return null; // link-only invite
     const base = (process.env.SITE_URL ?? process.env.CONVEX_SITE_URL ?? "").replace(/\/$/, "");

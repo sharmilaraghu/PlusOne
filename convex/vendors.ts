@@ -2,7 +2,7 @@ import { ConvexError, v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { messageDoc, quoteDoc, threadDoc, vendorDoc, vendorSlotDoc } from "./lib/docs";
-import { canonicalWebsite } from "./lib/text";
+import { canonicalWebsite, hostOf } from "./lib/text";
 import { vendorCardValidator } from "./lib/validators";
 
 export const listBySlot = query({
@@ -282,5 +282,19 @@ export const applyRanking = internalMutation({
       updated += 1;
     }
     return updated;
+  },
+});
+
+/** Every website already found for a need, so "find more" can look past them. */
+export const hostsForSlot = internalQuery({
+  args: { slotId: v.id("vendorSlots") },
+  returns: v.array(v.string()),
+  handler: async (ctx, args) => {
+    const vendors = await ctx.db
+      .query("vendors")
+      .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
+      .take(200);
+    const hosts = vendors.map((v) => (v.website ? hostOf(v.website) : null)).filter((h): h is string => Boolean(h));
+    return [...new Set(hosts)];
   },
 });

@@ -8,7 +8,7 @@ import { formatMoney } from "./lib/text";
 import { workflow } from "./workflows";
 
 export const start = mutation({
-  args: { slotId: v.id("vendorSlots"), query: v.string(), area: v.optional(v.string()) },
+  args: { slotId: v.id("vendorSlots"), query: v.string(), area: v.optional(v.string()), more: v.optional(v.boolean()) },
   returns: v.id("researchRuns"),
   handler: async (ctx, args): Promise<Id<"researchRuns">> => {
     const slot = await ctx.db.get(args.slotId);
@@ -37,6 +37,7 @@ export const start = mutation({
       slotId: args.slotId,
       query: q,
       area: area || undefined,
+      ...(args.more ? { more: true } : {}),
       status: "running",
       step: "Queued",
       foundCount: 0,
@@ -46,7 +47,7 @@ export const start = mutation({
       weddingId: wedding._id,
       actorUserId: userId,
       type: "research_started",
-      text: `started researching "${q}" for ${slot.title}.`,
+      text: args.more ? `asked PlusOne for more ${slot.title.toLowerCase()} options.` : `started researching "${q}" for ${slot.title}.`,
       refs: { slotId: args.slotId },
     });
     await workflow.start(ctx, internal.workflows.researchWorkflow, { researchRunId });

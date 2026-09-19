@@ -4,6 +4,7 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { Icon } from "./ui/Icon";
+import { usePrivacy } from "../lib/privacy";
 
 type Draft = FunctionReturnType<typeof api.outreach.listDrafts>[number]["message"] & {
   vendor: FunctionReturnType<typeof api.outreach.listDrafts>[number]["vendor"];
@@ -30,6 +31,7 @@ export function ConfirmOutreach({
   editable: boolean;
   onSent: (queued: number) => void;
 }) {
+  const privacy = usePrivacy();
   const sendAll = useMutation(api.outreach.sendAllForSlot);
   const discard = useMutation(api.outreach.discardDraftsForSlot);
   const updateDraft = useMutation(api.outreach.updateDraft);
@@ -97,7 +99,7 @@ export function ConfirmOutreach({
                 <span className="min-w-0">
                   <span className="block truncate text-sm font-medium">{d.vendor.name}</span>
                   <span className="block truncate font-mono text-[11px] text-quiet">
-                    {d.toAddress || "no email address yet"}
+                    {privacy.email(d.toAddress) || "no email address yet"}
                   </span>
                 </span>
                 {d.toAddress ? (
@@ -143,7 +145,7 @@ export function ConfirmOutreach({
             ) : (
               <article className="card-quiet px-5 py-4">
                 <p className="font-medium">{sample.subject}</p>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted">{sample.bodyText}</p>
+                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-muted">{privacy.text(sample.bodyText)}</p>
               </article>
             )}
             {!editable && drafts.length > 1 && (

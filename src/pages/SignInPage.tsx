@@ -92,6 +92,13 @@ export function SignInPage({ redirectTo }: { redirectTo?: string }) {
           </button>
         </form>
         </div>
+        <p className="mt-5 text-center text-sm text-muted">
+          Just looking?{" "}
+          <Link to="/guest" className="text-accent underline underline-offset-2">
+            Try it as a guest
+          </Link>{" "}
+          with a sample wedding. No sign-up.
+        </p>
       </div>
     </main>
   );

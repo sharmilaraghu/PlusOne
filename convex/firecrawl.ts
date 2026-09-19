@@ -245,7 +245,13 @@ const pickLink = (links: string[], re: RegExp, exclude: Set<string>, host: strin
   links.find((l) => re.test(l) && !exclude.has(l) && /^https?:\/\//.test(l) && (!host || hostOf(l) === host));
 
 export const searchVendors = internalAction({
-  args: { queries: v.array(v.string()), city: v.string(), limit: v.optional(v.number()) },
+  args: {
+    queries: v.array(v.string()),
+    city: v.string(),
+    limit: v.optional(v.number()),
+    /** Websites already found for this need, so "find more" turns up someone new. */
+    excludeHosts: v.optional(v.array(v.string())),
+  },
   returns: v.array(
     v.object({
       url: v.string(),
@@ -257,6 +263,7 @@ export const searchVendors = internalAction({
   handler: async (_ctx, args): Promise<Candidate[]> => {
     const limit = Math.max(1, Math.min(10, Math.floor(args.limit ?? 6)));
     const byHost = new Map<string, Candidate>();
+    const known = new Set(args.excludeHosts ?? []);
     for (const query of args.queries.slice(0, 3)) {
       // `city` is the full search location: "<area> <city>" when the couple gave a neighbourhood.
       const q = query.toLowerCase().includes(args.city.toLowerCase()) ? query : `${query} ${args.city}`;
@@ -277,7 +284,7 @@ export const searchVendors = internalAction({
         const url = "url" in item && typeof item.url === "string" ? item.url : (meta?.sourceURL ?? meta?.url);
         if (!url) continue;
         const host = hostOf(url);
-        if (!host || byHost.has(host)) continue;
+        if (!host || byHost.has(host) || known.has(host)) continue;
         if (isBlockedHost(host)) continue;
         const title = "title" in item && typeof item.title === "string" ? item.title : meta?.title;
         const description = "description" in item && typeof item.description === "string" ? item.description : meta?.description;

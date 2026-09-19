@@ -6,6 +6,8 @@ import type { Id } from "../../convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { money, statusLabel, timeAgo } from "../lib/format";
 import { BookButton } from "../components/BookButton";
+import { EmptyState } from "../components/ui/EmptyState";
+import { usePrivacy } from "../lib/privacy";
 
 /** Names for the kinds of email a couple sees in a conversation. */
 const KIND_LABEL: Record<string, string> = {
@@ -38,7 +40,26 @@ const statusStyle: Record<string, string> = {
   needs_attention: "bg-warn-bg text-warn",
 };
 
+/** The filters a couple actually thinks in. */
+const FILTERS = [
+  { id: "all", label: "All" },
+  { id: "needs_attention", label: "Needs you" },
+  { id: "sent", label: "Waiting" },
+  { id: "quoted", label: "Quoted" },
+  { id: "booked", label: "Booked" },
+];
+
+const STATUS_LABEL: Record<string, string> = {
+  sent: "waiting",
+  replied: "replied",
+  quoted: "quoted",
+  booked: "booked",
+  declined: "passed",
+  needs_attention: "needs you",
+};
+
 export function InboxPage() {
+  const privacy = usePrivacy();
   const { wedding, role } = useOutletContext<WeddingData>();
   const weddingId = wedding._id as Id<"weddings">;
   const { threadId } = useParams<{ threadId: string }>();
@@ -54,37 +75,75 @@ export function InboxPage() {
     if (!threadId && visible.length > 0) navigate(`/w/${weddingId}/inbox/${visible[0]._id}`, { replace: true });
   }, [threadId, visible, navigate, weddingId]);
 
-  return (
-    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
-      <aside className="min-w-0">
+  const all = (threads ?? []).filter((t) => t.status !== "draft");
+  const counts = Object.fromEntries(FILTERS.map((f) => [f.id, f.id === "all" ? all.length : all.filter((t) => t.status === f.id).length]));
+
+  if (threads !== undefined && all.length === 0) {
+    return (
+      <div>
         <h1 className="text-2xl">Inbox</h1>
-        <p className="text-xs text-muted">Every conversation PlusOne is having with your vendors.</p>
-        <div className="mt-3 flex flex-wrap gap-1 text-xs">
-          {["all", "sent", "quoted", "needs_attention", "booked"].map((f) => (
-            <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1 ${filter === f ? "bg-accent text-paper" : "bg-line/60 text-muted"}`}>
-              {statusLabel(f)}
+        <p className="mt-1 text-sm text-muted">Every conversation PlusOne is having with your vendors.</p>
+        <div className="mt-6">
+          <EmptyState
+            icon="mail"
+            title="No conversations yet"
+            body="When PlusOne emails vendors for you, every reply lands here: quotes read and totted up, questions answered, and anything that needs you flagged at the top."
+            action={<Link to={`/w/${weddingId}/vendors`} className="btn-primary">Find vendors to contact</Link>}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div>
+      <header className="flex flex-wrap items-end justify-between gap-4">
+        <div>
+          <h1 className="text-2xl">Inbox</h1>
+          <p className="mt-1 text-sm text-muted">Every conversation PlusOne is having with your vendors.</p>
+        </div>
+        <div className="flex max-w-full flex-wrap gap-1 rounded-full bg-cream p-1 shadow-[inset_0_0_0_1px_var(--color-line)]" role="group" aria-label="Show conversations">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              type="button"
+              aria-pressed={filter === f.id}
+              onClick={() => setFilter(f.id)}
+              className={`rounded-full px-3.5 py-1.5 text-xs transition ${
+                filter === f.id ? "bg-accent text-paper" : "text-muted hover:text-accent"
+              }`}
+            >
+              {f.label}
+              {counts[f.id] > 0 && <span className={`ml-1.5 tabular-nums ${filter === f.id ? "opacity-80" : "text-quiet"}`}>{counts[f.id]}</span>}
             </button>
           ))}
         </div>
+      </header>
+
+    <div className="mt-6 grid items-start gap-6 lg:grid-cols-[340px_1fr]">
+      <aside className="card min-w-0 overflow-hidden">
         {threads === undefined ? (
-          <p className="mt-3 text-sm text-muted">Loading…</p>
+          <p className="p-4 text-sm text-muted">Loading…</p>
         ) : visible.length === 0 ? (
-          <p className="mt-3 text-sm text-muted">No conversations yet. Request quotes from the Vendors page and replies will land here.</p>
+          <p className="p-5 text-sm text-muted">Nothing here right now.</p>
         ) : (
-          <ul className="mt-3 space-y-1">
+          <ul className="divide-y divide-line">
             {visible.map((t) => (
               <li key={t._id}>
                 <Link
                   to={`/w/${weddingId}/inbox/${t._id}`}
                   aria-current={t._id === threadId ? "page" : undefined}
-                  className={`block rounded-xl px-3 py-2 ${t._id === threadId ? "bg-accent-soft" : "hover:bg-sand"}`}
+                  className={`block px-4 py-3 transition ${t._id === threadId ? "bg-accent-soft" : "hover:bg-accent-soft/40"}`}
                 >
                   <div className="flex items-center justify-between gap-2">
                     <p className="truncate text-sm font-medium">{t.vendorName}</p>
-                    <span className={`chip ${statusStyle[t.status] ?? "bg-sand"}`}>{statusLabel(t.status)}</span>
+                    <span className={`chip shrink-0 ${statusStyle[t.status] ?? "bg-sand"}`}>{STATUS_LABEL[t.status] ?? statusLabel(t.status)}</span>
                   </div>
-                  <p className="truncate text-xs text-muted">{t.slotTitle}{t.latestQuote ? ` · ${money(t.latestQuote.total, t.latestQuote.currency)}` : ""}</p>
-                  {t.lastPreview && <p className="mt-0.5 truncate text-xs text-muted">{t.lastPreview}</p>}
+                  <p className="mt-0.5 truncate text-xs text-muted">
+                    {t.slotTitle}
+                    {t.latestQuote ? ` · ${money(t.latestQuote.total, t.latestQuote.currency)}` : ""}
+                  </p>
+                  {t.lastPreview && <p className="mt-1 truncate text-xs text-quiet">{privacy.text(t.lastPreview)}</p>}
                 </Link>
               </li>
             ))}
@@ -92,7 +151,11 @@ export function InboxPage() {
         )}
       </aside>
       <section className="min-w-0">
-        {threadId ? <ThreadView threadId={threadId as Id<"threads">} currency={wedding.currency} canEdit={canEdit} /> : <p className="text-muted">Select a conversation.</p>}
+        {threadId ? (
+          <ThreadView threadId={threadId as Id<"threads">} currency={wedding.currency} canEdit={canEdit} />
+        ) : (
+          <EmptyState compact icon="mail" title="Pick a conversation" body="Choose one on the left to read it." />
+        )}
 
         {/* Anything the couple forwarded in, read and flagged. */}
         {contracts && contracts.length > 0 && (
@@ -135,11 +198,13 @@ export function InboxPage() {
         )}
       </section>
     </div>
+    </div>
   );
 }
 
 function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; currency: string; canEdit: boolean }) {
   const data = useQuery(api.threads.get, { threadId });
+  const privacy = usePrivacy();
   const setStatus = useMutation(api.threads.setStatus);
   const resolve = useMutation(api.threads.resolveAttention);
   const followUp = useMutation(api.outreach.sendFollowUpNow);
@@ -165,7 +230,7 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
             {thread.nextFollowUpAt && thread.status === "sent" ? ` · follow-up ${new Date(thread.nextFollowUpAt).toLocaleDateString()}` : ""}
             {thread.followUpCount ? ` · ${thread.followUpCount}/3 nudges` : ""}
           </p>
-          {vendor.email && <p className="font-mono text-[11px] text-muted">{vendor.email}</p>}
+          {vendor.email && <p className="font-mono text-[11px] text-muted">{privacy.email(vendor.email)}</p>}
         </div>
         {canEdit && (
           <div className="flex flex-wrap gap-2">
@@ -190,7 +255,7 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
       {thread.pendingQuestion ? (
         <section className="card border-warn/40 p-4" aria-label="A question for you">
           <p className="text-xs uppercase tracking-wide text-warn">Only you can answer this</p>
-          <p className="mt-1.5 text-[0.95rem] leading-relaxed">{thread.pendingQuestion}</p>
+          <p className="mt-1.5 text-[0.95rem] leading-relaxed">{privacy.text(thread.pendingQuestion)}</p>
           {canEdit && (
             <form
               className="mt-3"
@@ -259,7 +324,7 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
               </span>
             </div>
             <p className="mt-2 font-medium">{m.subject}</p>
-            <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed">{m.bodyText}</pre>
+            <pre className="mt-2 whitespace-pre-wrap font-sans text-sm leading-relaxed">{privacy.text(m.bodyText)}</pre>
             {m.attachments.length > 0 && (
               <ul className="mt-2 flex flex-wrap gap-2 text-xs">
                 {m.attachments.map((a, i) => (
