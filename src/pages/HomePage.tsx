@@ -4,6 +4,7 @@ import { useAuthActions } from "@convex-dev/auth/react";
 import { api } from "../../convex/_generated/api";
 import { longDate, money } from "../lib/format";
 import { Icon } from "../components/ui/Icon";
+import { UserChip } from "../components/ui/UserChip";
 import { PrintWall } from "../components/PrintWall";
 
 /** The print inside each wedding's polaroid, in the order they were planned. */
@@ -12,10 +13,11 @@ const TILTS = ["-2.5deg", "1.8deg", "-1.2deg", "2.4deg", "-1.9deg", "1.3deg"];
 
 export function HomePage() {
   const mine = useQuery(api.weddings.listMine);
+  const draft = useQuery(api.drafts.mine);
   const { signOut } = useAuthActions();
   const has = mine && mine.length > 0;
 
-  if (mine === undefined) {
+  if (mine === undefined || draft === undefined) {
     return <div className="grid min-h-[100dvh] place-items-center bg-paper text-sm text-muted">Loading…</div>;
   }
 
@@ -30,18 +32,37 @@ export function HomePage() {
 
           <main id="main" className="flex min-h-0 flex-1 items-center justify-center px-5 pb-8">
             <div className="w-full max-w-[36rem] rounded-[18px] border border-line bg-cream px-6 py-7 text-center shadow-[0_30px_70px_-28px_rgba(70,35,35,0.55)] md:px-10 md:py-10">
-              <h1 className="text-[2.2rem] leading-[1.05] md:text-[2.8rem]">
-                Let's plan <em>something lovely</em>
-              </h1>
-              <p className="mx-auto mt-3.5 max-w-[30rem] text-[0.95rem] leading-relaxed text-muted md:text-base">
-                Tell PlusOne about your day — who is coming, roughly what you would like to spend — and it lays out the
-                plan, finds your vendors, and writes to them for you.
-              </p>
+              {draft ? (
+                <>
+                  <h1 className="text-[2.2rem] leading-[1.05] md:text-[2.8rem]">
+                    Welcome <em>back</em>
+                  </h1>
+                  <p className="mx-auto mt-3.5 max-w-[30rem] text-[0.95rem] leading-relaxed text-muted md:text-base">
+                    {draft.name}'s plan is saved just as you left it{" "}
+                    <span className="whitespace-nowrap">({savedWhen(draft.updatedAt)})</span>. Pick it up and finish in a
+                    minute or two.
+                  </p>
+                  <Link to="/new" className="btn-primary mt-6">
+                    Continue planning <Icon name="arrow" size={17} />
+                  </Link>
+                  <p className="mt-3 text-sm text-quiet">You can start over from the next page if you'd rather.</p>
+                </>
+              ) : (
+                <>
+                  <h1 className="text-[2.2rem] leading-[1.05] md:text-[2.8rem]">
+                    Let's plan <em>something lovely</em>
+                  </h1>
+                  <p className="mx-auto mt-3.5 max-w-[30rem] text-[0.95rem] leading-relaxed text-muted md:text-base">
+                    Tell PlusOne about your day — who is coming, roughly what you would like to spend — and it lays out the
+                    plan, finds your vendors, and writes to them for you.
+                  </p>
 
-              <Link to="/new" className="btn-primary mt-6">
-                Start planning <Icon name="arrow" size={17} />
-              </Link>
-              <p className="mt-3 text-sm text-quiet">About two minutes, and you can change all of it later.</p>
+                  <Link to="/new" className="btn-primary mt-6">
+                    Start planning <Icon name="arrow" size={17} />
+                  </Link>
+                  <p className="mt-3 text-sm text-quiet">About two minutes, and you can change all of it later.</p>
+                </>
+              )}
 
               <ul className="mx-auto mt-7 grid max-w-[30rem] gap-2 border-t border-line pt-5 text-left text-[0.86rem] leading-snug text-muted sm:grid-cols-2 sm:gap-x-5 sm:gap-y-2.5 sm:text-sm">
                 {[
@@ -136,10 +157,21 @@ export function HomePage() {
                 <span className="grid h-11 w-11 place-items-center rounded-full bg-accent-soft text-accent transition group-hover:bg-accent group-hover:text-paper">
                   <Icon name="plus" size={19} />
                 </span>
-                <span className="display text-[1.1rem]">Plan another</span>
-                <span className="max-w-[12rem] text-[0.8rem] leading-relaxed text-quiet">
-                  A second celebration, or a family member's.
-                </span>
+                {draft ? (
+                  <>
+                    <span className="display text-[1.1rem]">Finish {draft.name}</span>
+                    <span className="max-w-[12rem] text-[0.8rem] leading-relaxed text-quiet">
+                      Saved {savedWhen(draft.updatedAt)}. Pick up where you left off.
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span className="display text-[1.1rem]">Plan another</span>
+                    <span className="max-w-[12rem] text-[0.8rem] leading-relaxed text-quiet">
+                      A second celebration, or a family member's.
+                    </span>
+                  </>
+                )}
               </Link>
             </li>
           </ul>
@@ -147,6 +179,17 @@ export function HomePage() {
       </div>
     </div>
   );
+}
+
+/** "just now", "3 hours ago", "yesterday", "on 12 Sept". */
+function savedWhen(at: number): string {
+  const mins = Math.round((Date.now() - at) / 60_000);
+  if (mins < 2) return "just now";
+  if (mins < 60) return `${mins} minutes ago`;
+  const hours = Math.round(mins / 60);
+  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
+  if (hours < 48) return "yesterday";
+  return `on ${new Date(at).toLocaleDateString(undefined, { day: "numeric", month: "short" })}`;
 }
 
 /** One line of the plan's state, label left and figure right. */
@@ -165,9 +208,13 @@ function Header({ onSignOut }: { onSignOut: () => void }) {
       <Link to="/" className="display text-2xl tracking-tight text-accent" aria-label="PlusOne home">
         Plus<em>One</em>
       </Link>
-      <button onClick={onSignOut} className="text-sm text-muted transition hover:text-accent">
+      <div className="flex min-w-0 items-center gap-2">
+      <UserChip className="hidden max-w-[15rem] sm:inline-flex" />
+      <button onClick={onSignOut} className="btn-quiet btn-sm gap-1.5 bg-paper/90 text-ink shadow-[inset_0_0_0_1px_var(--color-line),0_6px_18px_-8px_rgba(70,35,35,0.35)] backdrop-blur-sm">
+        <Icon name="signout" size={15} />
         Sign out
       </button>
+      </div>
     </header>
   );
 }

@@ -6,6 +6,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { CURRENCIES, VIBES } from "../components/onboarding/shared";
 import { PageHeader } from "../components/ui/PageHeader";
+import { CountrySelect } from "../components/ui/CountrySelect";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 type Formality = "relaxed" | "smart" | "formal";
@@ -29,6 +30,7 @@ export function SettingsPage() {
     stylePalette: wedding.stylePalette ?? "",
     styleFormality: (wedding.styleFormality ?? "smart") as Formality,
     inspirationUrl: wedding.inspirationUrl ?? "",
+    inspirationNotes: wedding.inspirationNotes ?? "",
     sendMode: (wedding.sendMode ?? "auto") as "auto" | "review",
   });
   const [vibes, setVibes] = useState<string[]>(wedding.styleVibes ?? []);
@@ -57,6 +59,7 @@ export function SettingsPage() {
           styleFormality: form.styleFormality,
           styleVibes: vibes,
           inspirationUrl: form.inspirationUrl.trim(),
+          inspirationNotes: form.inspirationNotes.trim(),
           sendMode: form.sendMode,
         },
       });
@@ -83,7 +86,7 @@ export function SettingsPage() {
           <Field label="Neighbourhood" id="s-area" hint="Narrows vendor searches to one part of the city.">
             <input id="s-area" className="input" value={form.area} onChange={(e) => set("area", e.target.value)} disabled={!canEdit} placeholder="East Austin" />
           </Field>
-          <Field label="Country" id="s-country"><input id="s-country" className="input" value={form.country} onChange={(e) => set("country", e.target.value)} disabled={!canEdit} /></Field>
+          <Field label="Country" id="s-country"><CountrySelect id="s-country" value={form.country} onChange={(c) => set("country", c)} disabled={!canEdit} /></Field>
         </div>
       </section>
 
@@ -143,6 +146,9 @@ export function SettingsPage() {
           </div>
           <Field label="Inspiration link" id="s-insp" hint="A Pinterest board, a blog post or a venue page.">
             <input id="s-insp" type="url" className="input" value={form.inspirationUrl} onChange={(e) => set("inspirationUrl", e.target.value)} disabled={!canEdit} placeholder="https://…" />
+          </Field>
+          <Field label="In your words" id="s-notes" hint="Anything a vendor should know about the look and feel.">
+            <textarea id="s-notes" rows={3} className="input resize-y" value={form.inspirationNotes} onChange={(e) => set("inspirationNotes", e.target.value)} disabled={!canEdit} placeholder="Long tables under the olive trees, lots of candles, nothing too matchy" />
           </Field>
         </div>
       </section>

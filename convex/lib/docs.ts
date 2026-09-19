@@ -43,4 +43,6 @@ export const userSummary = v.object({
   _id: v.id("users"),
   name: v.optional(v.string()),
   email: v.optional(v.string()),
+  /** Profile photo, when they signed in with Google. */
+  image: v.optional(v.string()),
 });

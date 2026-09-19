@@ -5,6 +5,7 @@ import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { money, pct, timeAgo } from "../lib/format";
+import { BookButton } from "../components/BookButton";
 import { PageHeader } from "../components/ui/PageHeader";
 import { EmptyState } from "../components/ui/EmptyState";
 import { Icon } from "../components/ui/Icon";
@@ -150,12 +151,11 @@ function NeedBoard({ need, currency, canEdit }: { need: Need; currency: string; 
   const live = need.vendors.filter((v) => v.state !== "not_contacted");
   const cheapest = need.cheapest;
 
-  async function book(v: VendorRow) {
-    if (!window.confirm(`Book ${v.name} for ${need.title}?${v.quote ? ` ${money(v.quote.total, v.quote.currency)} goes onto your budget.` : ""}`)) return;
+  async function book(v: VendorRow, notify: boolean) {
     setBusy(v.vendorId);
     setError(null);
     try {
-      await markBooked({ slotId: need.slotId as Id<"vendorSlots">, vendorId: v.vendorId as Id<"vendors"> });
+      await markBooked({ slotId: need.slotId as Id<"vendorSlots">, vendorId: v.vendorId as Id<"vendors">, notify });
     } catch (e) {
       setError(e instanceof Error ? e.message : "That booking didn't save.");
     } finally {
@@ -304,14 +304,13 @@ function NeedBoard({ need, currency, canEdit }: { need: Need; currency: string; 
                         {v.state === "booked" ? (
                           <span className="chip-ok">Yours</span>
                         ) : (
-                          <button
-                            type="button"
-                            className="btn-primary btn-sm"
+                          <BookButton
+                            vendorName={v.name}
+                            label={busy === v.vendorId ? "…" : "Book"}
                             disabled={busy !== null || need.status === "booked"}
-                            onClick={() => void book(v)}
-                          >
-                            {busy === v.vendorId ? "…" : "Book"}
-                          </button>
+                            note={v.quote ? `${money(v.quote.total, v.quote.currency)} goes onto your budget.` : undefined}
+                            onBook={(notify) => book(v, notify)}
+                          />
                         )}
                         {v.state !== "booked" && v.threadId && (
                           <button

@@ -4,6 +4,8 @@ import { logActivity, requireMember } from "./lib/auth";
 import { quoteDoc, vendorDoc, vendorSlotDoc } from "./lib/docs";
 import { setCommittedForSlotHelper } from "./budget";
 import { rebalanceWeddingBudget } from "./lib/budget";
+import { internal } from "./_generated/api";
+import { workflow } from "./workflows";
 
 export const list = query({
   args: { weddingId: v.id("weddings") },
@@ -119,7 +121,15 @@ export const update = mutation({
 });
 
 export const markBooked = mutation({
-  args: { slotId: v.id("vendorSlots"), vendorId: v.id("vendors") },
+  args: {
+    slotId: v.id("vendorSlots"),
+    vendorId: v.id("vendors"),
+    /**
+     * Let PlusOne tell the chosen vendor and thank the others. Off when they booked
+     * outside PlusOne and there is nobody to tell.
+     */
+    notify: v.optional(v.boolean()),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const slot = await ctx.db.get(args.slotId);
@@ -155,6 +165,9 @@ export const markBooked = mutation({
       text: `booked ${vendor.name} for ${slot.title}.`,
       refs: { slotId: args.slotId, vendorId: args.vendorId, threadId: thread?._id },
     });
+    if (args.notify) {
+      await workflow.start(ctx, internal.workflows.bookingWorkflow, { slotId: args.slotId, vendorId: args.vendorId });
+    }
     return null;
   },
 });

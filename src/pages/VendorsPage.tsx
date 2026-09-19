@@ -5,6 +5,7 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { flattenSlots, money, statusLabel, timeAgo, type FlatSlot } from "../lib/format";
+import { BookButton } from "../components/BookButton";
 import { SUGGESTED_CATEGORIES } from "../../convex/lib/templates";
 import { Icon } from "../components/ui/Icon";
 import { VendorCard } from "../components/VendorCard";
@@ -31,6 +32,7 @@ export function VendorsPage() {
       <aside>
         <h1 className="text-2xl">Vendors</h1>
         <p className="text-xs text-muted">One slot per thing you need to book.</p>
+        {canEdit && slots && <ResearchAll weddingId={weddingId} waiting={slots.filter((s) => s.status === "research").length} />}
         <ul className="mt-3 space-y-1">
           {(slots ?? []).map((s) => (
             <li key={s._id}>
@@ -55,6 +57,47 @@ export function VendorsPage() {
           <SlotPanel key={slot._id} slot={slot} wedding={wedding} events={events} canEdit={canEdit} />
         )}
       </section>
+    </div>
+  );
+}
+
+/** One click to research every need nobody has looked into yet. */
+function ResearchAll({ weddingId, waiting }: { weddingId: Id<"weddings">; waiting: number }) {
+  const startAll = useMutation(api.research.startAll);
+  const [state, setState] = useState<{ busy: boolean; note: string | null }>({ busy: false, note: null });
+  if (waiting === 0 && !state.note) return null;
+  return (
+    <div className="mt-3 rounded-[14px] bg-accent-soft/60 p-3">
+      {state.note ? (
+        <p className="text-xs leading-relaxed text-accent">{state.note}</p>
+      ) : (
+        <>
+          <p className="text-xs leading-relaxed text-muted">
+            {waiting === 1 ? "One need hasn't" : `${waiting} needs haven't`} been looked into yet.
+          </p>
+          <button
+            type="button"
+            className="btn-primary btn-sm mt-2 w-full"
+            disabled={state.busy}
+            onClick={() => {
+              setState({ busy: true, note: null });
+              void startAll({ weddingId })
+                .then(({ started }) =>
+                  setState({
+                    busy: false,
+                    note:
+                      started === 0
+                        ? "Everything is already being researched."
+                        : `On it. PlusOne is researching ${started} ${started === 1 ? "need" : "needs"}, one every 20 seconds or so. Each fills in as it finishes.`,
+                  }),
+                )
+                .catch((e: unknown) => setState({ busy: false, note: e instanceof Error ? e.message : "That didn't start. Try again." }));
+            }}
+          >
+            <Icon name="search" size={15} /> {state.busy ? "Starting…" : "Find vendors for everything"}
+          </button>
+        </>
+      )}
     </div>
   );
 }
@@ -259,7 +302,6 @@ function SlotPanel({
         <ConfirmOutreach
           slotId={slot._id}
           drafts={drafts}
-          inboxAddress={wedding.inboxAddress}
           editable={wedding.sendMode === "review"}
           onSent={(queued) => setSentCount(queued)}
         />
@@ -304,7 +346,7 @@ function SlotPanel({
                   <td className="py-2 pr-4 text-xs text-warn">{q.redFlags.slice(0, 2).join("; ") || "—"}</td>
                   <td className="py-2 text-right">
                     {canEdit && slot.status !== "booked" && (
-                      <button className="btn-ghost btn-sm" onClick={() => void markBooked({ slotId: slot._id, vendorId: q.vendorId })}>Mark booked</button>
+                      <BookButton vendorName={q.vendorName} className="btn-ghost btn-sm" onBook={(notify) => markBooked({ slotId: slot._id, vendorId: q.vendorId, notify })} />
                     )}
                   </td>
                 </tr>

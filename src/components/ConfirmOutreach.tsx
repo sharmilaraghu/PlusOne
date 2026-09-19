@@ -21,13 +21,11 @@ type Draft = FunctionReturnType<typeof api.outreach.listDrafts>[number]["message
 export function ConfirmOutreach({
   slotId,
   drafts,
-  inboxAddress,
   editable,
   onSent,
 }: {
   slotId: Id<"vendorSlots">;
   drafts: Draft[];
-  inboxAddress: string | undefined;
   /** True in "let me read each email first" mode: every letter is shown and can be edited. */
   editable: boolean;
   onSent: (queued: number) => void;
@@ -80,7 +78,7 @@ export function ConfirmOutreach({
         <p className="mt-1 text-sm text-muted">
           {editable
             ? "You asked to read each one first. Edit anything you like, then send."
-            : `PlusOne will email ${reachable.length === 1 ? "this vendor" : `these ${reachable.length} vendors`} from ${inboxAddress ?? "your wedding inbox"}, then chase anyone who goes quiet and read the replies back to you.`}
+            : `PlusOne will email ${reachable.length === 1 ? "this vendor" : `these ${reachable.length} vendors`} from your wedding inbox, then chase anyone who goes quiet and read the replies back to you.`}
         </p>
       </div>
 

@@ -9,12 +9,14 @@
  */
 
 import type * as activity from "../activity.js";
+import type * as agent from "../agent.js";
 import type * as agentmail from "../agentmail.js";
 import type * as assistant from "../assistant.js";
 import type * as auth from "../auth.js";
 import type * as budget from "../budget.js";
 import type * as crons from "../crons.js";
 import type * as dashboard from "../dashboard.js";
+import type * as drafts from "../drafts.js";
 import type * as events from "../events.js";
 import type * as firecrawl from "../firecrawl.js";
 import type * as followups from "../followups.js";
@@ -52,12 +54,14 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   activity: typeof activity;
+  agent: typeof agent;
   agentmail: typeof agentmail;
   assistant: typeof assistant;
   auth: typeof auth;
   budget: typeof budget;
   crons: typeof crons;
   dashboard: typeof dashboard;
+  drafts: typeof drafts;
   events: typeof events;
   firecrawl: typeof firecrawl;
   followups: typeof followups;

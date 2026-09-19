@@ -1,5 +1,5 @@
 // Hairline icon set for PlusOne, 1.5px stroke, drawn to match the approved comp.
-type Name = "home" | "people" | "mail" | "guests" | "arrow" | "search" | "pen" | "send" | "reply" | "check" | "close" | "heart" | "settings" | "plus" | "calendar" | "dot" | "star" | "external";
+type Name = "home" | "people" | "mail" | "guests" | "arrow" | "search" | "pen" | "send" | "reply" | "check" | "close" | "heart" | "settings" | "plus" | "calendar" | "dot" | "star" | "external" | "signout";
 
 const paths: Record<Name, string> = {
   home: "M4 11.2 12 4.5l8 6.7M6.2 9.6V19.5h11.6V9.6M10 19.5v-5h4v5",
@@ -20,6 +20,7 @@ const paths: Record<Name, string> = {
   dot: "M12 11.4a.6.6 0 1 0 0 1.2.6.6 0 0 0 0-1.2Z",
   star: "M12 3.8l2.5 5.1 5.6.8-4 3.9 1 5.6-5.1-2.7-5 2.7 1-5.6-4.1-3.9 5.6-.8L12 3.8Z",
   external: "M14 4.5h5.5V10M19 5l-8 8M18 14v5.5H4.5V6h5.5",
+  signout: "M13.5 4.5h-8v15h8M10 12h10m-3.5-3.5L20 12l-3.5 3.5",
 };
 
 export function Icon({ name, size = 22, className = "" }: { name: Name; size?: number | string; className?: string }) {

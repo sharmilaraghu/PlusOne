@@ -1,9 +1,10 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { researchRunDoc } from "./lib/docs";
+import { formatMoney } from "./lib/text";
 import { workflow } from "./workflows";
 
 export const start = mutation({
@@ -50,6 +51,54 @@ export const start = mutation({
     });
     await workflow.start(ctx, internal.workflows.researchWorkflow, { researchRunId });
     return researchRunId;
+  },
+});
+
+/** Seconds between each need's search, so a whole plan doesn't hit the web at once. */
+const STAGGER_MS = 20_000;
+
+/** The search PlusOne runs for a need when nobody has typed one. Mirrors the Vendors page's default. */
+function defaultQuery(slot: Doc<"vendorSlots">, wedding: Doc<"weddings">): string {
+  const tradition = wedding.template === "western" || wedding.template === "custom" ? "" : `${wedding.template} `;
+  return `${slot.category} in ${wedding.city} for a ${tradition}wedding under ${formatMoney(slot.budget, wedding.currency)}`;
+}
+
+/**
+ * Research every need that hasn't been looked into yet, one after another. Booked
+ * needs, needs already being researched and needs with vendors found are left alone.
+ */
+export const startAll = mutation({
+  args: { weddingId: v.id("weddings") },
+  returns: v.object({ started: v.number() }),
+  handler: async (ctx, args) => {
+    const { userId, wedding } = await requireMember(ctx, args.weddingId, "planner");
+    const slots = await ctx.db
+      .query("vendorSlots")
+      .withIndex("by_weddingId_and_status", (q) => q.eq("weddingId", args.weddingId).eq("status", "research"))
+      .take(50);
+    let started = 0;
+    for (const slot of slots) {
+      const lastRun = await ctx.db
+        .query("researchRuns")
+        .withIndex("by_slotId", (q) => q.eq("slotId", slot._id))
+        .order("desc")
+        .first();
+      if (lastRun && (lastRun.status === "running" || lastRun.status === "done")) continue;
+      await ctx.scheduler.runAfter(started * STAGGER_MS, internal.research.startForSlot, {
+        slotId: slot._id,
+        query: defaultQuery(slot, wedding),
+      });
+      started += 1;
+    }
+    if (started > 0) {
+      await logActivity(ctx, {
+        weddingId: wedding._id,
+        actorUserId: userId,
+        type: "research_started",
+        text: `asked PlusOne to find vendors for ${started} ${started === 1 ? "need" : "needs"}.`,
+      });
+    }
+    return { started };
   },
 });
 

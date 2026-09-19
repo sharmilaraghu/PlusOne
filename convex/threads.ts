@@ -1,3 +1,4 @@
+import { agentSentText } from "./agent";
 import { ConvexError, v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { clampLimit, logActivity, requireMember } from "./lib/auth";
@@ -188,6 +189,16 @@ export const markSent = internalMutation({
     });
     const slot = await ctx.db.get(thread.slotId);
     if (slot && slot.status === "research") await ctx.db.patch(slot._id, { status: "contacted" });
+    const agentText = agentSentText(args.kind, (await ctx.db.get(thread.vendorId))?.name ?? "a vendor");
+    if (agentText) {
+      await logActivity(ctx, {
+        weddingId: thread.weddingId,
+        actorLabel: "PlusOne",
+        type: "note",
+        text: agentText,
+        refs: { threadId: thread._id, vendorId: thread.vendorId, slotId: thread.slotId },
+      });
+    }
     if (args.kind === "inquiry") {
       const vendor = await ctx.db.get(thread.vendorId);
       await logActivity(ctx, {
@@ -237,9 +248,8 @@ export const applyClassification = internalMutation({
     if (!thread || thread.status === "booked") return null;
     if (args.classification === "declined") {
       await ctx.db.patch(args.threadId, { status: "declined", nextFollowUpAt: undefined, attentionReason: undefined });
-    } else if (args.classification === "question") {
-      await ctx.db.patch(args.threadId, { status: "needs_attention", attentionReason: "vendor_question", nextFollowUpAt: undefined });
     }
+    // A question is left to the inbound workflow: PlusOne answers it, or asks the couple.
     return null;
   },
 });

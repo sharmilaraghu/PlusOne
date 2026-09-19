@@ -47,6 +47,11 @@ export const messageKind = v.union(
   v.literal("guest_question"),
   v.literal("notification"),
   v.literal("invite"),
+  // Written by PlusOne on its own, mid-conversation with a vendor.
+  v.literal("agent_reply"),
+  v.literal("negotiation"),
+  v.literal("booking_confirmation"),
+  v.literal("no_thanks"),
 );
 export type MessageKind = Infer<typeof messageKind>;
 

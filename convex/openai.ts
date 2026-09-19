@@ -6,7 +6,14 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalAction } from "./_generated/server";
 import { formatMoney, truncate } from "./lib/text";
-import { rsvpStatus, vendorCardValidator, type RsvpStatus, type VendorCard } from "./lib/validators";
+import {
+  replyClassification,
+  rsvpStatus,
+  vendorCardValidator,
+  type ReplyClassification,
+  type RsvpStatus,
+  type VendorCard,
+} from "./lib/validators";
 
 const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const MODEL_FAST = process.env.OPENAI_MODEL_FAST ?? "gpt-5.6-luna";
@@ -37,6 +44,7 @@ function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[]): string
     wedding.stylePalette ? `Colours: ${wedding.stylePalette}` : "",
     wedding.styleFormality ? `Formality: ${wedding.styleFormality}` : "",
     wedding.styleSummary ? `Style notes: ${wedding.styleSummary}` : "",
+    wedding.inspirationNotes ? `In their words: ${truncate(wedding.inspirationNotes, 600)}` : "",
     "Events:",
     ...lines,
   ]
@@ -46,16 +54,44 @@ function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[]): string
 
 // ---- onboarding -------------------------------------------------------------
 
+/** Reads whatever inspiration the couple gave (a page, their own words, pictures) into one brief. */
 export const summariseStyle = internalAction({
-  args: { weddingId: v.id("weddings"), markdown: v.string() },
+  args: {
+    weddingId: v.id("weddings"),
+    markdown: v.optional(v.string()),
+    notes: v.optional(v.string()),
+    images: v.optional(v.array(v.id("_storage"))),
+  },
   returns: v.null(),
   handler: async (ctx, args): Promise<null> => {
+    const urls: string[] = [];
+    for (const id of args.images ?? []) {
+      const url = await ctx.storage.getUrl(id);
+      if (url) urls.push(url);
+    }
+    const sources = [
+      args.notes ? `How the couple describe it:\n${truncate(args.notes, 2000)}` : "",
+      args.markdown ? `Their inspiration page:\n${truncate(args.markdown, PAGE_CHARS)}` : "",
+      urls.length ? `They also shared ${urls.length} mood-board picture${urls.length === 1 ? "" : "s"}, attached.` : "",
+    ].filter(Boolean);
+    if (!sources.length) return null;
     const { text } = await generateText({
       model: openai(MODEL_FAST),
-      prompt:
-        "You are a wedding stylist. From the page content below (a couple's inspiration link), write a 2-3 sentence " +
-        "style summary a vendor could act on: palette, mood, formality, cultural touches, must-haves. Plain text, no headings.\n\n" +
-        truncate(args.markdown, PAGE_CHARS),
+      messages: [
+        {
+          role: "user",
+          content: [
+            {
+              type: "text",
+              text:
+                "You are a wedding stylist. From the couple's inspiration below, write a 2-3 sentence style summary a " +
+                "vendor could act on: palette, mood, formality, cultural touches, must-haves. Plain text, no headings.\n\n" +
+                sources.join("\n\n"),
+            },
+            ...urls.map((url) => ({ type: "file" as const, data: new URL(url), mediaType: "image" })),
+          ],
+        },
+      ],
     });
     await ctx.runMutation(internal.weddings.setStyleSummary, { weddingId: args.weddingId, styleSummary: text.trim().slice(0, 1000) });
     return null;
@@ -421,6 +457,166 @@ export const draftFollowUp = internalAction({
   },
 });
 
+// ---- the agent's side of the conversation ----------------------------------
+
+/**
+ * The line PlusOne never crosses on its own: anything that spends money, commits
+ * the couple, or picks between options is theirs to decide.
+ */
+const AGENT_RULES =
+  "Rules you must follow:\n" +
+  "- Use only facts in the wedding brief or the couple's own answer. Never invent times, addresses, menus, " +
+  "headcounts, names or preferences.\n" +
+  "- Never agree to book, sign, pay, place a deposit or hold, or accept a price. Never share phone numbers, " +
+  "home addresses or payment details.\n" +
+  "- If they ask about budget, you may share the planned budget for this service, given below.\n" +
+  "- Write in the couple's own voice (we, us, our), never about them in the third person.\n" +
+  "- Plain text, warm and brief, answering their questions in the order they asked. Sign off with both partners' " +
+  "first names. No subject line, no placeholders in brackets.";
+
+const vendorDecisionSchema = z.object({
+  decision: z
+    .enum(["answer", "ask_couple", "no_reply_needed"])
+    .describe(
+      "'answer' when every question can be answered from the brief alone; 'ask_couple' when any part needs a " +
+        "decision, a preference, a commitment or a fact the brief does not have; 'no_reply_needed' for thank-yous, " +
+        "out-of-office and automatic replies",
+    ),
+  reply: z.string().describe("when 'answer': the email body to send the vendor; otherwise empty"),
+  questionForCouple: z
+    .string()
+    .describe(
+      "when 'ask_couple': the one thing the couple must tell us, in plain words, naming the vendor and quoting " +
+        "any options and prices they gave; otherwise empty",
+    ),
+  reason: z.string().describe("one short line on why, for the couple's activity feed"),
+});
+export type VendorDecision = z.infer<typeof vendorDecisionSchema>;
+
+/**
+ * Decide what to do with a vendor's question: answer it from what PlusOne already
+ * knows, ask the couple the one thing only they can say, or let it be.
+ */
+export const decideVendorReply = internalAction({
+  args: {
+    weddingId: v.id("weddings"),
+    slotTitle: v.string(),
+    slotBudget: v.number(),
+    vendorName: v.string(),
+    /** Earlier emails, oldest first, already formatted. */
+    conversation: v.string(),
+    latest: v.string(),
+  },
+  returns: v.object({
+    decision: v.union(v.literal("answer"), v.literal("ask_couple"), v.literal("no_reply_needed")),
+    reply: v.string(),
+    questionForCouple: v.string(),
+    reason: v.string(),
+  }),
+  handler: async (ctx, args): Promise<VendorDecision> => {
+    const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
+    if (!context) throw new Error("Wedding not found");
+    const { wedding, events } = context;
+    const { object } = await generateObject({
+      model: openai(MODEL_SMART),
+      schema: vendorDecisionSchema,
+      prompt:
+        `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
+        `${args.vendorName} (${args.slotTitle}) has just written back. Decide how to respond.\n\n${AGENT_RULES}\n` +
+        `${toneFor(wedding)}\n\n${weddingBrief(wedding, events)}\n` +
+        `Planned budget for ${args.slotTitle}: ${formatMoney(args.slotBudget, wedding.currency)}\n\n` +
+        (args.conversation ? `Earlier in this conversation:\n${truncate(args.conversation, 6000)}\n\n` : "") +
+        `Their latest email:\n${truncate(args.latest, PAGE_CHARS)}`,
+    });
+    // Belt and braces: an "answer" with nothing to send is really a question for the couple.
+    if (object.decision === "answer" && !object.reply.trim()) {
+      return { ...object, decision: "ask_couple", questionForCouple: object.questionForCouple || object.reason };
+    }
+    return object;
+  },
+});
+
+/** Write the reply once the couple has answered what PlusOne could not. */
+export const writeVendorReply = internalAction({
+  args: {
+    weddingId: v.id("weddings"),
+    slotTitle: v.string(),
+    slotBudget: v.number(),
+    vendorName: v.string(),
+    conversation: v.string(),
+    latest: v.string(),
+    coupleAnswer: v.string(),
+  },
+  returns: v.string(),
+  handler: async (ctx, args): Promise<string> => {
+    const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
+    if (!context) throw new Error("Wedding not found");
+    const { wedding, events } = context;
+    const { object } = await generateObject({
+      model: openai(MODEL_SMART),
+      schema: z.object({ bodyText: z.string() }),
+      prompt:
+        `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
+        `Reply to ${args.vendorName} (${args.slotTitle}), answering everything they asked. The couple has told you:\n` +
+        `"${truncate(args.coupleAnswer, 2000)}"\nPass that on faithfully; it is the couple's decision, so you may state ` +
+        `it, but do not go beyond it.\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n${weddingBrief(wedding, events)}\n` +
+        `Planned budget for ${args.slotTitle}: ${formatMoney(args.slotBudget, wedding.currency)}\n\n` +
+        (args.conversation ? `Earlier in this conversation:\n${truncate(args.conversation, 6000)}\n\n` : "") +
+        `Their latest email:\n${truncate(args.latest, PAGE_CHARS)}`,
+    });
+    return object.bodyText;
+  },
+});
+
+const PURPOSES = {
+  negotiate: (budget: string, quote: string) =>
+    `Their quote of ${quote} is above the couple's planned budget of ${budget} for this. Thank them for the quote, say ` +
+    `honestly that it is more than planned, and ask whether they have a package or a trimmed-down option that ` +
+    `comes closer to ${budget}, and what would change. Warm, not haggling; no ultimatums; do not reject the quote.`,
+  confirm: () =>
+    `The couple has chosen this vendor. Say they would love to go ahead, and ask what the next steps are to confirm ` +
+    `(contract, deposit, anything they need from the couple). Do not agree to any specific payment yourself.`,
+  decline: () =>
+    `The couple has gone with someone else for this. Thank them sincerely for their time and let them know ` +
+    `kindly that the couple has booked another vendor. Two or three sentences. Do not give reasons or name the other vendor.`,
+} as const;
+
+/** One of PlusOne's own emails that move a conversation to its end. */
+export const writeAgentEmail = internalAction({
+  args: {
+    weddingId: v.id("weddings"),
+    slotTitle: v.string(),
+    slotBudget: v.number(),
+    vendorName: v.string(),
+    conversation: v.string(),
+    purpose: v.union(v.literal("negotiate"), v.literal("confirm"), v.literal("decline")),
+    quoteTotal: v.optional(v.number()),
+  },
+  returns: v.string(),
+  handler: async (ctx, args): Promise<string> => {
+    const context = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
+    if (!context) throw new Error("Wedding not found");
+    const { wedding, events } = context;
+    // "around $4,600" reads like a person's budget; "$4,614" reads like a spreadsheet's.
+    const step = args.slotBudget >= 10_000 ? 500 : args.slotBudget >= 1_000 ? 100 : 10;
+    const budget = `around ${formatMoney(Math.round(args.slotBudget / step) * step, wedding.currency)}`;
+    const task =
+      args.purpose === "negotiate"
+        ? PURPOSES.negotiate(budget, formatMoney(args.quoteTotal ?? 0, wedding.currency))
+        : PURPOSES[args.purpose]();
+    const { object } = await generateObject({
+      model: openai(MODEL_SMART),
+      schema: z.object({ bodyText: z.string() }),
+      prompt:
+        `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
+        `Write to ${args.vendorName} (${args.slotTitle}). ${task}\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n` +
+        `${weddingBrief(wedding, events)}\n\n` +
+        (args.conversation ? `The conversation so far:\n${truncate(args.conversation, 6000)}` : ""),
+    });
+    return object.bodyText;
+  },
+});
+
 // ---- inbound ----------------------------------------------------------------
 
 const replySchema = z.object({
@@ -445,8 +641,8 @@ const replySchema = z.object({
 /** Classify + extract a vendor reply, then update quote / thread / budget / activity. */
 export const extractReply = internalAction({
   args: { messageId: v.id("messages") },
-  returns: v.null(),
-  handler: async (ctx, args): Promise<null> => {
+  returns: v.union(v.object({ classification: replyClassification, total: v.union(v.number(), v.null()) }), v.null()),
+  handler: async (ctx, args): Promise<{ classification: ReplyClassification; total: number | null } | null> => {
     const context = await ctx.runQuery(internal.messages.getContext, { messageId: args.messageId });
     if (!context || !context.thread) return null;
     const { message, wedding, thread, vendor, slot } = context;
@@ -491,7 +687,7 @@ export const extractReply = internalAction({
         summary: object.summary,
       });
     }
-    return null;
+    return { classification: object.classification, total: extracted.total ?? null };
   },
 });
 

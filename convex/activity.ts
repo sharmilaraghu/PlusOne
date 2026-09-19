@@ -4,17 +4,22 @@ import { clampLimit, logActivity, requireMember } from "./lib/auth";
 import { activityDoc } from "./lib/docs";
 import { activityRefsValidator, activityType } from "./lib/validators";
 
+/** What a couple sees when PlusOne can start writing on their behalf. */
+export const INBOX_READY_TEXT = "PlusOne is ready to email vendors for you.";
+
 export const list = query({
   args: { weddingId: v.id("weddings"), limit: v.optional(v.number()) },
   returns: v.array(activityDoc),
   handler: async (ctx, args) => {
     await requireMember(ctx, args.weddingId);
     const limit = clampLimit(args.limit, 30, 50);
-    return await ctx.db
+    const rows = await ctx.db
       .query("activity")
       .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
       .order("desc")
       .take(limit);
+    // Older entries named the mailbox address, which is plumbing, not news.
+    return rows.map((r) => (r.type === "inbox_ready" ? { ...r, text: INBOX_READY_TEXT } : r));
   },
 });
 

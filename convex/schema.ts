@@ -48,6 +48,10 @@ export const weddingFields = {
   template: cultureTemplate,
   styleSummary: v.optional(v.string()),
   inspirationUrl: v.optional(v.string()),
+  /** Inspiration in the couple's own words, when there is no link to point at. */
+  inspirationNotes: v.optional(v.string()),
+  /** Mood-board pictures the couple uploaded. */
+  inspirationImages: v.optional(v.array(v.id("_storage"))),
   /** How the couple describe the feel they want; shapes vendor searches and email tone. */
   styleVibes: v.optional(v.array(v.string())),
   stylePalette: v.optional(v.string()),
@@ -163,6 +167,10 @@ export const threadFields = {
   nextFollowUpAt: v.optional(v.number()),
   followUpCount: v.number(),
   attentionReason: v.optional(v.string()),
+  /** What the vendor needs from the couple that PlusOne could not answer itself. */
+  pendingQuestion: v.optional(v.string()),
+  /** Set once PlusOne has asked about an over-budget quote, so it asks only once. */
+  negotiatedAt: v.optional(v.number()),
 };
 
 export const messageFields = {
@@ -305,6 +313,21 @@ export default defineSchema({
   ...authTables,
 
   weddings: defineTable(weddingFields).index("by_inboxId", ["inboxId"]),
+
+  /**
+   * A wedding being set up but not yet created, one per user, so onboarding can be
+   * left and picked up again on any device. Deleted when the wedding is created.
+   */
+  onboardingDrafts: defineTable({
+    userId: v.id("users"),
+    /** "Anita & Sam", for the home page's "continue" prompt. */
+    name: v.string(),
+    step: v.number(),
+    /** The onboarding form's own state, as JSON; only the page that wrote it reads it. */
+    state: v.string(),
+    pictures: v.array(v.id("_storage")),
+    updatedAt: v.number(),
+  }).index("by_userId", ["userId"]),
 
   members: defineTable(memberFields)
     .index("by_weddingId", ["weddingId"])

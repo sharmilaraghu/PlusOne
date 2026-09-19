@@ -11,20 +11,31 @@ export const workflow = new WorkflowManager(components.workflow, {
   },
 });
 
-/** New wedding: create its AgentMail inbox, then (optionally) read the inspiration link. */
+/** New wedding: create its AgentMail inbox, then (optionally) read the inspiration into a style brief. */
 export const onboardingWorkflow = workflow.define({
   args: { weddingId: v.id("weddings") },
   handler: async (step, args): Promise<void> => {
     await step.runAction(internal.agentmail.createInbox, { weddingId: args.weddingId });
     const wedding = await step.runQuery(internal.weddings.getInternal, { weddingId: args.weddingId });
-    if (!wedding?.inspirationUrl) return;
-    try {
-      const markdown = await step.runAction(internal.firecrawl.readInspiration, { url: wedding.inspirationUrl }, { retry: false });
-      if (markdown.trim().length > 200) {
-        await step.runAction(internal.openai.summariseStyle, { weddingId: args.weddingId, markdown });
+    if (!wedding) return;
+    let markdown: string | undefined;
+    if (wedding.inspirationUrl) {
+      try {
+        const page = await step.runAction(internal.firecrawl.readInspiration, { url: wedding.inspirationUrl }, { retry: false });
+        if (page.trim().length > 200) markdown = page;
+      } catch (err) {
+        console.warn("inspiration link skipped", err instanceof Error ? err.message : err);
       }
+    }
+    if (!markdown && !wedding.inspirationNotes && !wedding.inspirationImages?.length) return;
+    try {
+      await step.runAction(
+        internal.openai.summariseStyle,
+        { weddingId: args.weddingId, markdown, notes: wedding.inspirationNotes, images: wedding.inspirationImages },
+        { retry: false },
+      );
     } catch (err) {
-      console.warn("inspiration step skipped", err instanceof Error ? err.message : err);
+      console.warn("style summary skipped", err instanceof Error ? err.message : err);
     }
   },
 });
@@ -191,11 +202,160 @@ export const researchWorkflow = workflow.define({
   },
 });
 
-/** Vendor reply: classify + extract quote (mutations inside the action update thread/budget/activity). */
+/** After this many answers of its own, PlusOne hands the conversation back to the couple. */
+const MAX_AUTO_REPLIES = 3;
+
+/** A quote this far over the planned budget gets one polite "what can you do?". */
+const NEGOTIATE_ABOVE = 1.1;
+
+/**
+ * Vendor reply: classify + extract the quote, then take PlusOne's own next step.
+ * A question is answered from what PlusOne knows, or handed to the couple as one
+ * clear question; an over-budget quote gets one polite ask for something closer.
+ */
 export const inboundWorkflow = workflow.define({
   args: { messageId: v.id("messages") },
   handler: async (step, args): Promise<void> => {
-    await step.runAction(internal.openai.extractReply, { messageId: args.messageId });
+    const verdict = await step.runAction(internal.openai.extractReply, { messageId: args.messageId });
+    if (!verdict) return;
+    const message = await step.runQuery(internal.messages.getInternal, { messageId: args.messageId });
+    if (!message?.threadId) return;
+    const threadId = message.threadId;
+    const brief = await step.runQuery(internal.agent.threadBrief, { threadId });
+    if (!brief || brief.status === "declined") return;
+
+    if (verdict.classification === "question") {
+      if (brief.autoReplies >= MAX_AUTO_REPLIES) {
+        await step.runMutation(internal.agent.askCouple, {
+          threadId,
+          question: `${brief.vendorName} has more questions. PlusOne has answered ${MAX_AUTO_REPLIES} times already, so this one is yours.`,
+        });
+        return;
+      }
+      try {
+        const decision = await step.runAction(
+          internal.openai.decideVendorReply,
+          {
+            weddingId: brief.weddingId,
+            slotTitle: brief.slotTitle,
+            slotBudget: brief.slotBudget,
+            vendorName: brief.vendorName,
+            conversation: brief.conversation,
+            latest: brief.latest,
+          },
+          { retry: false },
+        );
+        if (decision.decision === "answer") {
+          await step.runMutation(internal.agent.queueEmail, {
+            threadId,
+            kind: "agent_reply",
+            bodyText: decision.reply,
+            key: `${args.messageId}:agent_reply`,
+          });
+        } else if (decision.decision === "ask_couple") {
+          await step.runMutation(internal.agent.askCouple, { threadId, question: decision.questionForCouple });
+        }
+      } catch {
+        await step.runMutation(internal.agent.askCouple, {
+          threadId,
+          question: `${brief.vendorName} asked something PlusOne couldn't work out. Have a look at their email.`,
+        });
+      }
+      return;
+    }
+
+    const over = verdict.total !== null && verdict.total > brief.slotBudget * NEGOTIATE_ABOVE;
+    if (verdict.classification === "quote" && over && brief.negotiatedAt === null && brief.status !== "booked") {
+      try {
+        const bodyText = await step.runAction(
+          internal.openai.writeAgentEmail,
+          {
+            weddingId: brief.weddingId,
+            slotTitle: brief.slotTitle,
+            slotBudget: brief.slotBudget,
+            vendorName: brief.vendorName,
+            conversation: `${brief.conversation}\n\n${brief.vendorName}: ${brief.latest}`,
+            purpose: "negotiate",
+            quoteTotal: verdict.total ?? undefined,
+          },
+          { retry: false },
+        );
+        await step.runMutation(internal.agent.queueEmail, {
+          threadId,
+          kind: "negotiation",
+          bodyText,
+          key: `${threadId}:negotiation`,
+        });
+      } catch (err) {
+        console.warn("negotiation skipped", err instanceof Error ? err.message : err);
+      }
+    }
+  },
+});
+
+/** The couple answered what PlusOne couldn't; write it up and send it. */
+export const coupleAnswerWorkflow = workflow.define({
+  args: { threadId: v.id("threads"), answer: v.string(), key: v.string() },
+  handler: async (step, args): Promise<void> => {
+    const brief = await step.runQuery(internal.agent.threadBrief, { threadId: args.threadId });
+    if (!brief) return;
+    const bodyText = await step.runAction(internal.openai.writeVendorReply, {
+      weddingId: brief.weddingId,
+      slotTitle: brief.slotTitle,
+      slotBudget: brief.slotBudget,
+      vendorName: brief.vendorName,
+      conversation: brief.conversation,
+      latest: brief.latest,
+      coupleAnswer: args.answer,
+    });
+    await step.runMutation(internal.agent.queueEmail, {
+      threadId: args.threadId,
+      kind: "agent_reply",
+      bodyText,
+      key: args.key,
+      sendNow: true,
+    });
+  },
+});
+
+/** After a booking: tell the chosen vendor, and thank everyone else who quoted. */
+export const bookingWorkflow = workflow.define({
+  args: { slotId: v.id("vendorSlots"), vendorId: v.id("vendors") },
+  handler: async (step, args): Promise<void> => {
+    const { confirm, decline } = await step.runMutation(internal.agent.closeOutSlot, {
+      slotId: args.slotId,
+      bookedVendorId: args.vendorId,
+    });
+    const jobs: { threadId: typeof decline[number]; purpose: "confirm" | "decline" }[] = [
+      ...(confirm ? [{ threadId: confirm, purpose: "confirm" as const }] : []),
+      ...decline.map((threadId) => ({ threadId, purpose: "decline" as const })),
+    ];
+    for (const job of jobs) {
+      try {
+        const brief = await step.runQuery(internal.agent.threadBrief, { threadId: job.threadId });
+        if (!brief) continue;
+        const bodyText = await step.runAction(
+          internal.openai.writeAgentEmail,
+          {
+            weddingId: brief.weddingId,
+            slotTitle: brief.slotTitle,
+            slotBudget: brief.slotBudget,
+            vendorName: brief.vendorName,
+            conversation: brief.latest ? `${brief.conversation}\n\n${brief.vendorName}: ${brief.latest}` : brief.conversation,
+            purpose: job.purpose,
+          },
+          { retry: false },
+        );
+        await step.runMutation(internal.agent.queueEmail, {
+          threadId: job.threadId,
+          kind: job.purpose === "confirm" ? "booking_confirmation" : "no_thanks",
+          bodyText,
+          key: `${job.threadId}:${job.purpose}`,
+        });
+      } catch (err) {
+        console.warn("closing email skipped", err instanceof Error ? err.message : err);
+      }
+    }
   },
 });
 

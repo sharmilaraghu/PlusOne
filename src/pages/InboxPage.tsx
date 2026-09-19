@@ -5,6 +5,26 @@ import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import type { FunctionReturnType } from "convex/server";
 import { money, statusLabel, timeAgo } from "../lib/format";
+import { BookButton } from "../components/BookButton";
+
+/** Names for the kinds of email a couple sees in a conversation. */
+const KIND_LABEL: Record<string, string> = {
+  inquiry: "First email",
+  follow_up: "Follow-up",
+  vendor_reply: "Their reply",
+  agent_reply: "PlusOne's reply",
+  negotiation: "Asked about price",
+  booking_confirmation: "Going ahead",
+  no_thanks: "No thank you",
+};
+
+/** Why a conversation needs the couple, in their words. */
+const ATTENTION_LABEL: Record<string, string> = {
+  vendor_question: "they asked something only you can answer.",
+  reply_to_review: "PlusOne has written a reply for you to check before it goes.",
+  max_follow_ups: "no reply after three follow-ups.",
+  send_failed: "an email didn't send.",
+};
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
@@ -38,7 +58,7 @@ export function InboxPage() {
     <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
       <aside className="min-w-0">
         <h1 className="text-2xl">Inbox</h1>
-        <p className="truncate font-mono text-[11px] text-muted">{wedding.inboxAddress ?? "inbox being created…"}</p>
+        <p className="text-xs text-muted">Every conversation PlusOne is having with your vendors.</p>
         <div className="mt-3 flex flex-wrap gap-1 text-xs">
           {["all", "sent", "quoted", "needs_attention", "booked"].map((f) => (
             <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1 ${filter === f ? "bg-accent text-paper" : "bg-line/60 text-muted"}`}>
@@ -124,7 +144,11 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
   const resolve = useMutation(api.threads.resolveAttention);
   const followUp = useMutation(api.outreach.sendFollowUpNow);
   const markBooked = useMutation(api.slots.markBooked);
+  const answer = useMutation(api.agent.answerForCouple);
+  const send = useMutation(api.outreach.send);
   const [busy, setBusy] = useState(false);
+  const [reply, setReply] = useState("");
+  const [answerError, setAnswerError] = useState<string | null>(null);
 
   if (data === undefined) return <p className="text-muted">Loading…</p>;
   if (data === null) return <p className="text-muted">This conversation is gone.</p>;
@@ -157,15 +181,52 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
               <button className="btn-ghost btn-sm" onClick={() => void setStatus({ threadId, status: "declined" })}>Pass</button>
             )}
             {thread.status !== "booked" && (
-              <button className="btn-primary btn-sm" onClick={() => void markBooked({ slotId: slot._id, vendorId: vendor._id })}>Mark booked</button>
+              <BookButton vendorName={vendor.name} onBook={(notify) => markBooked({ slotId: slot._id, vendorId: vendor._id, notify })} />
             )}
           </div>
         )}
       </header>
 
-      {thread.attentionReason && (
-        <p className="rounded-xl bg-warn-bg px-4 py-3 text-sm text-warn">Needs you: {statusLabel(thread.attentionReason)}</p>
-      )}
+      {thread.pendingQuestion ? (
+        <section className="card border-warn/40 p-4" aria-label="A question for you">
+          <p className="text-xs uppercase tracking-wide text-warn">Only you can answer this</p>
+          <p className="mt-1.5 text-[0.95rem] leading-relaxed">{thread.pendingQuestion}</p>
+          {canEdit && (
+            <form
+              className="mt-3"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setAnswerError(null);
+                setBusy(true);
+                void answer({ threadId, answer: reply })
+                  .then(() => setReply(""))
+                  .catch((err: unknown) => setAnswerError(err instanceof Error ? err.message : "That didn't send."))
+                  .finally(() => setBusy(false));
+              }}
+            >
+              <label className="label" htmlFor="couple-answer">Your answer</label>
+              <textarea
+                id="couple-answer"
+                rows={2}
+                className="input resize-y"
+                value={reply}
+                onChange={(e) => setReply(e.target.value)}
+                placeholder="Just the gist. PlusOne writes the email and sends it."
+              />
+              {answerError && <p role="alert" className="mt-1 text-xs text-bad">{answerError}</p>}
+              <div className="mt-2 flex justify-end">
+                <button type="submit" className="btn-primary btn-sm" disabled={busy || !reply.trim()}>
+                  {busy ? "Sending…" : "Send to " + vendor.name}
+                </button>
+              </div>
+            </form>
+          )}
+        </section>
+      ) : thread.attentionReason ? (
+        <p className="rounded-xl bg-warn-bg px-4 py-3 text-sm text-warn">
+          Needs you: {ATTENTION_LABEL[thread.attentionReason] ?? statusLabel(thread.attentionReason)}
+        </p>
+      ) : null}
 
       {latestQuote && (
         <section className="card p-4" aria-label="Extracted quote">
@@ -191,7 +252,7 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
           <li key={m._id} className={`card p-4 ${m.direction === "in" ? "border-accent/30" : ""}`}>
             <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-muted">
               <span>
-                {m.direction === "in" ? "From" : "To"} <span className="text-ink">{m.direction === "in" ? m.fromAddress : m.toAddress}</span> · {statusLabel(m.kind)}
+                {m.direction === "in" ? vendor.name : "You"} · {KIND_LABEL[m.kind] ?? statusLabel(m.kind)}
               </span>
               <span>
                 {m.status === "failed" ? <span className="text-bad">failed</span> : m.status}{m.sentAt || m.receivedAt ? ` · ${timeAgo(m.sentAt ?? m.receivedAt)}` : ""}
@@ -206,7 +267,22 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
                 ))}
               </ul>
             )}
-            {m.errorMessage && <p className="mt-2 text-xs text-bad">{m.errorMessage}</p>}
+            {m.errorMessage && <p className="mt-2 text-xs text-bad">This one didn't send. Try again, or email them yourself.</p>}
+            {m.direction === "out" && m.status === "draft" && canEdit && (
+              <div className="mt-3 flex justify-end">
+                <button
+                  type="button"
+                  className="btn-primary btn-sm"
+                  disabled={busy}
+                  onClick={() => {
+                    setBusy(true);
+                    void send({ messageIds: [m._id] }).finally(() => setBusy(false));
+                  }}
+                >
+                  Send it
+                </button>
+              </div>
+            )}
           </li>
         ))}
       </ol>

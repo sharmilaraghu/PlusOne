@@ -11,6 +11,6 @@ export const me = query({
     if (!userId) return null;
     const user = await ctx.db.get(userId);
     if (!user) return null;
-    return { _id: user._id, name: user.name, email: user.email };
+    return { _id: user._id, name: user.name, email: user.email, image: user.image };
   },
 });

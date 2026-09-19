@@ -124,13 +124,32 @@ export function allocateSlotBudgets(
   return alloc;
 }
 
-/** Split `total` by weights into whole numbers that sum exactly to `total`. */
+/** The rounding a person would use for a budget this size: $40,000 splits in hundreds, ₹25,00,000 in thousands. */
+export function niceStep(total: number): number {
+  if (total >= 1_000_000) return 1000;
+  if (total >= 100_000) return 500;
+  if (total >= 10_000) return 100;
+  if (total >= 1_000) return 50;
+  if (total >= 100) return 10;
+  return 1;
+}
+
+/**
+ * Split `total` by weights into round numbers that still sum exactly to `total`.
+ * Each share is rounded to a sensible step; whatever rounding leaves over goes to the
+ * largest share, where it is least noticeable.
+ */
 export function splitByWeights(total: number, weights: number[]): number[] {
+  if (weights.length === 0) return [];
+  const whole = Math.round(total);
   const sum = weights.reduce((a, b) => a + b, 0) || 1;
-  const raw = weights.map((w) => Math.floor((total * w) / sum));
-  let remainder = Math.round(total) - raw.reduce((a, b) => a + b, 0);
-  for (let i = 0; remainder > 0 && i < raw.length; i++, remainder--) raw[i] += 1;
-  return raw;
+  // Too little to round across this many shares: fall back to whole units.
+  const step = whole >= niceStep(whole) * weights.length * 2 ? niceStep(whole) : 1;
+  const shares = weights.map((w) => Math.round((whole * w) / sum / step) * step);
+  const left = whole - shares.reduce((a, b) => a + b, 0);
+  const largest = shares.indexOf(Math.max(...shares));
+  shares[largest] += left;
+  return shares;
 }
 
 /**

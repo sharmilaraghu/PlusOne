@@ -4,6 +4,8 @@ import type { Id } from "./_generated/dataModel";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { logActivity, requireMember, requireUserId } from "./lib/auth";
 import { rebalanceWeddingBudget } from "./lib/budget";
+import { clearDraft } from "./drafts";
+import { INBOX_READY_TEXT } from "./activity";
 import { eventDoc, weddingDoc } from "./lib/docs";
 import {
   EVENT_COLORS,
@@ -164,6 +166,18 @@ export const get = query({
   },
 });
 
+const MAX_INSPIRATION_IMAGES = 6;
+
+/** A one-off upload URL for an inspiration picture; the id comes back to `create`. */
+export const generateInspirationUploadUrl = mutation({
+  args: {},
+  returns: v.string(),
+  handler: async (ctx) => {
+    await requireUserId(ctx);
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
 export const create = mutation({
   args: {
     name: v.string(),
@@ -179,6 +193,8 @@ export const create = mutation({
     totalBudget: v.number(),
     template: cultureTemplate,
     inspirationUrl: v.optional(v.string()),
+    inspirationNotes: v.optional(v.string()),
+    inspirationImages: v.optional(v.array(v.id("_storage"))),
     styleVibes: v.optional(v.array(v.string())),
     stylePalette: v.optional(v.string()),
     styleFormality: v.optional(styleFormality),
@@ -232,6 +248,14 @@ export const create = mutation({
     if (args.inspirationUrl && !/^https?:\/\//i.test(args.inspirationUrl)) {
       throw new ConvexError("Inspiration URL must start with http:// or https://");
     }
+    const images = args.inspirationImages ?? [];
+    if (images.length > MAX_INSPIRATION_IMAGES) {
+      throw new ConvexError(`Up to ${MAX_INSPIRATION_IMAGES} inspiration pictures, please.`);
+    }
+    for (const id of images) {
+      const file = await ctx.db.system.get("_storage", id);
+      if (!file?.contentType?.startsWith("image/")) throw new ConvexError("Inspiration uploads must be pictures.");
+    }
 
     const weddingId = await ctx.db.insert("weddings", {
       name: args.name.trim(),
@@ -246,12 +270,15 @@ export const create = mutation({
       totalBudget: args.totalBudget,
       template: args.template,
       inspirationUrl: args.inspirationUrl,
+      inspirationNotes: args.inspirationNotes?.trim().slice(0, 2000) || undefined,
+      inspirationImages: images.length ? images : undefined,
       styleVibes: args.styleVibes?.filter((t) => t.trim()).slice(0, 12),
       stylePalette: args.stylePalette?.trim() || undefined,
       styleFormality: args.styleFormality,
       createdBy: userId,
     });
     await ctx.db.insert("members", { weddingId, userId, role: "owner" });
+    await clearDraft(ctx, userId);
 
     // Events from the template (or the couple's own list for "custom").
     const totalDays = daysBetween(args.startDate, args.endDate);
@@ -381,6 +408,7 @@ export const update = mutation({
       totalBudget: v.optional(v.number()),
       styleSummary: v.optional(v.string()),
       inspirationUrl: v.optional(v.string()),
+      inspirationNotes: v.optional(v.string()),
       styleVibes: v.optional(v.array(v.string())),
       stylePalette: v.optional(v.string()),
       styleFormality: v.optional(styleFormality),
@@ -438,7 +466,7 @@ export const setInbox = internalMutation({
     await logActivity(ctx, {
       weddingId: args.weddingId,
       type: "inbox_ready",
-      text: `Wedding inbox is ready: ${args.inboxAddress}`,
+      text: INBOX_READY_TEXT,
     });
     return null;
   },
@@ -452,7 +480,7 @@ export const setStyleSummary = internalMutation({
     await logActivity(ctx, {
       weddingId: args.weddingId,
       type: "note",
-      text: "Style summary generated from the inspiration link.",
+      text: "Style summary generated from your inspiration.",
     });
     return null;
   },
