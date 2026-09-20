@@ -79,13 +79,20 @@ async function makeRoomForInbox(ctx: ActionCtx): Promise<void> {
 
 // ---- inbox ------------------------------------------------------------------
 
+/** AgentMail says "not found" when an inbox or a message is no longer there. */
+function missingInbox(err: unknown): boolean {
+  return /not_found|NotFoundError|404/.test(err instanceof Error ? err.message : String(err));
+}
+
 export const createInbox = internalAction({
-  args: { weddingId: v.id("weddings") },
+  args: { weddingId: v.id("weddings"), replace: v.optional(v.boolean()) },
   returns: v.union(v.string(), v.null()),
   handler: async (ctx, args): Promise<string | null> => {
     const wedding = await ctx.runQuery(internal.weddings.getInternal, { weddingId: args.weddingId });
     if (!wedding) return null;
-    if (wedding.inboxId) return wedding.inboxId; // workflow replay / retry safety
+    // `replace` is for an inbox that no longer exists at AgentMail; otherwise an
+    // existing one is kept, which also makes workflow replays safe.
+    if (wedding.inboxId && !args.replace) return wedding.inboxId;
     const shortId = wedding._id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, "");
     const username = `${slugify(wedding.partnerA)}-and-${slugify(wedding.partnerB)}-${shortId}`.replace(/-+/g, "-").slice(0, 60);
     // On a small plan the limit is reached quickly, and a couple with no inbox cannot be
@@ -113,6 +120,53 @@ export const createInbox = internalAction({
     }
     await ctx.runMutation(internal.weddings.setInbox, { weddingId: args.weddingId, inboxId, inboxAddress: inboxAddress ?? inboxId });
     return inboxId;
+  },
+});
+
+/**
+ * Who is holding the inboxes. With a small allowance it matters whether one is held by
+ * a wedding that never wrote to anyone, or by another deployment entirely.
+ *
+ * `npx convex run agentmail:inboxReport`
+ */
+export const inboxReport = internalAction({
+  args: {},
+  returns: v.array(v.object({ inboxId: v.string(), owner: v.string(), idle: v.boolean() })),
+  handler: async (ctx): Promise<{ inboxId: string; owner: string; idle: boolean }[]> => {
+    const res = (await am.inboxes.list()) as { inboxes?: unknown; data?: unknown };
+    const inboxes = (res.inboxes ?? res.data ?? []) as Array<{ inboxId?: string }>;
+    const usage = await ctx.runQuery(internal.weddings.inboxUsage, {});
+    const byInbox = new Map(usage.map((u) => [u.inboxId, u]));
+    const names = await ctx.runQuery(internal.weddings.namesByInbox, {});
+    const nameByInbox = new Map(names.map((n) => [n.inboxId, n.name]));
+    return inboxes
+      .filter((i): i is { inboxId: string } => Boolean(i.inboxId))
+      .map((i) => ({
+        inboxId: i.inboxId,
+        owner: nameByInbox.get(i.inboxId) ?? (i.inboxId === fallbackInbox() ? "the shared fallback" : "another deployment"),
+        idle: byInbox.get(i.inboxId)?.hasTraffic === false,
+      }));
+  },
+});
+
+/**
+ * Give an inbox back. The allowance is small, so an inbox belonging to a wedding that
+ * no longer exists has to return to the pool rather than sit there forever. The shared
+ * fallback is never released.
+ */
+export const releaseInbox = internalAction({
+  args: { inboxId: v.string() },
+  returns: v.boolean(),
+  handler: async (_ctx, args): Promise<boolean> => {
+    if (!args.inboxId || args.inboxId === fallbackInbox()) return false;
+    try {
+      await am.inboxes.delete(args.inboxId);
+      console.log("released an AgentMail inbox", args.inboxId);
+      return true;
+    } catch (err) {
+      console.warn("could not release inbox", args.inboxId, err instanceof Error ? err.message : err);
+      return false;
+    }
   },
 });
 
@@ -150,8 +204,30 @@ export const sendOutbound = internalAction({
       if (!inboxId) throw new Error("No AgentMail inbox for this wedding yet");
       if (!message.toAddress) throw new Error("Recipient has no email address");
       const replyTo = message.kind === "inquiry" ? undefined : thread?.lastInboundMessageId;
-      const fresh = () =>
-        am.inboxes.messages.send(inboxId, { to: [message.toAddress], subject: message.subject, text: message.bodyText });
+      let from = inboxId;
+
+      /**
+       * The allowance is small, so inboxes come and go: one can be released to make
+       * room, or removed at AgentMail entirely. Rather than fail a couple's email
+       * because the address it was written from has gone, take a new one and send.
+       */
+      const sendFrom = (id: string) =>
+        am.inboxes.messages.send(id, { to: [message.toAddress], subject: message.subject, text: message.bodyText });
+      const fresh = async () => {
+        try {
+          return await sendFrom(from);
+        } catch (err) {
+          if (!missingInbox(err)) throw err;
+          console.warn("the wedding's inbox is gone at AgentMail; taking a new one");
+          const replacement = await ctx.runAction(internal.agentmail.createInbox, {
+            weddingId: wedding._id,
+            replace: true,
+          });
+          if (!replacement) throw err;
+          from = replacement;
+          return await sendFrom(replacement);
+        }
+      };
 
       // Replying keeps the conversation in one place, but the message being replied to
       // belongs to whichever inbox held it at the time. A wedding that has since been
@@ -160,12 +236,9 @@ export const sendOutbound = internalAction({
       let result;
       if (replyTo) {
         try {
-          result = await am.inboxes.messages.reply(inboxId, replyTo, { text: message.bodyText });
+          result = await am.inboxes.messages.reply(from, replyTo, { text: message.bodyText });
         } catch (replyErr) {
-          const notVisible = /not_found|NotFoundError|404/.test(
-            replyErr instanceof Error ? replyErr.message : String(replyErr),
-          );
-          if (!notVisible) throw replyErr;
+          if (!missingInbox(replyErr)) throw replyErr;
           console.warn("original message not visible to this inbox; sending a fresh one instead");
           result = await fresh();
         }

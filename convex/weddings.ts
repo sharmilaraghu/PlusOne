@@ -512,6 +512,18 @@ export const setStyleSummary = internalMutation({
  * actually written to or heard from a vendor is never a candidate; an inbox
  * belonging to a wedding that never got started is.
  */
+/** Which wedding each inbox belongs to, by name, for the inbox report. */
+export const namesByInbox = internalQuery({
+  args: {},
+  returns: v.array(v.object({ inboxId: v.string(), name: v.string() })),
+  handler: async (ctx) => {
+    const weddings = await ctx.db.query("weddings").take(500);
+    return weddings
+      .filter((w) => Boolean(w.inboxId))
+      .map((w) => ({ inboxId: w.inboxId as string, name: w.name }));
+  },
+});
+
 export const inboxUsage = internalQuery({
   args: {},
   returns: v.array(

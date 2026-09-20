@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation } from "./_generated/server";
+import { internal } from "./_generated/api";
 
 const CHILD_TABLES = [
   "members",
@@ -43,6 +44,11 @@ export const deleteWedding = internalMutation({
     }
     const wedding = await ctx.db.get(args.weddingId);
     if (wedding) {
+      // The inbox goes back to AgentMail: the allowance is small, and a deleted
+      // wedding holding one means the next couple has to share the fallback.
+      if (wedding.inboxId) {
+        await ctx.scheduler.runAfter(0, internal.agentmail.releaseInbox, { inboxId: wedding.inboxId });
+      }
       await ctx.db.delete(args.weddingId);
       deleted++;
     }
