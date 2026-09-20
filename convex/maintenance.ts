@@ -49,3 +49,51 @@ export const deleteWedding = internalMutation({
     return { done: true, deleted };
   },
 });
+
+/**
+ * Forget one vendor conversation: its emails, the thread itself, and any quote read
+ * from it. The vendor card stays, so the need looks researched but never contacted.
+ *
+ * `npx convex run maintenance:forgetVendorThread '{"vendorId":"..."}'`
+ */
+export const forgetVendorThread = internalMutation({
+  args: { vendorId: v.id("vendors") },
+  returns: v.object({ messages: v.number(), threads: v.number(), quotes: v.number() }),
+  handler: async (ctx, args) => {
+    const threads = await ctx.db
+      .query("threads")
+      .withIndex("by_vendorId", (q) => q.eq("vendorId", args.vendorId))
+      .take(20);
+    let messages = 0;
+    let quotes = 0;
+    for (const thread of threads) {
+      for (const message of await ctx.db
+        .query("messages")
+        .withIndex("by_threadId", (q) => q.eq("threadId", thread._id))
+        .take(200)) {
+        await ctx.db.delete(message._id);
+        messages++;
+      }
+      for (const quote of await ctx.db
+        .query("quotes")
+        .withIndex("by_vendorId", (q) => q.eq("vendorId", args.vendorId))
+        .take(50)) {
+        await ctx.db.delete(quote._id);
+        quotes++;
+      }
+      // A need with nobody left to hear from is back to being researched.
+      const others = (
+        await ctx.db
+          .query("threads")
+          .withIndex("by_slotId", (q) => q.eq("slotId", thread.slotId))
+          .take(20)
+      ).filter((t) => t._id !== thread._id);
+      const slot = await ctx.db.get(thread.slotId);
+      if (slot && others.length === 0 && slot.status === "contacted") {
+        await ctx.db.patch(slot._id, { status: "research" });
+      }
+      await ctx.db.delete(thread._id);
+    }
+    return { messages, threads: threads.length, quotes };
+  },
+});
