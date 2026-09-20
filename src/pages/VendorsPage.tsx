@@ -642,7 +642,55 @@ function EventsForSlot({ slot, events, canEdit }: { slot: Slot; events: WeddingD
           );
         })}
       </ul>
+      {canEdit && slot.eventIds.length > 1 && slot.status !== "booked" && <SplitByDay slot={slot} count={slot.eventIds.length} />}
       {error && <p role="alert" className="mt-2 text-xs text-bad">{error}</p>}
     </section>
+  );
+}
+
+/** Two venues, or a different florist per day: one need becomes one need per day. */
+function SplitByDay({ slot, count }: { slot: Slot; count: number }) {
+  const split = useMutation(api.slots.splitByEvent);
+  const [asking, setAsking] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  if (!asking) {
+    return (
+      <button
+        type="button"
+        className="mt-3 text-xs text-accent underline underline-offset-2"
+        onClick={() => setAsking(true)}
+      >
+        Using a different {slot.category.toLowerCase()} on each day? Split this need
+      </button>
+    );
+  }
+  return (
+    <div className="mt-3 rounded-[14px] border border-line bg-cream p-3 text-sm">
+      <p>
+        This becomes {count} separate needs, one per day, each with its own vendors, budget and booking. The budget is
+        split by guest count, and everything found so far stays with the first day.
+      </p>
+      {error && <p role="alert" className="mt-1 text-xs text-bad">{error}</p>}
+      <div className="mt-2.5 flex justify-end gap-2">
+        <button type="button" className="btn-quiet btn-sm" disabled={busy} onClick={() => setAsking(false)}>Cancel</button>
+        <button
+          type="button"
+          className="btn-primary btn-sm"
+          disabled={busy}
+          onClick={() => {
+            setBusy(true);
+            setError(null);
+            void split({ slotId: slot._id })
+              .then(() => setAsking(false))
+              .catch((e: unknown) => setError(e instanceof Error ? e.message : "That didn't split."))
+              .finally(() => setBusy(false));
+          }}
+        >
+          {busy ? "Splitting…" : `Split into ${count}`}
+        </button>
+      </div>
+    </div>
   );
 }

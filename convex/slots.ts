@@ -1,9 +1,11 @@
 import { ConvexError, v } from "convex/values";
+import type { Id } from "./_generated/dataModel";
 import { internalQuery, mutation, query, internalMutation } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { quoteDoc, vendorDoc, vendorSlotDoc } from "./lib/docs";
 import { setCommittedForSlotHelper } from "./budget";
 import { rebalanceWeddingBudget } from "./lib/budget";
+import { splitByWeights } from "./lib/templates";
 import { internal } from "./_generated/api";
 import { workflow } from "./workflows";
 
@@ -122,6 +124,75 @@ export const update = mutation({
       }
     }
     return null;
+  },
+});
+
+/**
+ * One need becomes one per day: two venues for two days, a different florist for the
+ * ceremony and the reception. The original keeps the first day and whatever research
+ * and conversations it already has; the rest start fresh with their share of the budget,
+ * split by guest count so the bigger day gets the bigger share.
+ */
+export const splitByEvent = mutation({
+  args: { slotId: v.id("vendorSlots") },
+  returns: v.array(v.id("vendorSlots")),
+  handler: async (ctx, args): Promise<Id<"vendorSlots">[]> => {
+    const slot = await ctx.db.get(args.slotId);
+    if (!slot) throw new ConvexError("That need is no longer part of your plan.");
+    const { userId } = await requireMember(ctx, slot.weddingId, "planner");
+    if (slot.status === "booked") throw new ConvexError("This one is already booked. Un-book it first if you want to split it.");
+    if (slot.eventIds.length < 2) throw new ConvexError("This need is already for a single day.");
+
+    const events = [];
+    for (const eventId of slot.eventIds) {
+      const event = await ctx.db.get(eventId);
+      if (event) events.push(event);
+    }
+    if (events.length < 2) throw new ConvexError("This need is already for a single day.");
+    events.sort((a, b) => a.order - b.order);
+    const shares = splitByWeights(slot.budget, events.map((e) => Math.max(1, e.guestCount)));
+
+    const ids: Id<"vendorSlots">[] = [];
+    for (const [i, event] of events.entries()) {
+      const title = `${slot.title} — ${event.name}`.slice(0, 80);
+      if (i === 0) {
+        // The original carries its vendors, quotes and threads, so nothing is lost.
+        await ctx.db.patch(slot._id, { title, eventIds: [event._id], budget: shares[0] });
+        const line = await ctx.db
+          .query("budgetLines")
+          .withIndex("by_slotId", (q) => q.eq("slotId", slot._id))
+          .first();
+        if (line) await ctx.db.patch(line._id, { label: title, planned: shares[0], eventId: event._id });
+        ids.push(slot._id);
+        continue;
+      }
+      const slotId = await ctx.db.insert("vendorSlots", {
+        weddingId: slot.weddingId,
+        eventIds: [event._id],
+        category: slot.category,
+        title,
+        budget: shares[i],
+        status: "research",
+      });
+      await ctx.db.insert("budgetLines", {
+        weddingId: slot.weddingId,
+        slotId,
+        eventId: event._id,
+        label: title,
+        planned: shares[i],
+        committed: 0,
+        paid: 0,
+      });
+      ids.push(slotId);
+    }
+    await logActivity(ctx, {
+      weddingId: slot.weddingId,
+      actorUserId: userId,
+      type: "note",
+      text: `split ${slot.category.toLowerCase()} into ${events.length} separate needs, one per day.`,
+      refs: { slotId: slot._id },
+    });
+    return ids;
   },
 });
 
