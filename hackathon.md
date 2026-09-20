@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-20T04:58:19Z
+- **Last updated:** 2026-09-20T05:24:41Z
 
 ## Log
 
@@ -277,3 +277,9 @@ included, and a booked vendor's open question stays under "Needs you"
 (`convex/agent.ts`, `src/pages/InboxPage.tsx`, `src/pages/DecisionsPage.tsx`). Research shows
 all three searches it runs and starts from the couple's own style words, and the shortlist is
 now counted, filterable and shown on Decisions. Deployed.
+
+### 2026-09-20 - cad325a
+Moved the walkthrough to where a first-time couple, a guest or a judge will actually see it:
+a button under the menu rather than grey text below the role line, with Sign out at the foot
+of a sidebar that now keeps its own full height instead of drifting off a long page
+(`src/components/WeddingLayout.tsx`). Deployed.

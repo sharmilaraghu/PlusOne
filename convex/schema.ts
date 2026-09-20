@@ -317,6 +317,7 @@ export const contractCheckFields = {
 export const importFields = {
   weddingId: v.id("weddings"),
   storageId: v.optional(v.id("_storage")),
+  filename: v.optional(v.string()),
   rawText: v.optional(v.string()),
   status: importStatus,
   preview: v.optional(v.any()),
@@ -390,6 +391,9 @@ export default defineSchema({
   budgetLines: defineTable(budgetLineFields)
     .index("by_weddingId", ["weddingId"])
     .index("by_slotId", ["slotId"]),
+
+  /** A pasted or uploaded guest list, waiting to be checked before it becomes guests. */
+  guestImports: defineTable(importFields).index("by_weddingId", ["weddingId"]),
 
   guests: defineTable(guestFields)
     .index("by_weddingId", ["weddingId"])

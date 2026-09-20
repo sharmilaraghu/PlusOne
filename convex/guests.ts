@@ -4,7 +4,7 @@ import { internalMutation, internalQuery, mutation, query } from "./_generated/s
 import { logActivity, requireMember } from "./lib/auth";
 import { guestDoc, weddingDoc } from "./lib/docs";
 import { emailPool } from "./lib/pools";
-import { rsvpStatus } from "./lib/validators";
+import { importStatus, rsvpStatus } from "./lib/validators";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -270,5 +270,199 @@ export const dietarySummary = internalQuery({
     }
     if (prefs.size) parts.push("Other food needs: " + [...prefs].map(([k, n]) => `${k} (${n})`).join("; "));
     return parts.join(". ") + ".";
+  },
+});
+
+// ---- bringing in a whole list at once ---------------------------------------
+
+const MAX_IMPORT_GUESTS = 400;
+
+const importedGuest = v.object({
+  name: v.string(),
+  email: v.optional(v.string()),
+  side: v.optional(v.string()),
+  partySize: v.number(),
+});
+
+/** A one-off upload URL for a guest list file. */
+export const generateUploadUrl = mutation({
+  args: { weddingId: v.id("weddings") },
+  returns: v.string(),
+  handler: async (ctx, args) => {
+    await requireMember(ctx, args.weddingId, "planner");
+    return await ctx.storage.generateUploadUrl();
+  },
+});
+
+/** Hand PlusOne a spreadsheet, a PDF or a pasted list; it comes back as rows to check. */
+export const startImport = mutation({
+  args: {
+    weddingId: v.id("weddings"),
+    storageId: v.optional(v.id("_storage")),
+    filename: v.optional(v.string()),
+    rawText: v.optional(v.string()),
+  },
+  returns: v.id("guestImports"),
+  handler: async (ctx, args) => {
+    await requireMember(ctx, args.weddingId, "planner");
+    if (!args.storageId && !args.rawText?.trim()) throw new ConvexError("Paste a list or choose a file first.");
+    const importId = await ctx.db.insert("guestImports", {
+      weddingId: args.weddingId,
+      storageId: args.storageId,
+      filename: args.filename?.slice(0, 200),
+      rawText: args.rawText?.slice(0, 40_000),
+      status: "pending",
+    });
+    await ctx.scheduler.runAfter(0, internal.guestImport.read, { importId });
+    return importId;
+  },
+});
+
+/** The list PlusOne read, for the couple to check before anyone is added. */
+export const getImportForCouple = query({
+  args: { importId: v.id("guestImports") },
+  returns: v.union(
+    v.object({
+      status: importStatus,
+      filename: v.optional(v.string()),
+      error: v.optional(v.string()),
+      note: v.optional(v.string()),
+      guests: v.array(importedGuest),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const row = await ctx.db.get(args.importId);
+    if (!row) return null;
+    await requireMember(ctx, row.weddingId);
+    const preview = (row.preview ?? {}) as { guests?: unknown; note?: string };
+    return {
+      status: row.status,
+      filename: row.filename,
+      error: row.error,
+      note: preview.note,
+      guests: (Array.isArray(preview.guests) ? preview.guests : []) as { name: string; email?: string; side?: string; partySize: number }[],
+    };
+  },
+});
+
+/** Add the rows the couple kept. Anyone already on the list by email is left alone. */
+export const commitImport = mutation({
+  args: { importId: v.id("guestImports"), guests: v.array(importedGuest), eventIds: v.optional(v.array(v.id("events"))) },
+  returns: v.object({ added: v.number(), skipped: v.number() }),
+  handler: async (ctx, args) => {
+    const row = await ctx.db.get(args.importId);
+    if (!row) throw new ConvexError("That import is gone.");
+    const { userId } = await requireMember(ctx, row.weddingId, "planner");
+    if (args.guests.length === 0) throw new ConvexError("Nobody to add.");
+    if (args.guests.length > MAX_IMPORT_GUESTS) throw new ConvexError(`Up to ${MAX_IMPORT_GUESTS} guests at a time.`);
+
+    let eventIds = args.eventIds ?? [];
+    if (eventIds.length === 0) {
+      eventIds = (
+        await ctx.db
+          .query("events")
+          .withIndex("by_weddingId", (q) => q.eq("weddingId", row.weddingId))
+          .take(50)
+      ).map((e) => e._id);
+    }
+    // Someone with no email can still be a duplicate, so names count too.
+    const existingNames = new Set(
+      (
+        await ctx.db
+          .query("guests")
+          .withIndex("by_weddingId", (q) => q.eq("weddingId", row.weddingId))
+          .take(2000)
+      ).map((g) => g.name.trim().toLowerCase()),
+    );
+    let added = 0;
+    let skipped = 0;
+    for (const guest of args.guests.slice(0, MAX_IMPORT_GUESTS)) {
+      const name = guest.name.trim().slice(0, 120);
+      if (!name) {
+        skipped += 1;
+        continue;
+      }
+      const email = guest.email?.trim().toLowerCase();
+      if (email && !EMAIL_RE.test(email)) {
+        skipped += 1;
+        continue;
+      }
+      if (email) {
+        const existing = await ctx.db
+          .query("guests")
+          .withIndex("by_weddingId_and_email", (q) => q.eq("weddingId", row.weddingId).eq("email", email))
+          .first();
+        if (existing) {
+          skipped += 1;
+          continue;
+        }
+      }
+      if (!email && existingNames.has(name.toLowerCase())) {
+        skipped += 1;
+        continue;
+      }
+      existingNames.add(name.toLowerCase());
+      const partySize = Math.max(1, Math.min(20, Math.floor(guest.partySize || 1)));
+      await ctx.db.insert("guests", {
+        weddingId: row.weddingId,
+        name,
+        email: email || undefined,
+        side: guest.side?.slice(0, 60) || undefined,
+        partySize,
+        rsvp: "pending",
+        attendingCount: 0,
+        eventIds: eventIds.slice(0, 20),
+      });
+      added += 1;
+    }
+    await ctx.db.patch(args.importId, { status: "committed" });
+    if (added > 0) {
+      await logActivity(ctx, {
+        weddingId: row.weddingId,
+        actorUserId: userId,
+        type: "note",
+        text: `added ${added} ${added === 1 ? "guest" : "guests"} from ${row.filename ?? "a pasted list"}.`,
+      });
+    }
+    return { added, skipped };
+  },
+});
+
+// ---- internal ---------------------------------------------------------------
+
+export const getImport = internalQuery({
+  args: { importId: v.id("guestImports") },
+  returns: v.union(
+    v.object({
+      weddingId: v.id("weddings"),
+      storageId: v.optional(v.id("_storage")),
+      filename: v.optional(v.string()),
+      rawText: v.optional(v.string()),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const row = await ctx.db.get(args.importId);
+    if (!row) return null;
+    return { weddingId: row.weddingId, storageId: row.storageId, filename: row.filename, rawText: row.rawText };
+  },
+});
+
+export const setImportPreview = internalMutation({
+  args: { importId: v.id("guestImports"), guests: v.array(importedGuest), note: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.importId, { status: "mapped", preview: { guests: args.guests, note: args.note }, error: undefined });
+    return null;
+  },
+});
+
+export const failImport = internalMutation({
+  args: { importId: v.id("guestImports"), error: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.importId, { status: "failed", error: args.error.slice(0, 300) });
+    return null;
   },
 });

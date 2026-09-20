@@ -120,6 +120,8 @@ export function GuestsPage() {
       {note && <p className="mt-4 rounded-[12px] bg-ok-bg px-4 py-3 text-sm text-ok" aria-live="polite">{note}</p>}
       {error && <p role="alert" className="mt-4 text-sm text-bad">{error}</p>}
 
+      {canEdit && <ImportGuests weddingId={weddingId} />}
+
       {canEdit && (
         <section className="card mt-6 p-5 md:p-6" aria-labelledby="add-guest">
           <h2 id="add-guest" className="display text-lg">Add a guest</h2>
@@ -298,6 +300,192 @@ function KitchenNotes({ guests }: { guests: Guest[] }) {
         <p className="mt-3 text-sm text-muted">
           Also: {prefs.map(({ d, who }) => `${d} (${who})`).join(", ")}.
         </p>
+      )}
+    </section>
+  );
+}
+
+/**
+ * A whole list at once: a spreadsheet, a PDF or a paste. PlusOne reads it into names
+ * and emails, and nobody is added until the couple has looked at what it read.
+ */
+function ImportGuests({ weddingId }: { weddingId: Id<"weddings"> }) {
+  const uploadUrl = useMutation(api.guests.generateUploadUrl);
+  const startImport = useMutation(api.guests.startImport);
+  const commitImport = useMutation(api.guests.commitImport);
+  const [importId, setImportId] = useState<Id<"guestImports"> | null>(null);
+  const [open, setOpen] = useState(false);
+  const [pasted, setPasted] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [done, setDone] = useState<string | null>(null);
+  const [dropped, setDropped] = useState<Set<string>>(new Set());
+  const result = useQuery(api.guests.getImportForCouple, importId ? { importId } : "skip");
+
+  async function read(file: File | null) {
+    setError(null);
+    setDone(null);
+    setBusy(true);
+    try {
+      let id;
+      if (file) {
+        const res = await fetch(await uploadUrl({ weddingId }), { method: "POST", headers: { "Content-Type": file.type || "application/octet-stream" }, body: file });
+        if (!res.ok) throw new Error("That file didn't upload. Try again.");
+        const { storageId } = (await res.json()) as { storageId: Id<"_storage"> };
+        id = await startImport({ weddingId, storageId, filename: file.name });
+      } else {
+        id = await startImport({ weddingId, rawText: pasted });
+      }
+      setDropped(new Set());
+      setImportId(id);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That didn't work. Try again.");
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const rows = (result?.guests ?? []).map((g, i) => ({ ...g, key: `${i}-${g.email ?? g.name}` }));
+  const keeping = rows.filter((r) => !dropped.has(r.key));
+
+  if (!open) {
+    return (
+      <p className="mt-4 text-sm text-muted">
+        Have a list already?{" "}
+        <button type="button" className="text-accent underline underline-offset-2" onClick={() => setOpen(true)}>
+          Bring in a spreadsheet, a PDF or a paste
+        </button>{" "}
+        instead of typing them one by one.
+      </p>
+    );
+  }
+
+  return (
+    <section className="card mt-6 p-5 md:p-6" aria-labelledby="import-h">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="import-h" className="display text-lg">Bring in your guest list</h2>
+        <button type="button" className="text-xs text-quiet underline underline-offset-2" onClick={() => setOpen(false)}>Close</button>
+      </div>
+      <p className="mt-1 text-sm text-muted">
+        A spreadsheet (.xlsx or .csv), a PDF, or paste the names below. PlusOne picks out names and email addresses,
+        and shows you what it read before anyone is added.
+      </p>
+
+      {!result || result.status === "committed" ? (
+        <>
+          <div className="mt-4 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-start">
+            <textarea
+              rows={3}
+              className="input resize-y"
+              value={pasted}
+              onChange={(e) => setPasted(e.target.value)}
+              placeholder={"Olivia Carter, olivia@example.com\nThe Bennett family (4), noah@example.com"}
+              aria-label="Paste your guest list"
+            />
+            <div className="grid gap-2">
+              <button type="button" className="btn-primary btn-sm" disabled={busy || !pasted.trim()} onClick={() => void read(null)}>
+                {busy ? "Reading…" : "Read this list"}
+              </button>
+              <label className="btn-quiet btn-sm cursor-pointer">
+                <Icon name="plus" size={15} />
+                Choose a file
+                <input
+                  type="file"
+                  accept=".csv,.tsv,.txt,.xlsx,.xlsm,.pdf,text/csv,application/pdf"
+                  className="sr-only"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    e.target.value = "";
+                    if (file) void read(file);
+                  }}
+                />
+              </label>
+            </div>
+          </div>
+          {done && <p className="mt-3 text-sm text-ok" aria-live="polite">{done}</p>}
+        </>
+      ) : result.status === "pending" ? (
+        <p className="mt-4 text-sm text-muted" aria-live="polite">
+          Reading {result.filename ?? "your list"}…
+        </p>
+      ) : result.status === "failed" ? (
+        <div className="mt-4">
+          <p role="alert" className="text-sm text-bad">PlusOne couldn't read that: {result.error}</p>
+          <button type="button" className="btn-quiet btn-sm mt-2" onClick={() => setImportId(null)}>Try another list</button>
+        </div>
+      ) : rows.length === 0 ? (
+        <div className="mt-4">
+          <p role="alert" className="text-sm text-bad">
+            PlusOne couldn't find any guests in {result.filename ?? "that list"}. A spreadsheet or PDF with a name and an
+            email per row works best.
+          </p>
+          <button type="button" className="btn-quiet btn-sm mt-2" onClick={() => setImportId(null)}>Try another list</button>
+        </div>
+      ) : (
+        <div className="mt-4">
+          <p className="text-sm">
+            <strong className="font-medium">{keeping.length} {keeping.length === 1 ? "guest" : "guests"}</strong> read from{" "}
+            {result.filename ?? "your list"}. Drop anyone who shouldn't be here, then add them.
+          </p>
+          {result.note && <p className="mt-1 text-xs text-quiet">{result.note}</p>}
+          <ul className="mt-3 max-h-[22rem] divide-y divide-line overflow-y-auto rounded-[12px] border border-line">
+            {rows.map((r) => {
+              const out = dropped.has(r.key);
+              return (
+                <li key={r.key} className={`flex items-center gap-3 px-3 py-2 text-sm ${out ? "opacity-45" : ""}`}>
+                  <span className="min-w-0 flex-1">
+                    <span className={`block truncate ${out ? "line-through" : ""}`}>{r.name}</span>
+                    <span className="block truncate text-xs text-quiet">
+                      {r.email ?? "no email"}
+                      {r.side ? ` · ${r.side}` : ""}
+                      {r.partySize > 1 ? ` · party of ${r.partySize}` : ""}
+                    </span>
+                  </span>
+                  <button
+                    type="button"
+                    className="text-xs text-quiet underline underline-offset-2 hover:text-accent"
+                    onClick={() =>
+                      setDropped((d) => {
+                        const next = new Set(d);
+                        if (out) next.delete(r.key);
+                        else next.add(r.key);
+                        return next;
+                      })
+                    }
+                  >
+                    {out ? "Keep" : "Drop"}
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+          {error && <p role="alert" className="mt-2 text-sm text-bad">{error}</p>}
+          <div className="mt-3 flex flex-wrap items-center justify-end gap-3">
+            <button type="button" className="btn-quiet btn-sm" onClick={() => setImportId(null)}>Cancel</button>
+            <button
+              type="button"
+              className="btn-primary btn-sm"
+              disabled={busy || keeping.length === 0 || !importId}
+              onClick={() => {
+                if (!importId) return;
+                setBusy(true);
+                setError(null);
+                void commitImport({ importId, guests: keeping.map(({ key: _key, ...g }) => g) })
+                  .then(({ added, skipped }) => {
+                    setImportId(null);
+                    setPasted("");
+                    setDone(
+                      `Added ${added} ${added === 1 ? "guest" : "guests"}${skipped > 0 ? `, skipped ${skipped} already on your list` : ""}.`,
+                    );
+                  })
+                  .catch((e: unknown) => setError(e instanceof Error ? e.message : "They didn't save."))
+                  .finally(() => setBusy(false));
+              }}
+            >
+              {busy ? "Adding…" : `Add ${keeping.length} to the list`}
+            </button>
+          </div>
+        </div>
       )}
     </section>
   );

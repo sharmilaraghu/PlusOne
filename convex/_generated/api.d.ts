@@ -21,6 +21,7 @@ import type * as drafts from "../drafts.js";
 import type * as events from "../events.js";
 import type * as firecrawl from "../firecrawl.js";
 import type * as followups from "../followups.js";
+import type * as guestImport from "../guestImport.js";
 import type * as guests from "../guests.js";
 import type * as http from "../http.js";
 import type * as inbound from "../inbound.js";
@@ -67,6 +68,7 @@ declare const fullApi: ApiFromModules<{
   events: typeof events;
   firecrawl: typeof firecrawl;
   followups: typeof followups;
+  guestImport: typeof guestImport;
   guests: typeof guests;
   http: typeof http;
   inbound: typeof inbound;
