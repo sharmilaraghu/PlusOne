@@ -115,7 +115,7 @@ export function DecisionsPage() {
       ) : (
         <div className="mt-7 grid gap-5">
           {shown.map((need) => (
-            <NeedBoard key={need.slotId} need={need} currency={board.currency} canEdit={canEdit} />
+            <NeedBoard key={need.slotId} need={need} currency={board.currency} canEdit={canEdit} weddingId={weddingId} />
           ))}
         </div>
       )}
@@ -142,7 +142,7 @@ function Kpi({ label, value, note, tone }: { label: string; value: string; note:
 }
 
 /** One need, with everyone in the running side by side. */
-function NeedBoard({ need, currency, canEdit }: { need: Need; currency: string; canEdit: boolean }) {
+function NeedBoard({ need, currency, canEdit, weddingId }: { need: Need; currency: string; canEdit: boolean; weddingId: Id<"weddings"> }) {
   const markBooked = useMutation(api.slots.markBooked);
   const setStatus = useMutation(api.threads.setStatus);
   const [busy, setBusy] = useState<string | null>(null);
@@ -300,11 +300,21 @@ function NeedBoard({ need, currency, canEdit }: { need: Need; currency: string; 
                   </td>
 
                   <td className="py-3.5 pl-4 pr-6 align-top text-right">
+                    <span className="inline-flex flex-col items-end gap-1.5">
+                      {v.state === "booked" && <span className="chip-ok">Yours</span>}
+                      {/* Booked or not, the conversation stays open right up to the day. */}
+                      {v.threadId && (
+                        <Link
+                          to={`/w/${weddingId}/inbox/${v.threadId}`}
+                          className="text-xs text-accent underline underline-offset-2"
+                        >
+                          {v.state === "booked" ? "Message them" : "Open emails"}
+                        </Link>
+                      )}
+                    </span>
                     {canEdit && v.state !== "declined" && (
-                      <span className="inline-flex flex-col items-end gap-1.5">
-                        {v.state === "booked" ? (
-                          <span className="chip-ok">Yours</span>
-                        ) : (
+                      <span className="mt-1.5 inline-flex flex-col items-end gap-1.5">
+                        {v.state === "booked" ? null : (
                           <BookButton
                             vendorName={v.name}
                             label={busy === v.vendorId ? "…" : "Book"}
