@@ -348,3 +348,9 @@
   .judge-bar__tag { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { .judge-bar, .judge-bar__go { transition: none; } }
+
+/* A quiet last line: the policy has to be reachable from the page itself. */
+.lp-footer { display: flex; justify-content: center; gap: 10px; padding: 28px 20px 40px; font-size: 13px; color: var(--ink-soft, #6b6b6b); }
+.lp-footer__link { color: inherit; text-underline-offset: 3px; }
+.lp-footer__link:hover { color: var(--wine); }
+

@@ -159,6 +159,11 @@ export function LandingPage() {
         </div>
       </footer>
 
-    </div>
+          <footer className="lp-footer">
+        <Link to="/privacy" className="lp-footer__link">Privacy</Link>
+        <span aria-hidden="true">·</span>
+        <Link to="/how-it-works" className="lp-footer__link">How it works</Link>
+      </footer>
+</div>
   );
 }

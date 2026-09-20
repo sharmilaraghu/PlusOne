@@ -18,6 +18,7 @@ import { HowItWorksPage } from "./pages/HowItWorksPage";
 import { WeddingLayout } from "./components/WeddingLayout";
 import { GuestPage } from "./pages/GuestPage";
 import { AccountPage } from "./pages/AccountPage";
+import { PrivacyPage } from "./pages/PrivacyPage";
 
 export default function App() {
   return (
@@ -26,6 +27,7 @@ export default function App() {
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/join/:token" element={<JoinPage />} />
         <Route path="/guest" element={<GuestPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         <Route
           path="/*"
           element={
