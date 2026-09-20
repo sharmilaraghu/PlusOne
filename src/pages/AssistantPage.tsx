@@ -7,6 +7,8 @@ import type { Id } from "../../convex/_generated/dataModel";
 import { PageHeader } from "../components/ui/PageHeader";
 import { Icon } from "../components/ui/Icon";
 import { usePrivacy } from "../lib/privacy";
+import { ProposalCard } from "../components/assistant/ProposalCard";
+import { AssistantNotes } from "../components/assistant/AssistantNotes";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 
@@ -14,12 +16,13 @@ const OPENERS = [
   "What should we book next?",
   "How much of our budget is left?",
   "Find us a florist",
-  "What happens on the day itself?",
+  "Add Priya and Sam to the guest list",
+  "Remember: no lilies, Mum is allergic",
 ];
 
 export function AssistantPage() {
   const privacy = usePrivacy();
-  const { wedding, role } = useOutletContext<WeddingData>();
+  const { wedding, role, events } = useOutletContext<WeddingData>();
   const weddingId = wedding._id as Id<"weddings">;
   const history = useQuery(api.assistant.history, { weddingId });
   const ask = useMutation(api.assistant.ask);
@@ -69,8 +72,9 @@ export function AssistantPage() {
           </span>
           <h2 className="mt-3 display text-[1.35rem]">Ask anything about your wedding</h2>
           <p className="mx-auto mt-2 max-w-[28rem] text-sm leading-relaxed text-muted">
-            It answers from your own plan — what is booked, what is left, what you have spent — and it can start a vendor
-            search or add something you have forgotten. It never sends an email; that always goes through you.
+            It answers from your own plan — what is booked, what is left, what you have spent — and it can offer to add
+            guests, add a day, move money, search for vendors or write to one. Nothing happens until you press the
+            button on the card, and you can change the words first.
           </p>
           <ul className="mt-5 flex flex-wrap justify-center gap-2">
             {OPENERS.map((o) => (
@@ -116,22 +120,37 @@ export function AssistantPage() {
                 </p>
               )}
 
-              {/* What it actually did, so nothing happens invisibly. */}
-              {m.toolCalls?.map((t, i) => (
-                <p key={i} className="mt-2 flex items-center gap-1.5 text-xs text-accent">
-                  <Icon name={t.name === "research" ? "search" : "plus"} size={13} />
-                  {t.status === "done"
-                    ? t.name === "research"
-                      ? `Started a search for ${String((t.args as { need?: string })?.need ?? "that")}`
-                      : `Added ${String((t.args as { title?: string })?.title ?? "a need")} to your vendors`
-                    : "Couldn't do that one — try the Vendors screen"}
-                </p>
-              ))}
+              {/* What it offers to do. Nothing happens until the couple presses. */}
+              {m.toolCalls?.map((t, i) =>
+                t.name === "propose" ? (
+                  <ProposalCard
+                    key={i}
+                    weddingId={weddingId}
+                    replyId={m._id}
+                    index={i}
+                    call={t}
+                    canEdit={canEdit}
+                    events={events}
+                  />
+                ) : (
+                  // Older replies, from when it acted without asking.
+                  <p key={i} className="mt-2 flex items-center gap-1.5 text-xs text-accent">
+                    <Icon name={t.name === "research" ? "search" : "plus"} size={13} />
+                    {t.status === "done"
+                      ? t.name === "research"
+                        ? `Started a search for ${String((t.args as { need?: string })?.need ?? "that")}`
+                        : `Added ${String((t.args as { title?: string })?.title ?? "a need")} to your vendors`
+                      : "Couldn't do that one — try the Vendors screen"}
+                  </p>
+                ),
+              )}
             </li>
           ))}
           <div ref={endRef} />
         </ul>
       )}
+
+      <AssistantNotes weddingId={weddingId} canEdit={canEdit} />
 
       {error && <p role="alert" className="mt-3 text-sm text-bad">{error}</p>}
 

@@ -4,8 +4,8 @@ import { v } from "convex/values";
 import { z } from "zod";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalAction } from "./_generated/server";
-import { formatMoney, truncate } from "./lib/text";
+import { internalAction, type ActionCtx } from "./_generated/server";
+import { formatMoney, matchByName, truncate } from "./lib/text";
 import {
   replyClassification,
   rsvpStatus,
@@ -886,23 +886,166 @@ export const parseRsvp = internalAction({
 
 // ---- assistant ---------------------------------------------------------------
 
-const assistantSchema = z.object({
-  answer: z.string().describe("the reply to show the couple, in plain words, 1-5 short paragraphs"),
-  action: z
-    .enum(["none", "research", "add_need"])
-    .describe("only when the couple clearly asked for it; otherwise 'none'"),
-  needTitle: z.string().nullable().describe("for 'research', the exact title of the existing need to search for"),
-  query: z.string().nullable().describe("for 'research', what to search for in plain words"),
-  newNeedTitle: z.string().nullable().describe("for 'add_need', what to call the new vendor need"),
-  newNeedCategory: z.string().nullable().describe("for 'add_need', a short category such as Cake or Transport"),
+/**
+ * What the assistant may offer to do. One flat object rather than a union: structured
+ * outputs handle `oneOf` badly, and the codebase already leans on nullable fields.
+ */
+const proposalSchema = z.object({
+  kind: z.enum(["add_guest", "add_need", "research", "set_budget", "add_event", "write_vendor"]),
+  label: z.string().describe("one short line naming the action, e.g. 'Add Olivia Carter to the guest list'"),
+  why: z.string().nullable().describe("one sentence on why you are offering it, from what they just said"),
+
+  // Which existing thing this is about. Name it EXACTLY as it appears in the plan.
+  needTitle: z.string().nullable().describe("for research/set_budget on a need: the exact title of an existing need"),
+  vendorName: z.string().nullable().describe("for write_vendor: the exact name of a vendor already being emailed"),
+  eventNames: z.array(z.string()).nullable().describe("which days this is for; null means every day"),
+
+  // add_guest
+  guestName: z.string().nullable(),
+  guestEmail: z.string().nullable(),
+  guestSide: z.string().nullable().describe("whose side, when they say"),
+  guestPartySize: z.number().nullable().describe("how many people this row covers; 1 unless they say"),
+
+  // add_need
+  title: z.string().nullable().describe("for add_need: what to call it, e.g. 'Cake'"),
+  category: z.string().nullable().describe("for add_need: a short category, e.g. 'Cake'"),
+
+  // research
+  query: z.string().nullable().describe("for research: what to search for, 3 to 300 characters of plain words"),
+
+  // set_budget
+  budgetTarget: z
+    .enum(["total", "event", "need"])
+    .nullable()
+    .describe("for set_budget: the wedding total, one day, or one vendor need"),
+  eventName: z.string().nullable().describe("for set_budget on a day, and for add_event: the day's name"),
+  amount: z.number().nullable().describe("for set_budget: the new amount in the wedding's currency"),
+
+  // add_event
+  date: z.string().nullable().describe("for add_event: the date as YYYY-MM-DD"),
+  guestCount: z.number().nullable().describe("for add_event: roughly how many people"),
+  budgetShare: z.number().nullable().describe("for add_event: roughly what share of the budget; a weight, not an amount"),
+
+  // write_vendor
+  message: z.string().nullable().describe("for write_vendor: the email to send, in the couple's voice, signed off"),
+  asWritten: z.boolean().nullable().describe("true only when they dictated the exact words to send"),
 });
 
+const assistantSchema = z.object({
+  answer: z.string().describe("the reply to show the couple, in plain words, 1-5 short paragraphs"),
+  proposals: z
+    .array(proposalSchema)
+    .max(3)
+    .describe("things to do for them, only when they clearly asked; otherwise an empty list"),
+  remember: z
+    .array(z.string().max(160))
+    .max(3)
+    .describe(
+      "things worth remembering that no screen holds: preferences, people, constraints " +
+        "('no lilies, her mum is allergic'). Never numbers or vendors already in the plan, and never a whole sentence of chat.",
+    ),
+});
+
+type Proposal = z.infer<typeof proposalSchema>;
+type BoardContext = Awaited<ReturnType<typeof contextFor>>;
+async function contextFor(ctx: ActionCtx, weddingId: Id<"weddings">) {
+  return await ctx.runQuery(internal.assistant.context, { weddingId });
+}
+
 /**
- * Answer one question about this wedding.
+ * Turn what the model named into what the database can act on. A proposal whose target
+ * cannot be found never becomes a card — the answer text explains instead.
+ */
+function resolveProposal(p: Proposal, board: BoardContext): Record<string, unknown> | null {
+  const events = (p.eventNames ?? [])
+    .map((name) => matchByName(board.events, name, (e) => e.name))
+    .filter((e): e is BoardContext["events"][number] => Boolean(e));
+  const base = {
+    kind: p.kind,
+    label: p.label.slice(0, 120),
+    why: p.why?.slice(0, 200) ?? null,
+    ...(events.length ? { eventIds: events.map((e) => e.eventId), eventNames: events.map((e) => e.name) } : {}),
+  };
+
+  switch (p.kind) {
+    case "add_guest": {
+      const name = p.guestName?.trim();
+      if (!name) return null;
+      return {
+        ...base,
+        guestName: name.slice(0, 120),
+        guestEmail: p.guestEmail?.trim().toLowerCase() ?? null,
+        guestSide: p.guestSide?.slice(0, 60) ?? null,
+        guestPartySize: Math.max(1, Math.min(20, Math.floor(p.guestPartySize ?? 1))),
+      };
+    }
+    case "add_need": {
+      const title = p.title?.trim() || p.label.replace(/^add (a|an|the)?\s*/i, "").trim();
+      if (!title) return null;
+      return { ...base, title: title.slice(0, 80), category: (p.category ?? title).trim().slice(0, 60) };
+    }
+    case "research": {
+      const need = matchByName(board.needs, p.needTitle, (n) => n.title);
+      if (!need) return null;
+      const query = (p.query ?? `${need.category}`).trim();
+      if (query.length < 3) return null;
+      return {
+        ...base,
+        slotId: need.slotId,
+        slotTitle: need.title,
+        query: query.slice(0, 300),
+        ...(need.status === "booked" ? { blocked: `${need.title} is already booked.` } : {}),
+      };
+    }
+    case "set_budget": {
+      const amount = p.amount;
+      if (amount === null || !Number.isFinite(amount) || amount < 0) return null;
+      const target = p.budgetTarget ?? (p.needTitle ? "need" : p.eventName ? "event" : "total");
+      if (target === "need") {
+        const need = matchByName(board.needs, p.needTitle, (n) => n.title);
+        if (!need) return null;
+        return { ...base, budgetTarget: "need", slotId: need.slotId, slotTitle: need.title, amount };
+      }
+      if (target === "event") {
+        const day = matchByName(board.events, p.eventName, (e) => e.name);
+        if (!day) return null;
+        return { ...base, budgetTarget: "event", eventId: day.eventId, eventName: day.name, amount };
+      }
+      return { ...base, budgetTarget: "total", amount };
+    }
+    case "add_event": {
+      const name = (p.eventName ?? p.title)?.trim();
+      if (!name || !p.date || !/^\d{4}-\d{2}-\d{2}$/.test(p.date)) return null;
+      return {
+        ...base,
+        eventName: name.slice(0, 80),
+        date: p.date,
+        guestCount: Math.max(0, Math.floor(p.guestCount ?? 0)),
+        budgetShare: Math.max(0, p.budgetShare ?? 0),
+      };
+    }
+    case "write_vendor": {
+      const vendor = matchByName(board.vendors, p.vendorName, (t) => t.vendorName);
+      const message = p.message?.trim();
+      if (!vendor || !message) return null;
+      return {
+        ...base,
+        threadId: vendor.threadId,
+        vendorName: vendor.vendorName,
+        message: message.slice(0, 4000),
+        asWritten: p.asWritten ?? false,
+        ...(vendor.hasEmail ? {} : { blocked: `PlusOne has no email address for ${vendor.vendorName} yet.` }),
+      };
+    }
+  }
+}
+
+/**
+ * Answer one question about this wedding, and offer to do what they asked for.
  *
- * The assistant can start a search or add a vendor need, and nothing else. It is given
- * no way to send an email: outreach always goes through the confirmation screen, so the
- * couple's inbox never sends something they have not seen.
+ * The assistant never acts on its own: anything it can do becomes a card the couple
+ * presses. That is the whole guard, so it applies to email too — the words are shown
+ * before they go, which is what the vendor screen's confirmation always did.
  */
 export const answerQuestion = internalAction({
   args: { weddingId: v.id("weddings"), replyId: v.id("chatMessages") },
@@ -911,16 +1054,24 @@ export const answerQuestion = internalAction({
     try {
       const wedding = await ctx.runQuery(internal.weddings.getContext, { weddingId: args.weddingId });
       if (!wedding) throw new Error("Wedding not found");
-      const board = await ctx.runQuery(internal.assistant.context, { weddingId: args.weddingId });
+      const board = await contextFor(ctx, args.weddingId);
+      const money = (n: number) => formatMoney(n, board.currency);
 
       const needLines = board.needs
         .map(
           (n) =>
-            `- ${n.title} (${n.category}): ${formatMoney(n.budget, wedding.wedding.currency)} planned, ${n.status}` +
+            `- ${n.title} (${n.category}): ${money(n.budget)} planned, ${n.status}` +
             `, ${n.vendorCount} vendor${n.vendorCount === 1 ? "" : "s"} found` +
-            (n.bestQuote !== null ? `, best quote ${formatMoney(n.bestQuote, wedding.wedding.currency)}` : ""),
+            (n.bestQuote !== null ? `, best quote ${money(n.bestQuote)}` : ""),
         )
         .join("\n");
+      const dayLines = board.events
+        .map((e) => `- ${e.name} on ${e.date}, ${e.guestCount} guests, ${money(e.budget)}`)
+        .join("\n");
+      const vendorLines = board.vendors
+        .map((t) => `- ${t.vendorName} (${t.slotTitle}): ${t.state}${t.hasEmail ? "" : ", no email address"}`)
+        .join("\n");
+      const notes = (wedding.wedding.assistantNotes ?? []).map((n) => `- ${n}`).join("\n");
       const conversation = board.recent.map((m) => `${m.role === "user" ? "Couple" : "You"}: ${m.content}`).join("\n");
 
       const { object } = await generateObject({
@@ -929,44 +1080,43 @@ export const answerQuestion = internalAction({
         prompt:
           `You are PlusOne, a calm and competent wedding planning assistant talking to the couple whose plan is below. ` +
           `Answer from their plan first; you may add general knowledge about weddings and traditions, but never invent ` +
-          `numbers, vendors or quotes that are not in the plan. Be warm and brief, use plain words, and give one clear ` +
-          `next step when there is one. If they ask you to do something you cannot do, say so plainly.\n` +
-          `You can do exactly two things: start a vendor search for an existing need ('research'), or add a new vendor ` +
-          `need ('add_need'). You cannot send email — say that outreach happens on the vendor screen, where they confirm ` +
-          `once and you send the rest.\n\n` +
+          `numbers, vendors, guests or quotes that are not in the plan. Be warm and brief, use plain words, and give one ` +
+          `clear next step when there is one.\n\n` +
+          `You can offer to do six things, as proposals: add a guest, add a vendor need, search the web for vendors for ` +
+          `an existing need, change a budget (the total, one day, or one need), add a day to the plan, or write to a ` +
+          `vendor you are already emailing. You never do any of them yourself — each becomes a card the couple presses ` +
+          `to confirm, and they can edit it first. Only propose what they clearly asked for, at most two or three at a ` +
+          `time, and say in one line what you are offering. Name an existing need, day or vendor EXACTLY as it appears ` +
+          `below, or the card cannot be made.\n` +
+          `For a vendor email, write the whole message in their voice, signed off with both first names.\n\n` +
           `${weddingBrief(wedding.wedding, wedding.events)}\n\n` +
+          `Days:\n${dayLines || "(none yet)"}\n\n` +
           `Vendor needs:\n${needLines || "(none yet)"}\n\n` +
+          `Vendors you are emailing:\n${vendorLines || "(none yet)"}\n\n` +
           `Guests: ${board.guests.total} on the list, ${board.guests.yes} coming, ${board.guests.pending} yet to reply.\n` +
-          `Committed so far: ${formatMoney(board.committed, wedding.wedding.currency)} of ` +
-          `${formatMoney(wedding.wedding.totalBudget, wedding.wedding.currency)}.\n\n` +
-          `Conversation so far:\n${conversation}`,
+          `Committed so far: ${money(board.committed)} of ${money(board.totalBudget)}.\n` +
+          (notes ? `\nThings they have told you to remember:\n${notes}\n` : "") +
+          `\nConversation so far:\n${conversation}`,
       });
 
-      const toolCalls: Array<{ name: string; args: unknown; result?: unknown; status: string }> = [];
+      // Resolved here, where the plan is in hand: a card can only ever point at
+      // something that exists. Anything unresolvable is dropped, not shown.
+      const toolCalls = object.proposals
+        .slice(0, 3)
+        .map((p) => resolveProposal(p, board))
+        .filter((p): p is Record<string, unknown> => p !== null)
+        .map((p) => ({
+          name: "propose",
+          args: p,
+          status: p.blocked ? "error" : "proposed",
+          ...(p.blocked ? { result: { done: String(p.blocked), at: Date.now() } } : {}),
+        }));
 
-      if (object.action === "research" && object.needTitle) {
-        const wanted = object.needTitle.trim().toLowerCase();
-        const match =
-          board.needs.find((n) => n.title.toLowerCase() === wanted) ??
-          board.needs.find((n) => n.title.toLowerCase().includes(wanted) || wanted.includes(n.title.toLowerCase()));
-        if (match) {
-          const runId = await ctx.runMutation(internal.research.startForSlot, {
-            slotId: match.slotId,
-            query: object.query ?? `${match.title} in ${wedding.wedding.city}`,
-          });
-          toolCalls.push({ name: "research", args: { need: match.title }, result: { started: runId !== null }, status: "done" });
-        } else {
-          toolCalls.push({ name: "research", args: { need: object.needTitle }, result: { started: false }, status: "error" });
-        }
-      }
-
-      if (object.action === "add_need" && object.newNeedTitle) {
-        const slotId = await ctx.runMutation(internal.slots.addInternal, {
+      if (object.remember.length > 0) {
+        await ctx.runMutation(internal.assistant.remember, {
           weddingId: args.weddingId,
-          title: object.newNeedTitle.trim().slice(0, 80),
-          category: (object.newNeedCategory ?? object.newNeedTitle).trim().slice(0, 60),
+          notes: object.remember.map((n) => n.slice(0, 160)),
         });
-        toolCalls.push({ name: "add_need", args: { title: object.newNeedTitle }, result: { slotId }, status: "done" });
       }
 
       await ctx.runMutation(internal.assistant.finishReply, {
@@ -986,9 +1136,6 @@ export const answerQuestion = internalAction({
     return null;
   },
 });
-
-// ---- forwarded contracts -----------------------------------------------------
-
 const contractSchema = z.object({
   summary: z.string().describe("two or three plain sentences: what this agreement commits the couple to"),
   flags: z

@@ -63,6 +63,10 @@ export const weddingFields = {
   createdBy: v.id("users"),
   /** A sample wedding for a guest: fictional vendors, and email is simulated rather than sent. */
   demo: v.optional(v.boolean()),
+  /** Short things the couple told the assistant that no other screen holds. */
+  assistantNotes: v.optional(v.array(v.string())),
+  /** Older chat, boiled down, so a long conversation keeps its thread cheaply. */
+  assistantSummary: v.optional(v.string()),
 };
 
 export const memberFields = {
