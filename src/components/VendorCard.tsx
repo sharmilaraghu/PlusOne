@@ -142,7 +142,7 @@ export function VendorCard({
 }) {
   const privacy = usePrivacy();
   return (
-    <li className={`card rise flex flex-col p-5 ${selected ? "ring-2 ring-accent/40" : ""}`}>
+    <li className={`card rise flex min-w-0 flex-col p-5 ${selected ? "ring-2 ring-accent/40" : ""}`}>
       <div className="flex items-start gap-3">
         {rank !== undefined && (
           <span

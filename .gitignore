@@ -16,3 +16,9 @@ dist
 
 # TypeScript incremental build info
 *.tsbuildinfo
+
+# Demo video: raw screen recordings can show personal accounts, and the edit's
+# working files are large. Neither belongs in the repository.
+/recordings/
+/docs/demo-video/
+/ElevenLabs_video_*.mp4

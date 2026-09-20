@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-20T10:11:00Z
+- **Last updated:** 2026-09-20T10:35:36Z
 
 ## Log
 
@@ -338,3 +338,26 @@ quote and sends without opening another screen (`src/components/assistant/`). No
 lives only in the chat — the card reads the same queries the vendors screen reads, and a
 DJ search run from the chat put five real vendors on that need, three of them ranked as
 top picks. Deployed.
+
+### 2026-09-20 - working tree
+Tested from a fresh clone against a new dev deployment. Install, typecheck and production
+build pass. Driven in a headless browser with no console errors: the public pages, guest
+sign-in and all eight screens of the sample wedding at desktop and phone width, adding and
+removing a guest, booking a vendor (the budget moved and the confirmation and thank-you
+emails were written and simulated), answering a vendor's question, the assistant, email
+sign-up through all six onboarding steps, and one live vendor search that returned four
+real photographers with sourced ratings. The AgentMail webhook accepted a correctly signed
+event and returned 401 for a tampered and an unsigned one (`convex/http.ts`). Not tested
+there: real outbound email and Google sign-in.
+
+One bug found and fixed: vendor cards pushed the Vendors page wider than a phone screen; the
+grid item now shrinks (`src/components/VendorCard.tsx`). Found and not yet fixed: the key
+check in `start.sh` can never warn, because `convex env get` exits 0 for a missing key;
+`scripts/ui-shot.mjs` fails at the country select; `/signin` always opens on Create account.
+
+Recorded the demo video on the live app, as one couple's wedding from sign-in to booking:
+onboarding, a live vendor search, a quote request sent from the wedding inbox, the reply read
+into a quote, PlusOne asking an over-budget vendor for something closer by itself and the
+lower quote that came back, booking, a guest's reply read in with allergies, and the
+assistant adding guests from a card. The video's working files are kept out of the
+repository (`.gitignore`); raw screen recordings can show personal accounts.
