@@ -100,31 +100,21 @@ sent and the replies read back into quotes, and the decision made.
 
 Six steps: who you are, which functions fall on which days, how many guests at each, how the budget splits, which vendors you still need, and the feel you're after. Everything is editable afterwards.
 
-![Onboarding, step four: one total budget split across the rehearsal dinner, ceremony and reception by percentage, with the amounts beside each slider](docs/screenshots/03-onboarding.jpg)
-
 ### Every celebration on one shelf
 
 Each wedding is a print you can read at a glance: how long you have, how many vendors are booked of the total, what is committed against the budget, and the one thing worth doing next.
-
-![Your weddings: a print per wedding carrying its countdown, vendors booked, budget committed and the next thing to do](docs/screenshots/02-home.jpg)
 
 ### Every day in one place
 
 Each function keeps its own guests, budget and vendor needs, and the three figures always reconcile: the functions, the needs and the total all add up to the same number, whatever you change.
 
-![Overview: the budget bar, a card per day with its guests, budget and vendor needs, and a live activity feed of what PlusOne has done](docs/screenshots/04-overview.jpg)
-
 ### Vendors found on the open web, ranked with reasons
 
 Describe what you need in plain words. Firecrawl searches, reads each vendor's own site for prices and contact details, then looks them up on review directories. The best three come first, each with its rating linked to the page it came from, its price against that need's budget, and one line on why it ranks there.
 
-![Vendors: the best match for photography and two more, each with its rating, its price against the budget and one line on why it ranks there](docs/screenshots/05-vendors.jpg)
-
 ### Confirm once, and PlusOne does the emailing
 
 You see exactly who will be written to and one letter in full. After that it sends them all from your own wedding inbox, chases anyone who goes quiet, and reads every reply back into a structured quote: the total, the deposit, what is and isn't included, and what to watch out for. A quote that lives only in an attached PDF is read too.
-
-![Inbox: every vendor conversation with its status, and one reply read into a quote with total, deposit and inclusions above the emails themselves](docs/screenshots/07-inbox.jpg)
 
 PlusOne carries the conversation. A vendor's question is answered from your plan, or turned into one plain question for you. A quote that comes in over budget gets one polite ask for something closer. It never agrees to pay, sign or accept a price, and it hands back to you after three replies of its own.
 
@@ -134,19 +124,13 @@ Forward any contract to the same inbox and it comes back in plain English, with 
 
 One screen: who was asked, who replied and how fast, what has been quoted, what is booked. Per need, every vendor side by side with price, deposit, whether they are free on your actual dates, and what is and isn't included. Book or pass on the row.
 
-![Decisions: asked, replied, quotes in and booked across the top, then every vendor per need with where it stands, its quote and what is included](docs/screenshots/06-decisions.jpg)
-
 ### Guests reply in their own words
 
 Bring the list in as a spreadsheet, a PDF or a paste. Invitations go out from the wedding inbox, and when someone writes back *"we'd love to, two of us, and I'm gluten free"*, the list updates itself. Allergies are kept as their own record, and food vendors are told the allergens and the numbers, never the names.
 
-![Guests: RSVP counts, the add-a-guest form, the allergies gathered for the caterer, and the list with replies read back in](docs/screenshots/08-guests.jpg)
-
 ### An assistant that knows your plan
 
 It answers from your own numbers, and it can do the work: add a guest, add a vendor need, search for vendors, change a budget, add a day, or write to a vendor. Each offer arrives as a card you can read and edit, and nothing happens until you press it, which is what makes writing an email from chat acceptable: the words are read first.
-
-![Assistant: an answer about the remaining budget, then an offer to add two guests as a card with Do it, Change something and No thanks](docs/screenshots/09-assistant.jpg)
 
 ---
 
@@ -222,4 +206,4 @@ Built for the [Convex All Gas Hackathon](https://luma.com/convex-allgas-hackatho
 
 ---
 
-*Screenshots are of the sample wedding anyone can open with "Try it as a guest". Its vendors, guests and addresses are fictional (the reserved `.example` domain), and email on a sample wedding is simulated rather than sent. The pipeline behind it is the real one; its measured results are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md).*
+*The demo video and the screenshot are of the sample wedding anyone can open with "Try it as a guest". Its vendors, guests and addresses are fictional (the reserved `.example` domain), and email on a sample wedding is simulated rather than sent. The pipeline behind it is the real one; its measured results are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md).*
