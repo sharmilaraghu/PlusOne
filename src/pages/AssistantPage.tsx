@@ -131,6 +131,7 @@ export function AssistantPage() {
                     call={t}
                     canEdit={canEdit}
                     events={events}
+                    currency={wedding.currency}
                   />
                 ) : (
                   // Older replies, from when it acted without asking.

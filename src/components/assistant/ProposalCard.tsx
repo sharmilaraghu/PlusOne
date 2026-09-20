@@ -6,6 +6,7 @@ import { api } from "../../../convex/_generated/api";
 import type { Id } from "../../../convex/_generated/dataModel";
 import { Icon } from "../ui/Icon";
 import { usePrivacy } from "../../lib/privacy";
+import { ResearchResult } from "./ResearchResult";
 
 type Call = { name: string; args: unknown; result?: unknown; status: string };
 
@@ -36,6 +37,7 @@ export function ProposalCard({
   call,
   canEdit,
   events,
+  currency,
 }: {
   weddingId: Id<"weddings">;
   replyId: Id<"chatMessages">;
@@ -43,6 +45,7 @@ export function ProposalCard({
   call: Call;
   canEdit: boolean;
   events: { _id: string; name: string }[];
+  currency: string;
 }) {
   const run = useMutation(api.assistant.runProposal);
   const dismiss = useMutation(api.assistant.dismissProposal);
@@ -62,15 +65,27 @@ export function ProposalCard({
   if (call.status === "done" || call.status === "dismissed" || call.status === "error") {
     const tone = call.status === "done" ? "text-ok" : "text-quiet";
     return (
-      <p className={`mt-2 flex flex-wrap items-center gap-2 text-xs ${tone}`}>
-        <Icon name={call.status === "done" ? "check" : "dot"} size={13} />
-        {privacy.text(String(result?.done ?? "Done."))}
-        {call.status === "done" && result?.tab !== undefined && (
-          <Link to={`/w/${weddingId}/${result.tab}`} className="underline underline-offset-2">
-            Take a look
-          </Link>
-        )}
-      </p>
+      <>
+        <p className={`mt-2 flex flex-wrap items-center gap-2 text-xs ${tone}`}>
+          <Icon name={call.status === "done" ? "check" : "dot"} size={13} />
+          {privacy.text(String(result?.done ?? "Done."))}
+          {call.status === "done" && result?.tab !== undefined && (
+            <Link to={`/w/${weddingId}/${result.tab}`} className="underline underline-offset-2">
+              Take a look
+            </Link>
+          )}
+        </p>
+        {/* A search keeps going after the card is pressed, so its results belong here
+            rather than on another screen. */}
+        {call.status === "done" && kind === "research" && p.slotId ? (
+          <ResearchResult
+            slotId={p.slotId as Id<"vendorSlots">}
+            slotTitle={String(p.slotTitle ?? "this need")}
+            currency={currency}
+            canEdit={canEdit}
+          />
+        ) : null}
+      </>
     );
   }
 
