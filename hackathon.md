@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-20T15:14:48Z
+- **Last updated:** 2026-09-20T15:42:28Z
 
 ## Log
 
@@ -398,3 +398,18 @@ one. The prompt is a useful guard, so the script is unchanged (`package.json`).
 Drafted the submission entry under `docs/submission-details/` and kept the folder out of the
 repository alongside `docs/submission/`, since it holds the form's personal fields and its
 screenshots (`.gitignore`).
+
+### 2026-09-20 - 9b56dc2, 67a3cff, 36e99d4, 9e84302
+The demo video is public and the README opens with it. A "Watch the demo" section sits between
+the hero and the contents, the thumbnail linking to the recording at
+https://www.youtube.com/watch?v=TExwYZGxJ-0, with a badge beside the live app and the build log.
+With the video giving the tour, the eight screenshots under "What it does" were the same walk
+again in stills, so they came out; each feature's paragraph now carries its section alone and
+the page keeps two large images, the landing shot and the thumbnail. The files stay in
+`docs/screenshots/`, which this log and the submission form both point at.
+
+Stopped tracking `.impeccable/`, the design tool's working directory: 25 files and 8.4MB of
+mocks and comps that regenerate, while the design that shipped lives in `src/` and `DESIGN.md`.
+The files stay on disk and the directory is now ignored whole (`.gitignore`). Added a `commit`
+skill so the history reads as the authors' own work, with no assistant attribution trailers
+(`.claude/skills/commit/SKILL.md`). No product or Convex code changed in this session.
