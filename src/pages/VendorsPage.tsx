@@ -188,6 +188,8 @@ function SlotPanel({
         {canEdit && <RemoveSlot slot={slot} weddingId={wedding._id as Id<"weddings">} />}
       </header>
 
+      <EventsForSlot slot={slot} events={events} canEdit={canEdit} />
+
       {canEdit && (
         <section className="card p-5">
           <label htmlFor="q" className="label">Research the open web</label>
@@ -553,5 +555,65 @@ function RemoveSlot({ slot, weddingId }: { slot: Slot; weddingId: Id<"weddings">
       </button>
       {error && <p role="alert" className="mt-1 max-w-xs text-sm text-bad">{error}</p>}
     </div>
+  );
+}
+
+/**
+ * Which days this vendor is for. Most serve every day, but a photographer might do
+ * the ceremony only while the caterer does three, and that changes the guest count
+ * PlusOne quotes and which day the money lands on.
+ */
+function EventsForSlot({ slot, events, canEdit }: { slot: Slot; events: WeddingData["events"]; canEdit: boolean }) {
+  const update = useMutation(api.slots.update);
+  const [error, setError] = useState<string | null>(null);
+  const on = new Set(slot.eventIds as string[]);
+
+  async function toggle(eventId: string, next: boolean) {
+    const ids = next ? [...on, eventId] : [...on].filter((id) => id !== eventId);
+    if (ids.length === 0) {
+      setError("A vendor need has to cover at least one day. Remove the need itself if you don't want it.");
+      return;
+    }
+    setError(null);
+    try {
+      await update({ slotId: slot._id, patch: { eventIds: ids as Id<"events">[] } });
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "That didn't save.");
+    }
+  }
+
+  return (
+    <section className="card p-4 md:p-5" aria-label="Which days this vendor is for">
+      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
+        <p className="label mb-0">Needed for</p>
+        <p className="text-xs text-quiet">
+          {canEdit ? "Tick every day this vendor is for. Quotes and guest counts follow." : `${on.size} of ${events.length} days`}
+        </p>
+      </div>
+      <ul className="mt-2.5 flex flex-wrap gap-2">
+        {events.map((e) => {
+          const active = on.has(e._id);
+          return (
+            <li key={e._id}>
+              <button
+                type="button"
+                disabled={!canEdit}
+                aria-pressed={active}
+                onClick={() => void toggle(e._id, !active)}
+                className={`rounded-full px-3.5 py-1.5 text-sm transition disabled:cursor-default ${
+                  active
+                    ? "bg-accent text-paper"
+                    : "bg-cream text-muted shadow-[inset_0_0_0_1px_var(--color-line)] hover:bg-accent-soft hover:text-accent"
+                }`}
+              >
+                {e.name}
+                <span className={`ml-2 text-xs ${active ? "opacity-80" : "text-quiet"}`}>{e.guestCount}</span>
+              </button>
+            </li>
+          );
+        })}
+      </ul>
+      {error && <p role="alert" className="mt-2 text-xs text-bad">{error}</p>}
+    </section>
   );
 }

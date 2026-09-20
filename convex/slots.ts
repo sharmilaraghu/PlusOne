@@ -104,7 +104,7 @@ export const update = mutation({
       }
     }
     await ctx.db.patch(args.slotId, args.patch);
-    if (args.patch.budget !== undefined || args.patch.title !== undefined) {
+    if (args.patch.budget !== undefined || args.patch.title !== undefined || args.patch.eventIds !== undefined) {
       const line = await ctx.db
         .query("budgetLines")
         .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
@@ -113,6 +113,11 @@ export const update = mutation({
         await ctx.db.patch(line._id, {
           ...(args.patch.budget !== undefined ? { planned: args.patch.budget } : {}),
           ...(args.patch.title !== undefined ? { label: args.patch.title } : {}),
+          // A need that now serves one day belongs to that day; one that serves several
+          // belongs to none of them in particular.
+          ...(args.patch.eventIds !== undefined
+            ? { eventId: args.patch.eventIds.length === 1 ? args.patch.eventIds[0] : undefined }
+            : {}),
         });
       }
     }
