@@ -17,6 +17,7 @@ import { JoinPage } from "./pages/JoinPage";
 import { HowItWorksPage } from "./pages/HowItWorksPage";
 import { WeddingLayout } from "./components/WeddingLayout";
 import { GuestPage } from "./pages/GuestPage";
+import { AccountPage } from "./pages/AccountPage";
 
 export default function App() {
   return (
@@ -44,6 +45,7 @@ export default function App() {
                 <Routes>
                   <Route path="/" element={<HomePage />} />
                   <Route path="/new" element={<OnboardingPage />} />
+                  <Route path="/account" element={<AccountPage />} />
                   <Route path="/w/:weddingId" element={<WeddingLayout />}>
                     <Route index element={<OverviewPage />} />
                     <Route path="decisions" element={<DecisionsPage />} />

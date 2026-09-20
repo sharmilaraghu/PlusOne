@@ -68,7 +68,7 @@ export function WeddingLayout() {
           <Link to="/" className="display text-2xl tracking-tight text-accent" aria-label="PlusOne home">
             Plus<em>One</em>
           </Link>
-          <UserChip className="mx-3 max-w-[10rem] md:mx-0 md:mt-4 md:flex md:max-w-none" />
+          <UserChip to="/account" className="mx-3 max-w-[10rem] transition hover:border-accent md:mx-0 md:mt-4 md:flex md:max-w-none" />
           <button onClick={() => void signOut()} className="btn-quiet btn-sm gap-1.5 md:hidden">
             <Icon name="signout" size={15} />
             Sign out

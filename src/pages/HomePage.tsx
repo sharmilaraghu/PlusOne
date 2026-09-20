@@ -209,7 +209,7 @@ function Header({ onSignOut }: { onSignOut: () => void }) {
         Plus<em>One</em>
       </Link>
       <div className="flex min-w-0 items-center gap-2">
-      <UserChip className="hidden max-w-[15rem] sm:inline-flex" />
+      <UserChip to="/account" className="hidden max-w-[15rem] sm:inline-flex" />
       <button onClick={onSignOut} className="btn-quiet btn-sm gap-1.5 bg-paper/90 text-ink shadow-[inset_0_0_0_1px_var(--color-line),0_6px_18px_-8px_rgba(70,35,35,0.35)] backdrop-blur-sm">
         <Icon name="signout" size={15} />
         Sign out

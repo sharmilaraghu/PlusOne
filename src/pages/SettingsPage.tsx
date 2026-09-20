@@ -1,13 +1,12 @@
 import { useState } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { useOutletContext } from "react-router-dom";
+import { useMutation } from "convex/react";
+import { Link, useOutletContext } from "react-router-dom";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
 import { CURRENCIES, VIBES } from "../components/onboarding/shared";
 import { PageHeader } from "../components/ui/PageHeader";
 import { CountrySelect } from "../components/ui/CountrySelect";
-import { MASKED_EMAIL, setHideEmails, useHideEmails } from "../lib/privacy";
 
 type WeddingData = NonNullable<FunctionReturnType<typeof api.weddings.get>>;
 type Formality = "relaxed" | "smart" | "formal";
@@ -189,9 +188,9 @@ export function SettingsPage() {
         </div>
       </section>
 
-      <YourNameSection />
-
-      <PrivacySection />
+      <p className="mt-5 text-sm text-muted">
+        Your own name, sign-in and privacy live on <Link to="/account" className="text-accent underline underline-offset-2">your account page</Link>.
+      </p>
 
       {error && <p role="alert" className="mt-4 text-sm text-bad">{error}</p>}
 
@@ -214,80 +213,5 @@ function Field({ label, id, hint, children }: { label: string; id: string; hint?
       {children}
       {hint && <p className="mt-1.5 text-xs text-quiet">{hint}</p>}
     </div>
-  );
-}
-
-/** Applies at once and only to this browser: nothing to save, nobody else affected. */
-function PrivacySection() {
-  const hide = useHideEmails();
-  return (
-    <section className="card mt-5 p-6 md:p-7" aria-labelledby="privacy-h">
-      <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="min-w-0 max-w-[36rem]">
-          <h2 id="privacy-h" className="display text-xl">Hide email addresses</h2>
-          <p className="mt-1 text-sm leading-relaxed text-muted">
-            Shows every email address as {MASKED_EMAIL}: yours, your guests', your vendors', and any inside emails
-            and activity. Handy when you're sharing your screen or recording a demo. It only changes what this
-            browser shows; the emails themselves are untouched.
-          </p>
-        </div>
-        <button
-          type="button"
-          role="switch"
-          aria-checked={hide}
-          aria-labelledby="privacy-h"
-          onClick={() => setHideEmails(!hide)}
-          className={`relative h-7 w-12 shrink-0 rounded-full transition ${hide ? "bg-accent" : "bg-line"}`}
-        >
-          <span
-            className={`absolute top-1 h-5 w-5 rounded-full bg-paper shadow transition-all ${hide ? "left-6" : "left-1"}`}
-          />
-        </button>
-      </div>
-    </section>
-  );
-}
-
-/** Who you are in this app: shown to the people you plan with, never to vendors. */
-function YourNameSection() {
-  const me = useQuery(api.users.me);
-  const setName = useMutation(api.users.setName);
-  const [name, setName_] = useState<string | null>(null);
-  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
-  if (me === undefined) return null;
-  const value = name ?? me?.name ?? "";
-  return (
-    <section className="card mt-5 p-6 md:p-7" aria-labelledby="you-h">
-      <h2 id="you-h" className="display text-xl">Your name</h2>
-      <p className="mt-1 text-sm leading-relaxed text-muted">
-        Shown at the top of PlusOne and beside anything you do, so the people you plan with see a name rather than an
-        email address. Vendors never see it; emails to them are signed with the couple's first names.
-      </p>
-      <form
-        className="mt-3 flex flex-wrap gap-2"
-        onSubmit={(e) => {
-          e.preventDefault();
-          setState("saving");
-          void setName({ name: value })
-            .then(() => setState("saved"))
-            .catch(() => setState("idle"));
-        }}
-      >
-        <input
-          className="input max-w-[20rem]"
-          value={value}
-          onChange={(e) => {
-            setName_(e.target.value);
-            setState("idle");
-          }}
-          placeholder="Anita"
-          aria-label="Your name"
-        />
-        <button type="submit" className="btn-quiet btn-sm" disabled={state === "saving" || !value.trim()}>
-          {state === "saving" ? "Saving…" : "Save"}
-        </button>
-        <span aria-live="polite" className="self-center text-sm text-muted">{state === "saved" ? "Saved." : ""}</span>
-      </form>
-    </section>
   );
 }
