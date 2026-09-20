@@ -223,6 +223,7 @@ function NeedBoard({ need, currency, canEdit }: { need: Need; currency: string; 
                     <span className="flex items-baseline gap-2">
                       <span className="font-medium">{v.name}</span>
                       {v.isTopPick && <span className="text-[11px] text-accent">top pick</span>}
+                      {v.shortlisted && <span className="text-[11px] text-accent" title="Shortlisted by you">♥ shortlisted</span>}
                     </span>
                     {v.rating !== undefined && (
                       <span className="mt-0.5 flex items-center gap-1 text-xs text-quiet">

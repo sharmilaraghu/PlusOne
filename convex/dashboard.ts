@@ -23,6 +23,8 @@ const vendorRow = v.object({
   rating: v.optional(v.number()),
   reviewCount: v.optional(v.number()),
   isTopPick: v.optional(v.boolean()),
+  /** Hearted by the couple on the Vendors page. */
+  shortlisted: v.optional(v.boolean()),
   /** Where this one has got to, in the couple's words. */
   state: v.union(
     v.literal("not_contacted"),
@@ -224,6 +226,7 @@ export const board = query({
           rating: vendor.rating,
           reviewCount: vendor.reviewCount,
           isTopPick: vendor.isTopPick,
+          shortlisted: vendor.shortlisted,
           state,
           threadStatusRaw: thread?.status ?? null,
           followUpCount: thread?.followUpCount ?? 0,

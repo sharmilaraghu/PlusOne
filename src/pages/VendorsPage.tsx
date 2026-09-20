@@ -148,8 +148,14 @@ function SlotPanel({
   const selectable = useMemo(() => (vendors ?? []).filter((v) => !!v.email), [vendors]);
   // `listBySlot` already returns top picks first, then by score. The split here is
   // only about how they are shown: the three PlusOne would choose, then the rest.
-  const topPicks = useMemo(() => (vendors ?? []).filter((v) => v.isTopPick), [vendors]);
-  const others = useMemo(() => (vendors ?? []).filter((v) => !v.isTopPick), [vendors]);
+  const [onlyShortlisted, setOnlyShortlisted] = useState(false);
+  const shortlistedCount = (vendors ?? []).filter((v) => v.shortlisted).length;
+  const inView = useMemo(
+    () => (vendors ?? []).filter((v) => !onlyShortlisted || v.shortlisted),
+    [vendors, onlyShortlisted],
+  );
+  const topPicks = useMemo(() => inView.filter((v) => v.isTopPick), [inView]);
+  const others = useMemo(() => inView.filter((v) => !v.isTopPick), [inView]);
   const topPickable = useMemo(() => topPicks.filter((v) => !!v.email), [topPicks]);
   const ranked = (vendors ?? []).some((v) => v.score !== undefined);
 
@@ -232,7 +238,22 @@ function SlotPanel({
       <section aria-labelledby="found-h">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h3 id="found-h" className="text-lg">Vendors {vendors ? `(${vendors.length})` : ""}</h3>
+            <h3 id="found-h" className="text-lg">
+              Vendors {vendors ? `(${vendors.length})` : ""}
+              {shortlistedCount > 0 && (
+                <button
+                  type="button"
+                  aria-pressed={onlyShortlisted}
+                  onClick={() => setOnlyShortlisted((v) => !v)}
+                  title={onlyShortlisted ? "Show everyone again" : "Show only the ones you've hearted"}
+                  className={`ml-3 rounded-full px-3 py-1 text-xs align-middle transition ${
+                    onlyShortlisted ? "bg-accent text-paper" : "bg-cream text-muted shadow-[inset_0_0_0_1px_var(--color-line)] hover:text-accent"
+                  }`}
+                >
+                  ♥ {shortlistedCount} shortlisted
+                </button>
+              )}
+            </h3>
             {ranked && (
               <p className="text-xs text-quiet">
                 Ranked on what reviewers say, price against your {money(slot.budget, wedding.currency)} budget, and fit.
@@ -253,6 +274,14 @@ function SlotPanel({
         ) : vendors.length === 0 ? (
           <div className="card mt-3 p-6 text-sm text-muted">
             {researching ? "Reading vendor websites… cards appear as each one is read." : "No vendors yet. Run a search above, or add one you already know below."}
+          </div>
+        ) : inView.length === 0 ? (
+          <div className="card mt-3 p-6 text-sm text-muted">
+            None of these are shortlisted yet. Tap the heart on a vendor to keep it here, or{" "}
+            <button type="button" className="text-accent underline underline-offset-2" onClick={() => setOnlyShortlisted(false)}>
+              show everyone again
+            </button>
+            .
           </div>
         ) : (
           <>

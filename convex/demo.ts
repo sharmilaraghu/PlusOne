@@ -52,7 +52,7 @@ async function addVendor(
     highlights: seed.highlights,
     sourceUrls: [],
     summary: seed.summary,
-    shortlisted: true,
+    shortlisted: seed.isTopPick ?? false,
     scrapedAt: now - 12 * DAY,
     rating: seed.rating,
     reviewCount: seed.reviewCount,
