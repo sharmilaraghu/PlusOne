@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-20T05:24:41Z
+- **Last updated:** 2026-09-20T07:42:14Z
 
 ## Log
 
@@ -283,3 +283,30 @@ Moved the walkthrough to where a first-time couple, a guest or a judge will actu
 a button under the menu rather than grey text below the role line, with Sign out at the foot
 of a sidebar that now keeps its own full height instead of drifting off a long page
 (`src/components/WeddingLayout.tsx`). Deployed.
+
+### 2026-09-20 - 493ef2b
+A guest list arrives as a spreadsheet, a PDF or a paste rather than one name at a time:
+.xlsx is unzipped and read straight from its XML, a PDF goes to the model as a file, and
+either way the rows are shown for checking before anyone is added, with headers, blank
+rows and totals skipped and "+ guest" or "(3)" read as party sizes
+(`convex/guestImport.ts`, `convex/guests.ts`, file storage). Importing the same file
+twice adds nobody the second time — by email, or by name when there is none. Names now
+show wherever an address used to: signing up asks for one, the top of the app and the
+activity feed use it, an account that never gave one gets a readable name made from its
+address, and an account page carries a person's own name, sign-in and privacy switch.
+
+### 2026-09-20 - 056b53d
+The assistant stopped being a talker. It now offers what it can do as cards in the chat —
+add a guest, add a vendor need, search the web for vendors, change a budget, add a day,
+or write to a vendor — and does nothing until the couple presses the button, which is
+what makes writing an email from chat acceptable: the words are read first. Every card
+runs the same helper its screen runs (extracted first, unchanged, in `6730a4c`), so the
+result lands in Guests, Vendors, the budget and the activity feed exactly as a form would
+(`convex/assistant.ts`, `convex/openai.ts`). Names resolve to ids when a card is made and
+are re-checked when it runs, so a card cannot point at something since deleted; a second
+press does nothing; a refusal reads as "Olivia Carter is already on your guest list".
+Testing caught two real bugs: a new need and a new day both arrived at zero, because the
+budget re-split weighs each item by what it already has — they now start at what a typical
+one costs there. It also remembers: short things no screen holds, shown in the chat and
+forgettable, alongside the plan it already re-reads each turn. The assistant's own context
+dropped from roughly 200 reads to nine. Deployed.
