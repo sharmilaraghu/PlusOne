@@ -300,18 +300,13 @@ function NeedBoard({ need, currency, canEdit, weddingId }: { need: Need; currenc
                   </td>
 
                   <td className="py-3.5 pl-4 pr-6 align-top text-right">
-                    <span className="inline-flex flex-col items-end gap-1.5">
-                      {v.state === "booked" && <span className="chip-ok">Yours</span>}
-                      {/* Booked or not, the conversation stays open right up to the day. */}
-                      {v.threadId && (
-                        <Link
-                          to={`/w/${weddingId}/inbox/${v.threadId}`}
-                          className="text-xs text-accent underline underline-offset-2"
-                        >
-                          {v.state === "booked" ? "Message them" : "Open emails"}
-                        </Link>
-                      )}
-                    </span>
+                    {/* "Where it stands" already says Booked; this is how you reach them. */}
+                    {v.threadId && (
+                      <Link to={`/w/${weddingId}/inbox/${v.threadId}`} className="btn-quiet btn-sm gap-1.5 whitespace-nowrap">
+                        <Icon name="mail" size={14} />
+                        Email
+                      </Link>
+                    )}
                     {canEdit && v.state !== "declined" && (
                       <span className="mt-1.5 inline-flex flex-col items-end gap-1.5">
                         {v.state === "booked" ? null : (
