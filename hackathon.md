@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-20T14:37:22Z
+- **Last updated:** 2026-09-20T15:14:48Z
 
 ## Log
 
@@ -381,3 +381,20 @@ swaps one email address for another in guests, stored emails and inbound events,
 table at a time, so a person can take their own address out of demo data without deleting
 the weddings around it (`convex/maintenance.ts`). Checked on the dev deployment with a
 case-insensitive match and its restore. Not yet deployed to production.
+
+### 2026-09-20 - b582ece
+Deployed to production, which the entry above had left undone: the Convex functions pushed to
+the prod deployment with the schema validated and no indexes dropped, and the frontend built
+against the production `VITE_CONVEX_URL` and uploaded to static hosting as 43 files, with the
+previous deployment's files cleaned up. The live URL now answers 200, so every figure in the
+header is deployed rather than local.
+
+The one-shot `npm run deploy` script cannot finish unattended: `npx convex deploy` asks before
+touching prod, and the static-hosting step runs its own `convex deploy` that asks again. Ran
+it as `convex deploy -y --cmd 'npm run build'` followed by the static step with `--skip-build
+--skip-convex`, after checking the built bundle referenced the prod deployment and not the dev
+one. The prompt is a useful guard, so the script is unchanged (`package.json`).
+
+Drafted the submission entry under `docs/submission-details/` and kept the folder out of the
+repository alongside `docs/submission/`, since it holds the form's personal fields and its
+screenshots (`.gitignore`).
