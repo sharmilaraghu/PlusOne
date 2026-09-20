@@ -149,6 +149,8 @@ export const researchRunFields = {
   query: v.string(),
   /** "Find more options": skip every website already found for this need. */
   more: v.optional(v.boolean()),
+  /** The searches PlusOne actually ran, so the couple can see their style in them. */
+  queries: v.optional(v.array(v.string())),
   /** Neighbourhood to bias this one search towards; overrides the wedding's area. */
   area: v.optional(v.string()),
   status: researchStatus,

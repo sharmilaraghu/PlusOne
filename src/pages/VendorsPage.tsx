@@ -126,7 +126,14 @@ function SlotPanel({
   const draft = useMutation(api.outreach.draft);
   const markBooked = useMutation(api.slots.markBooked);
 
-  const defaultQuery = `${slot.category} in ${wedding.city} for a ${wedding.template === "western" ? "" : wedding.template + " "}wedding under ${money(slot.budget, wedding.currency)}`;
+  // The couple's own words about the day, so the search starts from their style, not just the category.
+  const styleWords = [...(wedding.styleVibes ?? []).slice(0, 2), wedding.stylePalette ?? ""].filter(Boolean).join(", ").toLowerCase();
+  const tradition = wedding.template === "western" || wedding.template === "custom" ? "" : `${wedding.template} `;
+  const defaultQuery = [
+    `${slot.category} in ${wedding.area ? `${wedding.area}, ` : ""}${wedding.city}`,
+    `for a ${tradition}wedding${styleWords ? ` that feels ${styleWords}` : ""}`,
+    `under ${money(slot.budget, wedding.currency)}`,
+  ].join(" ");
   const [query, setQuery] = useState(defaultQuery);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [drafting, setDrafting] = useState(false);
@@ -196,9 +203,27 @@ function SlotPanel({
               {run.step}
               {run.status === "failed" && run.error ? ` — ${run.error}` : ""}
               {run.status === "done" ? ` · ${run.foundCount} vendors · ${timeAgo(run.finishedAt)}` : ""}
+              {run.queries && run.queries.length > 0 && (
+                <span className="mt-1 block text-quiet">
+                  Searches: {run.queries.join(" · ")}
+                </span>
+              )}
             </p>
           )}
           <p className="mt-2 text-[11px] text-muted">Firecrawl reads each vendor's own website. Every price links back to the page it came from.</p>
+          {(wedding.styleVibes?.length || wedding.stylePalette || wedding.styleSummary) && (
+            <p className="mt-1.5 text-[11px] text-muted">
+              <span className="text-accent">Matching your style:</span>{" "}
+              {[
+                (wedding.styleVibes ?? []).join(", "),
+                wedding.stylePalette,
+                wedding.styleFormality,
+                wedding.styleSummary ? "your inspiration board" : "",
+              ]
+                .filter(Boolean)
+                .join(" · ")}
+            </p>
+          )}
         </section>
       )}
 

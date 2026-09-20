@@ -146,6 +146,16 @@ export const startForSlot = internalMutation({
   },
 });
 
+/** Records the searches the planner wrote, for the progress line. */
+export const setQueries = internalMutation({
+  args: { researchRunId: v.id("researchRuns"), queries: v.array(v.string()) },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.researchRunId, { queries: args.queries.slice(0, 3).map((q) => q.slice(0, 200)) });
+    return null;
+  },
+});
+
 export const getRun = internalQuery({
   args: { researchRunId: v.id("researchRuns") },
   returns: v.union(researchRunDoc, v.null()),

@@ -65,7 +65,8 @@ export const researchWorkflow = workflow.define({
       });
       const wedding = await step.runQuery(internal.weddings.getInternal, { weddingId: run.weddingId });
 
-      await step.runMutation(internal.research.setStep, { researchRunId: run._id, step: `Searching the web: ${plan.queries[0]}` });
+      await step.runMutation(internal.research.setQueries, { researchRunId: run._id, queries: plan.queries });
+      await step.runMutation(internal.research.setStep, { researchRunId: run._id, step: "Searching the web" });
       const known = run.more ? await step.runQuery(internal.vendors.hostsForSlot, { slotId: run.slotId }) : [];
       const candidates = await step.runAction(internal.firecrawl.searchVendors, {
         queries: plan.queries,
