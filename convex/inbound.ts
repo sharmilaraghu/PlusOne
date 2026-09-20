@@ -1,6 +1,7 @@
 import { v } from "convex/values";
+import type { Doc } from "./_generated/dataModel";
 import { internal } from "./_generated/api";
-import { internalMutation, internalQuery, query } from "./_generated/server";
+import { internalMutation, internalQuery, query, type MutationCtx, type QueryCtx } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { contractCheckDoc, guestDoc, weddingDoc } from "./lib/docs";
 import { contractStatus, flagSeverity, routedAs } from "./lib/validators";
@@ -34,10 +35,7 @@ export const claim = internalMutation({
       .first();
     if (byEvent) return { status: "duplicate" as const, inboundEventId: byEvent._id, weddingId: byEvent.weddingId ?? null };
 
-    const wedding = await ctx.db
-      .query("weddings")
-      .withIndex("by_inboxId", (q) => q.eq("inboxId", args.inboxId))
-      .first();
+    const wedding = await weddingForInbound(ctx, args.inboxId, args.fromAddress);
     const inboundEventId = await ctx.db.insert("inboundEvents", {
       agentmailMessageId: args.agentmailMessageId,
       eventId: args.eventId,
@@ -50,6 +48,55 @@ export const claim = internalMutation({
     return { status: "new" as const, inboundEventId, weddingId: wedding?._id ?? null };
   },
 });
+
+/**
+ * Which wedding an email belongs to.
+ *
+ * One inbox usually means one wedding. When several share the fallback inbox, guessing
+ * would file a couple's forwarded contract under someone else's wedding, so the sender
+ * has to prove which one: their own address on the guest list, on a vendor, or on the
+ * people planning it. No match means no wedding, and the email is logged as being from
+ * a sender we do not know.
+ */
+async function weddingForInbound(
+  ctx: QueryCtx | MutationCtx,
+  inboxId: string,
+  fromAddress: string,
+): Promise<Doc<"weddings"> | null> {
+  const weddings = await ctx.db
+    .query("weddings")
+    .withIndex("by_inboxId", (q) => q.eq("inboxId", inboxId))
+    .take(20);
+  if (weddings.length <= 1) return weddings[0] ?? null;
+
+  const email = fromAddress.trim().toLowerCase();
+  if (!email) return null;
+  for (const wedding of weddings) {
+    const guest = await ctx.db
+      .query("guests")
+      .withIndex("by_weddingId_and_email", (q) => q.eq("weddingId", wedding._id).eq("email", email))
+      .first();
+    if (guest) return wedding;
+  }
+  for (const wedding of weddings) {
+    const vendors = await ctx.db
+      .query("vendors")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", wedding._id))
+      .take(200);
+    if (vendors.some((v) => v.email?.toLowerCase() === email)) return wedding;
+  }
+  for (const wedding of weddings) {
+    const members = await ctx.db
+      .query("members")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", wedding._id))
+      .take(20);
+    for (const member of members) {
+      const user = await ctx.db.get(member.userId);
+      if (user?.email?.toLowerCase() === email) return wedding;
+    }
+  }
+  return null;
+}
 
 export const finish = internalMutation({
   args: {
