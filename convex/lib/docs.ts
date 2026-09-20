@@ -45,4 +45,6 @@ export const userSummary = v.object({
   email: v.optional(v.string()),
   /** Profile photo, when they signed in with Google. */
   image: v.optional(v.string()),
+  /** A readable name made from their address, for accounts that never gave one. */
+  nameFromEmail: v.optional(v.string()),
 });

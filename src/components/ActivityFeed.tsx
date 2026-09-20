@@ -55,7 +55,7 @@ export function ActivityFeed({ weddingId, limit = 40 }: { weddingId: Id<"wedding
               </span>
               <div className="min-w-0">
                 <p className="line-clamp-2 leading-snug" title={privacy.text(a.text)}>{privacy.text(a.text)}</p>
-                <p className="text-[11px] text-quiet">{a.actorLabel} · {timeAgo(a._creationTime)}</p>
+                <p className="text-[11px] text-quiet">{privacy.text(a.actorLabel)} · {timeAgo(a._creationTime)}</p>
               </div>
             </li>
           ))}

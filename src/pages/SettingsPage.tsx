@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { useOutletContext } from "react-router-dom";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
@@ -189,6 +189,8 @@ export function SettingsPage() {
         </div>
       </section>
 
+      <YourNameSection />
+
       <PrivacySection />
 
       {error && <p role="alert" className="mt-4 text-sm text-bad">{error}</p>}
@@ -242,6 +244,50 @@ function PrivacySection() {
           />
         </button>
       </div>
+    </section>
+  );
+}
+
+/** Who you are in this app: shown to the people you plan with, never to vendors. */
+function YourNameSection() {
+  const me = useQuery(api.users.me);
+  const setName = useMutation(api.users.setName);
+  const [name, setName_] = useState<string | null>(null);
+  const [state, setState] = useState<"idle" | "saving" | "saved">("idle");
+  if (me === undefined) return null;
+  const value = name ?? me?.name ?? "";
+  return (
+    <section className="card mt-5 p-6 md:p-7" aria-labelledby="you-h">
+      <h2 id="you-h" className="display text-xl">Your name</h2>
+      <p className="mt-1 text-sm leading-relaxed text-muted">
+        Shown at the top of PlusOne and beside anything you do, so the people you plan with see a name rather than an
+        email address. Vendors never see it; emails to them are signed with the couple's first names.
+      </p>
+      <form
+        className="mt-3 flex flex-wrap gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          setState("saving");
+          void setName({ name: value })
+            .then(() => setState("saved"))
+            .catch(() => setState("idle"));
+        }}
+      >
+        <input
+          className="input max-w-[20rem]"
+          value={value}
+          onChange={(e) => {
+            setName_(e.target.value);
+            setState("idle");
+          }}
+          placeholder="Anita"
+          aria-label="Your name"
+        />
+        <button type="submit" className="btn-quiet btn-sm" disabled={state === "saving" || !value.trim()}>
+          {state === "saving" ? "Saving…" : "Save"}
+        </button>
+        <span aria-live="polite" className="self-center text-sm text-muted">{state === "saved" ? "Saved." : ""}</span>
+      </form>
     </section>
   );
 }

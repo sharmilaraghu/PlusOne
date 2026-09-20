@@ -20,7 +20,10 @@ export const { auth, signIn, signOut, store, isAuthenticated } = convexAuth({
         if (!EMAIL_RE.test(email)) {
           throw new ConvexError("Enter a valid email address.");
         }
-        return { email };
+        // Their own name, so the app greets them by it and the activity feed never
+        // falls back to an address.
+        const name = String(params.name ?? "").trim().slice(0, 80);
+        return name ? { email, name } : { email };
       },
     }),
   ],

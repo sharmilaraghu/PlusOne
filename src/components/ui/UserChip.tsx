@@ -7,7 +7,8 @@ export function UserChip({ className = "" }: { className?: string }) {
   const me = useQuery(api.users.me);
   const privacy = usePrivacy();
   if (!me) return null;
-  const label = me.name?.trim() || privacy.email(me.email) || "Guest";
+  // A name if they gave one, otherwise one made from their address — never the address.
+  const label = me.name?.trim() || me.nameFromEmail || "Guest";
   const initial = label.charAt(0).toUpperCase();
   return (
     <div

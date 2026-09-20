@@ -1,6 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, query } from "./_generated/server";
-import { clampLimit, logActivity, requireMember } from "./lib/auth";
+import { clampLimit, logActivity, nameFromEmail, requireMember } from "./lib/auth";
 import { activityDoc } from "./lib/docs";
 import { activityRefsValidator, activityType } from "./lib/validators";
 
@@ -18,8 +18,12 @@ export const list = query({
       .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
       .order("desc")
       .take(limit);
-    // Older entries named the mailbox address, which is plumbing, not news.
-    return rows.map((r) => (r.type === "inbox_ready" ? { ...r, text: INBOX_READY_TEXT } : r));
+    // Older entries named the mailbox address, or signed themselves with one.
+    return rows.map((r) => ({
+      ...r,
+      ...(r.type === "inbox_ready" ? { text: INBOX_READY_TEXT } : {}),
+      actorLabel: r.actorLabel.includes("@") ? (nameFromEmail(r.actorLabel) ?? "Someone") : r.actorLabel,
+    }));
   },
 });
 

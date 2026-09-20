@@ -39,7 +39,22 @@ export async function requireMember(
 /** Human label for the acting user, used in the activity feed. */
 export async function actorLabelFor(ctx: QueryCtx | MutationCtx, userId: Id<"users">): Promise<string> {
   const user = await ctx.db.get(userId);
-  return user?.name ?? user?.email ?? "Someone";
+  return user?.name?.trim() || nameFromEmail(user?.email) || "Someone";
+}
+
+/** "olivia.carter@…" becomes "Olivia Carter": a name to show, never the address itself. */
+export function nameFromEmail(email: string | undefined): string | undefined {
+  const local = email?.split("@")[0];
+  if (!local) return undefined;
+  return (
+    local
+      .replace(/[._-]+/g, " ")
+      .replace(/\d+/g, "")
+      .trim()
+      .split(/\s+/)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(" ") || undefined
+  );
 }
 
 export async function logActivity(

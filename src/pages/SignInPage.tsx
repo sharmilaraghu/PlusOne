@@ -70,6 +70,13 @@ export function SignInPage({ redirectTo }: { redirectTo?: string }) {
               .finally(() => setBusy(false));
           }}
         >
+          {flow === "signUp" && (
+            <div>
+              <label className="label" htmlFor="name">Your name</label>
+              <input id="name" name="name" autoComplete="name" required className="input" placeholder="Anita" />
+              <p className="mt-1 text-xs text-muted">Shown to anyone you plan with. Never shown to vendors.</p>
+            </div>
+          )}
           <div>
             <label className="label" htmlFor="email">Email</label>
             <input id="email" name="email" type="email" autoComplete="email" required className="input" />
