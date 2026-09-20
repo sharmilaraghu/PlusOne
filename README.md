@@ -6,6 +6,7 @@
 
 [![Live app](https://img.shields.io/badge/Live%20app-rapid--albatross--416.convex.site-74162a?style=flat-square&logo=googlechrome&logoColor=white)](https://rapid-albatross-416.convex.site)
 [![Build log](https://img.shields.io/badge/Build%20log-hackathon.md-5e1122?style=flat-square)](hackathon.md)
+[![Demo video](https://img.shields.io/badge/Demo-three%20minutes-FF0000?style=flat-square&logo=youtube&logoColor=white)](https://www.youtube.com/watch?v=TExwYZGxJ-0)
 [![Convex](https://img.shields.io/badge/Convex-Backend%20%2B%20Hosting-EE342F?style=flat-square&logo=convex&logoColor=white)](https://convex.dev)
 [![Firecrawl](https://img.shields.io/badge/Firecrawl-Search%20%2B%20Map%20%2B%20Scrape-FF6A00?style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM%2FrhtAAAFGElEQVR42u2YW2wUVRjHf%2BfMTLdQa7m0xRZaKQWBgCZEojyID2rEkJhIYhAevBDER0QSLxE1BhKjiUQMXkg03iVExRpSJRqtREyMJhCQS6wiKkKFBUpbW9rOzpzPhzPLwrZlZ7uF9sGTbHZ3ds85%2F%2FnO%2F%2Ft%2F%2F2%2BUiAgjeGhG%2BBg6gMaMUIBphmjd99qwAzQhKAVHDsKbqyF5zF5XasgiWhhApex7eSV89jXMmQxbN0JPu42oCUcAwCCA0eVQVQuTA1i3EtbcBcm%2FQFTBIAvkoIr4JuA5YIDZJfDNDnjlQQjaQIx9DQ9AiY5ZQW8AApzthRkJeKcJtu8AxwMjwwRQBBwNPafBPwFF0TU%2FBXUCnz8N7UlwnEFndmEAwxCUhqYGaNkF4x2bvb6BKg0%2FHITjxzPRvqwAxdjpXWeg4RNo1%2BAqe5wKCIAUcPRQhq%2BXD6DYI3M1fPw87PkS6h3oDjI4jEApcOZI1k1dDoAG0A7sboKXXoMq14LTfZP8HPeUsnTIk4t6UImhFfzeDPcsgapO0EHfjbWCLmDsRPu9cSM0rLVAw%2BASARRjxbf1BCxaCJNOQYkD4QAUE2DKLNjwDCxeCWd67cU8yqCbF%2B%2BCFEgPPHknjDkM4z0rKaqfo00ZmAp8%2BAI0boEZQKeXd7LEj2CQAi8B2z6F3XthnAt%2BkIMKwBfvQz3gAMlfINUNjhtbdnR83rnQkYSmd0H7VlJyEV6Aahf%2BDaDGhR2NsH%2BXNRJhOIQATWgXPfAT%2FLwTaor6Hq1kecL0SAWgIm30u2Db62ACqwIxMlrnZav%2BPAbHjZ2VvbYDdBrw3P5Pzw9gsgvvbYbd38WmYjyAQZR1bUehhH6KvwIfKJ8OLQGM0lYrsxOnN4RpwHP32%2BgpNQQAxUCRZ9W5%2BzQUZ1l6ATwF%2FwDLn4Jbl8OvBop130gasfObj8KBH2PVaJ27EVKwcpX9nCix9TX7xrWCs0BxGazdBPWzoSNyOn0qi4JaBY3Pxmq29MVTMFr0qzdg1e0wvsaagGyEom1kKmst%2BZc9Cn8LJPrjo4JQYM%2BhAoU6nZWdrVBXAbu%2Bhf3fW%2FHtiTLYACVF8JsPix%2BAqTPsvOuuh7kT4dQxKNIXmgQVrd3mxnI5uTnY0wW9KShVUJqyEUxvMsqBjgDGVttSpjzLz5proGo%2BtDmQcLKiKFlHqwYZwfS8K8bYvxnJIBPA09AJNJfBlq0wbY6tNkqD9qCyClpCmMCFsiTRGgnnPAvmDCaCUW9bXJrhUloWlIrMqAPrX4Ub5tnuzvUyGd6chBtvg7KrrASdkxSxeK6WWD5W565VwNwpNmJp%2FXMEThlYsQIWLYWUD64b9SgutJ%2BEBfNg0wdwy31w9ryyaAR8DfOXXFgEBgrTRZ9upcX0wE6492aoi2y8D4yZBJsPW96pfrRTRffe3go3VUC9sXNHazhoYOcJGFdZoFCn727mfJh%2BLbQ6UOzCHwoe22K5Rj86lgYnAmXjYOlCaAdKHWg2cPcdMLZ8iEpd2jat2QSnQ6t51QITKonV2AMseAKSQLcGXQ0PvR3b%2FutYRsGEMHMuPPI47PWhrgwSXgyZiKJbUWF75pMpeHkdTKzIPHjKHaAYwxiRlC8SGJENq0VmKZGWQ9Fv4cDzwui3fftErkRk%2B4siYWDXEhNraze23XJckBAeXg%2FlpeB3545g2h86HfDRW7BgmTWqrhvb%2Bqu8n1HHtEkDOiOlL3HbqVT%2BDbhEjb4axHb%2FP%2BUvcPwHAchw%2B5M83N0AAAAASUVORK5CYII%3D)](https://firecrawl.dev)
 [![AgentMail](https://img.shields.io/badge/AgentMail-An%20inbox%20per%20wedding-1f1f1f?style=flat-square&logo=data%3Aimage%2Fpng%3Bbase64%2CiVBORw0KGgoAAAANSUhEUgAAACgAAAAoCAYAAACM%2FrhtAAAGaElEQVR42u2Yb2wT5x3HP%2Ffcnc%2B52MTOkshgpyiBBLy0ocVtFq0aQ2iVgKyDVRWTVipKK3gH2lsEW%2FeCSZn6pkKaKjHomy3NeLO1L0KHgKJO5QX%2FRFJQ6AiUQUKaxGltJ2f77PPd7QU9iwAJcWBVJ%2FF74xfPo%2Bc%2B%2Fv39Po8UiURdvscm%2BJ7bE8AngLOZLMtIkjS%2Fjwjx3QNmMhlKpRKKoswKqigKAIZh4LrudwcoSbBu3ToCgQBjY%2BNYloWiKGVPedDJZBLbLtHR0YGiKAuCrAhQCIFpmkSjUT766O%2BcOnWCffv2UFsbZmIiST6fx3VdJie%2FplAw2br113z8cR%2FHj%2F%2BT5cuXkc%2FnKw63qMxzEsVikXg8juu6NDY28vbbv%2BOzz%2F7FO%2B9009KyHFVV2LLlVU6ePM6hQ38mkUgAEI%2FHKRaLFQMqlQKWShZtbT8EwDRNJEmirq6O3bt3sXPnDlKpFIsXLy6v27aNruusWLECx3EqDnFFgI7joKo%2BOjt%2FhCRJuK6LJEmYponruqiqSiQSKYdaCFHe8%2FzzCXw%2BX8WQyny85v0KIQgGg1iWRalUorq6esZe13VxXZeqqqr7zikUCgQCAYQQSJKEbTtIEg8tHGkusXAnpCUcx8ayShQKJkLIKIpCS8syEokEicRqVq6ME4tFqampQZIk8vk8o6NfMTR0lXPnLnDmzBmuXPmCYtHCcWx8Ph%2Ba5sN1JXw%2BdU7IWQElScKyLEKhGnp7ezCMLP39%2FfT3DzA0NMT169eZmEjiuiUANE1H16uQJIlCoUA2O%2B21dOrr62hqaqK1tZVVq56hvb2daDTKG2%2B8xbVr19B1fdbQzwooywrj42O8%2F%2F4hXn9964w1y7JIJpOMjn7F8PAtkslJJie%2FJpvN4jgOgUCAurof0NBQTzQaJRqNUldXh6ZpM87p6%2BvjlVdepb6%2BAdu25w8oyzKZzBQvv9zFBx%2F8lWw2Ww6DEAJFUfD5fBUlu2VZWJY1w1OBQIAdO3bS23uEUCj0QMhZikTCtku89NLPcBznvmJwHIdisfhtfjoPbe6KoqAoCqqq3lNUDmvW%2FISent6FFQnAU081Eo%2BvpLV1BU8%2F3cbSpUuJxaKEQiFkWZ6X92zbJpPJMDIyws2bN7l8eZCrV%2F%2FN4OAX3Lp1E9dl1nk%2BJ6DruhSLRUyzgOPYCCGorg4QDtcQi8WIRpewaFENS5YsIRRahN%2FvLzfodHqK0dFRpqenGBm5zcjICKlUupynQgg0TUPTtDlV0UM96PUtrzHbto1tO6TTKSzLxO%2BvplSyKZXMe5SMH0WRMc0siuInHL7jcU%2BmeT3zYSkiBwKLfj%2FXhrsPEkIwNTXFpk2%2F4L33%2FoSq%2BvjyyxtEIhE2b97EmjU%2FpbOzk7a2NjKZKQC2bdvGgQPv8s03KQYGBvD7%2Fdi2XT73sY46rz%2BmUik6Ojro6Ohg165dBIMBYrHYjH3Dw8MYRpZ4fCUAqdQf5i1wH2kWa5rG2NgYhmGgqmoZwJvH3p9obGwsjzjLspiYmEDTtMc%2Fi%2B%2F1nmma3L49imVZ6LpOPp8v59bdViwWsW0bTdMwDIPh4duYZgFN0yoSrqISuHw%2BT1fXRgoFk%2B7uboQQyLL8wA%2B6rossywgh6O7%2BI5ZVpKtrw7eiVXr8gLIsk8vlaGlp4eTJExw8eJA333wLWb7TgO%2BeArZto6oqiqKwfft2Dh8%2BzCefnKC5uYlcLleRaJXm%2B%2FThJbhhTDMwcBHHcVm7di3Nzc18%2BOE%2FCIfD5HI5AHRdJ5VKsXnzL7lx4z98%2BukpbNvhuedWEwwu%2Bt%2BE2AuZbTvs2bOXZcuaOX%2F%2BPNlsjkTiBQYHr6DrOrquMzg4SCLxArlcngsXztHU1MTevXtxHHfe06diD97duA1jmqNH%2B3jxxR%2BTy%2BV47bWtnD17lv379%2BO6Lvv2%2FZbOzk56ev5CVVUVp0%2BfZsOGnxMMBiuu4ooBZVkmlUqxceN6jhz5Wzmfnn12NZcuXQagvf0ZLl68UM7HLVt%2BxbFjx2dVLI8V0INMp9McO3aU2tpadu%2F%2BDZ9%2Ffqms9wqFAqtWtXPgwLskk0nWr%2B8iHA5XDLdgQO%2F6GYlEMIxpJiaShEKhGY06nU7T0FBPdXWA8fFxfD7fgi7u0kIfML0rgRDivjbjedkTqKqqLvjpQ2GB5l0zvTx7kAb0JsxC4R4J0IN8lPUnD5hPAP8fAP8LmUIGKxO5lK0AAAAASUVORK5CYII%3D)](https://agentmail.to)
@@ -60,8 +61,26 @@
 
 ---
 
+## Watch the demo
+
+Three minutes, end to end: a wedding described once, vendors found on the open web, the emails
+sent and the replies read back into quotes, and the decision made.
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=TExwYZGxJ-0">
+    <img src="https://img.youtube.com/vi/TExwYZGxJ-0/maxresdefault.jpg" alt="Watch the PlusOne demo on YouTube" width="820" />
+  </a>
+</p>
+
+<p align="center">
+  <a href="https://www.youtube.com/watch?v=TExwYZGxJ-0"><b>PlusOne — Your AI copilot for the perfect wedding</b></a>
+</p>
+
+---
+
 ## Table of Contents
 
+- [Watch the demo](#watch-the-demo)
 - [What it does](#what-it-does)
   - [Tell it about your wedding](#tell-it-about-your-wedding)
   - [Vendors found on the open web, ranked with reasons](#vendors-found-on-the-open-web-ranked-with-reasons)
