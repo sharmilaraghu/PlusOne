@@ -7,12 +7,11 @@ dist
 *.local
 .DS_Store
 
-# Impeccable: downloaded binary and regenerable build/review artifacts
+# Impeccable: downloaded binary, and the whole working directory. The mocks,
+# comps and review artifacts are large and regenerable, and the shipped design
+# lives in src/ and DESIGN.md.
 .claude/skills/impeccable/scripts/bin/
-.impeccable/build/
-.impeccable/review/
-.impeccable/mocks/test/
-.impeccable/mocks/landing/
+/.impeccable/
 
 # TypeScript incremental build info
 *.tsbuildinfo
