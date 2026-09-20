@@ -70,14 +70,21 @@ export function InboxPage() {
   const canEdit = role !== "viewer";
   const contracts = useQuery(api.inbound.listContractChecks, { weddingId });
 
-  const visible = (threads ?? []).filter((t) => (filter === "all" ? t.status !== "draft" : t.status === filter));
+  // A booked vendor can still ask something only the couple can answer, so "Needs you"
+  // follows the open question rather than the conversation's state.
+  const needsYou = (t: { status: string; pendingQuestion?: string }) => t.status === "needs_attention" || Boolean(t.pendingQuestion);
+  const matches = (t: { status: string; pendingQuestion?: string }) =>
+    filter === "all" ? t.status !== "draft" : filter === "needs_attention" ? needsYou(t) : t.status === filter;
+  const visible = (threads ?? []).filter(matches);
 
   useEffect(() => {
     if (!threadId && visible.length > 0) navigate(`/w/${weddingId}/inbox/${visible[0]._id}`, { replace: true });
   }, [threadId, visible, navigate, weddingId]);
 
   const all = (threads ?? []).filter((t) => t.status !== "draft");
-  const counts = Object.fromEntries(FILTERS.map((f) => [f.id, f.id === "all" ? all.length : all.filter((t) => t.status === f.id).length]));
+  const counts = Object.fromEntries(
+    FILTERS.map((f) => [f.id, f.id === "all" ? all.length : all.filter((t) => (f.id === "needs_attention" ? needsYou(t) : t.status === f.id)).length]),
+  );
 
   if (threads !== undefined && all.length === 0) {
     return (
