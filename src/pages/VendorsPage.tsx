@@ -303,7 +303,7 @@ function SlotPanel({
                     </button>
                   )}
                 </div>
-                <ul className="mt-3 grid items-stretch gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                <ul className="mt-3 grid items-stretch gap-4 md:grid-cols-2">
                   {topPicks.map((v, i) => (
                     <VendorCard
                       key={v._id}
@@ -329,7 +329,7 @@ function SlotPanel({
                 <h4 className="mt-7 display text-[1.15rem]">
                   {topPicks.length > 0 ? `Also found (${others.length})` : `Found (${others.length})`}
                 </h4>
-                <ul className="mt-3 grid items-stretch gap-4 md:grid-cols-2 2xl:grid-cols-3">
+                <ul className="mt-3 grid items-stretch gap-4 md:grid-cols-2">
                   {others.map((v) => (
                     <VendorCard
                       key={v._id}
