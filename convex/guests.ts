@@ -1,6 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
-import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { guestDoc, weddingDoc } from "./lib/docs";
 import { emailPool } from "./lib/pools";
@@ -32,36 +33,81 @@ export const add = mutation({
   returns: v.id("guests"),
   handler: async (ctx, args) => {
     await requireMember(ctx, args.weddingId, "planner");
-    const email = args.email?.trim().toLowerCase();
-    if (email && !EMAIL_RE.test(email)) throw new ConvexError("That does not look like an email address.");
-    const partySize = args.partySize ?? 1;
-    if (!Number.isFinite(partySize) || partySize < 1 || partySize > 20) throw new ConvexError("Party size must be between 1 and 20.");
-    let eventIds = args.eventIds ?? [];
-    if (eventIds.length === 0) {
-      eventIds = (
-        await ctx.db
-          .query("events")
-          .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
-          .take(50)
-      ).map((e) => e._id);
-    } else {
-      for (const eventId of eventIds.slice(0, 20)) {
-        const event = await ctx.db.get(eventId);
-        if (!event || event.weddingId !== args.weddingId) throw new ConvexError("Event does not belong to this wedding.");
-      }
-    }
-    return await ctx.db.insert("guests", {
-      weddingId: args.weddingId,
-      name: args.name.trim(),
-      email: email || undefined,
-      side: args.side,
-      partySize: Math.floor(partySize),
-      rsvp: "pending",
-      attendingCount: 0,
-      eventIds: eventIds.slice(0, 20),
-    });
+    return await addGuestHelper(ctx, args.weddingId, args);
   },
 });
+
+/** One guest, validated and inserted. Shared by the form and the assistant. */
+export async function addGuestHelper(
+  ctx: MutationCtx,
+  weddingId: Id<"weddings">,
+  guest: { name: string; email?: string; side?: string; partySize?: number; eventIds?: Id<"events">[] },
+): Promise<Id<"guests">> {
+  const email = guest.email?.trim().toLowerCase();
+  if (email && !EMAIL_RE.test(email)) throw new ConvexError("That does not look like an email address.");
+  const partySize = guest.partySize ?? 1;
+  if (!Number.isFinite(partySize) || partySize < 1 || partySize > 20) throw new ConvexError("Party size must be between 1 and 20.");
+  let eventIds = guest.eventIds ?? [];
+  if (eventIds.length === 0) {
+    eventIds = await allEventIds(ctx, weddingId);
+  } else {
+    for (const eventId of eventIds.slice(0, 20)) {
+      const event = await ctx.db.get(eventId);
+      if (!event || event.weddingId !== weddingId) throw new ConvexError("Event does not belong to this wedding.");
+    }
+  }
+  return await ctx.db.insert("guests", {
+    weddingId,
+    name: guest.name.trim(),
+    email: email || undefined,
+    side: guest.side,
+    partySize: Math.floor(partySize),
+    rsvp: "pending",
+    attendingCount: 0,
+    eventIds: eventIds.slice(0, 20),
+  });
+}
+
+/** Every day of the wedding: what a guest is invited to unless told otherwise. */
+async function allEventIds(ctx: MutationCtx, weddingId: Id<"weddings">): Promise<Id<"events">[]> {
+  return (
+    await ctx.db
+      .query("events")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", weddingId))
+      .take(50)
+  ).map((e) => e._id);
+}
+
+/**
+ * Whether this person is already on the list: by email, or by name when there is no
+ * email. `knownNames` lets a bulk import check hundreds of rows with one read.
+ */
+export async function findDuplicateGuest(
+  ctx: MutationCtx,
+  weddingId: Id<"weddings">,
+  name: string,
+  email?: string,
+  knownNames?: Set<string>,
+): Promise<boolean> {
+  if (email) {
+    const existing = await ctx.db
+      .query("guests")
+      .withIndex("by_weddingId_and_email", (q) => q.eq("weddingId", weddingId).eq("email", email))
+      .first();
+    return Boolean(existing);
+  }
+  const names =
+    knownNames ??
+    new Set(
+      (
+        await ctx.db
+          .query("guests")
+          .withIndex("by_weddingId", (q) => q.eq("weddingId", weddingId))
+          .take(2000)
+      ).map((g) => g.name.trim().toLowerCase()),
+    );
+  return names.has(name.trim().toLowerCase());
+}
 
 export const update = mutation({
   args: {
@@ -358,15 +404,9 @@ export const commitImport = mutation({
     if (args.guests.length > MAX_IMPORT_GUESTS) throw new ConvexError(`Up to ${MAX_IMPORT_GUESTS} guests at a time.`);
 
     let eventIds = args.eventIds ?? [];
-    if (eventIds.length === 0) {
-      eventIds = (
-        await ctx.db
-          .query("events")
-          .withIndex("by_weddingId", (q) => q.eq("weddingId", row.weddingId))
-          .take(50)
-      ).map((e) => e._id);
-    }
-    // Someone with no email can still be a duplicate, so names count too.
+    if (eventIds.length === 0) eventIds = await allEventIds(ctx, row.weddingId);
+    // Someone with no email can still be a duplicate, so names count too. Read once
+    // for the whole list rather than per row.
     const existingNames = new Set(
       (
         await ctx.db
@@ -388,17 +428,7 @@ export const commitImport = mutation({
         skipped += 1;
         continue;
       }
-      if (email) {
-        const existing = await ctx.db
-          .query("guests")
-          .withIndex("by_weddingId_and_email", (q) => q.eq("weddingId", row.weddingId).eq("email", email))
-          .first();
-        if (existing) {
-          skipped += 1;
-          continue;
-        }
-      }
-      if (!email && existingNames.has(name.toLowerCase())) {
+      if (await findDuplicateGuest(ctx, row.weddingId, name, email, existingNames)) {
         skipped += 1;
         continue;
       }

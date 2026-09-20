@@ -1,5 +1,5 @@
 import { ConvexError, v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type MutationCtx } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import type { Id } from "./_generated/dataModel";
 import { eventDoc } from "./lib/docs";
@@ -84,35 +84,48 @@ export const add = mutation({
   returns: v.id("events"),
   handler: async (ctx, args) => {
     await requireMember(ctx, args.weddingId, "planner");
-    if (!Number.isFinite(args.budget) || args.budget < 0) throw new ConvexError("Budget must be a non-negative number.");
-    if (!Number.isFinite(args.guestCount) || args.guestCount < 0) throw new ConvexError("Guest count must be non-negative.");
-    const existing = await ctx.db
-      .query("events")
-      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
-      .take(50);
-    if (existing.length >= 20) throw new ConvexError("A wedding can have at most 20 events.");
-    const order = existing.length;
-    const eventId = await ctx.db.insert("events", {
-      weddingId: args.weddingId,
-      name: args.name.trim(),
-      date: args.date,
-      dayIndex: Math.floor(args.dayIndex),
-      budget: args.budget,
-      guestCount: Math.floor(args.guestCount),
-      color: EVENT_COLORS[order % EVENT_COLORS.length],
-      order,
-    });
-    // The new function's budget comes out of the same total as everyone else's.
-    await rebalanceWeddingBudget(ctx, args.weddingId);
-    await logActivity(ctx, {
-      weddingId: args.weddingId,
-      type: "note",
-      text: `added ${args.name.trim()} to the plan.`,
-      refs: { eventId },
-    });
-    return eventId;
+    return await addEventHelper(ctx, args.weddingId, args);
   },
 });
+
+/**
+ * One more day in the plan. Its budget is a weight rather than an amount: the rebalance
+ * re-splits the same total across every day, so every share moves.
+ */
+export async function addEventHelper(
+  ctx: MutationCtx,
+  weddingId: Id<"weddings">,
+  args: { name: string; date: string; dayIndex: number; budget: number; guestCount: number },
+): Promise<Id<"events">> {
+  if (!Number.isFinite(args.budget) || args.budget < 0) throw new ConvexError("Budget must be a non-negative number.");
+  if (!Number.isFinite(args.guestCount) || args.guestCount < 0) throw new ConvexError("Guest count must be non-negative.");
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(args.date)) throw new ConvexError("A day needs a date as YYYY-MM-DD.");
+  const existing = await ctx.db
+    .query("events")
+    .withIndex("by_weddingId", (q) => q.eq("weddingId", weddingId))
+    .take(50);
+  if (existing.length >= 20) throw new ConvexError("A wedding can have at most 20 events.");
+  const order = existing.length;
+  const eventId = await ctx.db.insert("events", {
+    weddingId,
+    name: args.name.trim(),
+    date: args.date,
+    dayIndex: Math.max(0, Math.floor(args.dayIndex)),
+    budget: args.budget,
+    guestCount: Math.floor(args.guestCount),
+    color: EVENT_COLORS[order % EVENT_COLORS.length],
+    order,
+  });
+  // The new function's budget comes out of the same total as everyone else's.
+  await rebalanceWeddingBudget(ctx, weddingId);
+  await logActivity(ctx, {
+    weddingId,
+    type: "note",
+    text: `added ${args.name.trim()} to the plan.`,
+    refs: { eventId },
+  });
+  return eventId;
+}
 
 /**
  * Remove one function from the plan.

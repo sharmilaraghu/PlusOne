@@ -1,6 +1,6 @@
 import { ConvexError, v } from "convex/values";
-import type { Id } from "./_generated/dataModel";
-import { internalQuery, mutation, query, internalMutation } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
+import { internalQuery, mutation, query, internalMutation, type MutationCtx } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { quoteDoc, vendorDoc, vendorSlotDoc } from "./lib/docs";
 import { setCommittedForSlotHelper } from "./budget";
@@ -55,28 +55,7 @@ export const add = mutation({
   returns: v.id("vendorSlots"),
   handler: async (ctx, args) => {
     await requireMember(ctx, args.weddingId, "planner");
-    if (!Number.isFinite(args.budget) || args.budget < 0) throw new ConvexError("Budget must be a non-negative number.");
-    for (const eventId of args.eventIds.slice(0, 20)) {
-      const event = await ctx.db.get(eventId);
-      if (!event || event.weddingId !== args.weddingId) throw new ConvexError("Event does not belong to this wedding.");
-    }
-    const slotId = await ctx.db.insert("vendorSlots", {
-      weddingId: args.weddingId,
-      eventIds: args.eventIds.slice(0, 20),
-      category: args.category.trim(),
-      title: args.title.trim(),
-      budget: args.budget,
-      status: "research",
-    });
-    await ctx.db.insert("budgetLines", {
-      weddingId: args.weddingId,
-      slotId,
-      label: args.title.trim(),
-      planned: args.budget,
-      committed: 0,
-      paid: 0,
-    });
-    return slotId;
+    return await addSlotHelper(ctx, args);
   },
 });
 
@@ -96,36 +75,75 @@ export const update = mutation({
     const slot = await ctx.db.get(args.slotId);
     if (!slot) throw new ConvexError("Slot not found.");
     await requireMember(ctx, slot.weddingId, "planner");
-    if (args.patch.budget !== undefined && (!Number.isFinite(args.patch.budget) || args.patch.budget < 0)) {
-      throw new ConvexError("Budget must be a non-negative number.");
-    }
-    if (args.patch.eventIds) {
-      for (const eventId of args.patch.eventIds.slice(0, 20)) {
-        const event = await ctx.db.get(eventId);
-        if (!event || event.weddingId !== slot.weddingId) throw new ConvexError("Event does not belong to this wedding.");
-      }
-    }
-    await ctx.db.patch(args.slotId, args.patch);
-    if (args.patch.budget !== undefined || args.patch.title !== undefined || args.patch.eventIds !== undefined) {
-      const line = await ctx.db
-        .query("budgetLines")
-        .withIndex("by_slotId", (q) => q.eq("slotId", args.slotId))
-        .first();
-      if (line) {
-        await ctx.db.patch(line._id, {
-          ...(args.patch.budget !== undefined ? { planned: args.patch.budget } : {}),
-          ...(args.patch.title !== undefined ? { label: args.patch.title } : {}),
-          // A need that now serves one day belongs to that day; one that serves several
-          // belongs to none of them in particular.
-          ...(args.patch.eventIds !== undefined
-            ? { eventId: args.patch.eventIds.length === 1 ? args.patch.eventIds[0] : undefined }
-            : {}),
-        });
-      }
-    }
+    await updateSlotHelper(ctx, slot, args.patch);
     return null;
   },
 });
+
+/** A need and its budget line. Shared by the vendors form and the assistant. */
+export async function addSlotHelper(
+  ctx: MutationCtx,
+  args: { weddingId: Id<"weddings">; title: string; category: string; eventIds: Id<"events">[]; budget: number },
+): Promise<Id<"vendorSlots">> {
+  if (!Number.isFinite(args.budget) || args.budget < 0) throw new ConvexError("Budget must be a non-negative number.");
+  for (const eventId of args.eventIds.slice(0, 20)) {
+    const event = await ctx.db.get(eventId);
+    if (!event || event.weddingId !== args.weddingId) throw new ConvexError("Event does not belong to this wedding.");
+  }
+  const slotId = await ctx.db.insert("vendorSlots", {
+    weddingId: args.weddingId,
+    eventIds: args.eventIds.slice(0, 20),
+    category: args.category.trim(),
+    title: args.title.trim(),
+    budget: args.budget,
+    status: "research",
+  });
+  await ctx.db.insert("budgetLines", {
+    weddingId: args.weddingId,
+    slotId,
+    label: args.title.trim(),
+    planned: args.budget,
+    committed: 0,
+    paid: 0,
+  });
+  return slotId;
+}
+
+/** Edit a need, keeping its budget line's label, amount and day in step. */
+export async function updateSlotHelper(
+  ctx: MutationCtx,
+  slot: Doc<"vendorSlots">,
+  patch: { title?: string; category?: string; eventIds?: Id<"events">[]; budget?: number; notes?: string },
+): Promise<void> {
+  if (patch.budget !== undefined && (!Number.isFinite(patch.budget) || patch.budget < 0)) {
+    throw new ConvexError("Budget must be a non-negative number.");
+  }
+  if (patch.eventIds) {
+    if (patch.eventIds.length === 0) throw new ConvexError("A vendor need has to cover at least one day.");
+    for (const eventId of patch.eventIds.slice(0, 20)) {
+      const event = await ctx.db.get(eventId);
+      if (!event || event.weddingId !== slot.weddingId) throw new ConvexError("Event does not belong to this wedding.");
+    }
+  }
+  await ctx.db.patch(slot._id, patch);
+  if (patch.budget !== undefined || patch.title !== undefined || patch.eventIds !== undefined) {
+    const line = await ctx.db
+      .query("budgetLines")
+      .withIndex("by_slotId", (q) => q.eq("slotId", slot._id))
+      .first();
+    if (line) {
+      await ctx.db.patch(line._id, {
+        ...(patch.budget !== undefined ? { planned: patch.budget } : {}),
+        ...(patch.title !== undefined ? { label: patch.title } : {}),
+        // A need that now serves one day belongs to that day; one that serves several
+        // belongs to none of them in particular.
+        ...(patch.eventIds !== undefined
+          ? { eventId: patch.eventIds.length === 1 ? patch.eventIds[0] : undefined }
+          : {}),
+      });
+    }
+  }
+}
 
 /**
  * One need becomes one per day: two venues for two days, a different florist for the

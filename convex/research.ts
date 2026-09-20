@@ -1,7 +1,7 @@
 import { ConvexError, v } from "convex/values";
 import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
-import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query, type MutationCtx } from "./_generated/server";
 import { logActivity, requireMember } from "./lib/auth";
 import { researchRunDoc } from "./lib/docs";
 import { formatMoney } from "./lib/text";
@@ -14,46 +14,65 @@ export const start = mutation({
     const slot = await ctx.db.get(args.slotId);
     if (!slot) throw new ConvexError("Slot not found.");
     const { userId, wedding } = await requireMember(ctx, slot.weddingId, "planner");
-    if (slot.status === "booked") {
-      throw new ConvexError(`${slot.title} is already booked. Un-book it first if you want to look again.`);
-    }
-    const q = args.query.trim();
-    if (q.length < 3) throw new ConvexError("Describe what you are looking for in a few words.");
-    if (q.length > 300) throw new ConvexError("Keep the search under 300 characters.");
-
-    const running = await ctx.db
-      .query("researchRuns")
-      .withIndex("by_slotId", (s) => s.eq("slotId", args.slotId))
-      .order("desc")
-      .take(1);
-    if (running[0]?.status === "running" && Date.now() - running[0].startedAt < 5 * 60_000) {
-      throw new ConvexError("Research is already running for this slot. Give it a minute.");
-    }
-
-    // An explicit area overrides the wedding's own neighbourhood for this search only.
-    const area = args.area?.trim().slice(0, 120) || wedding.area;
-    const researchRunId = await ctx.db.insert("researchRuns", {
-      weddingId: slot.weddingId,
-      slotId: args.slotId,
-      query: q,
-      area: area || undefined,
-      ...(args.more ? { more: true } : {}),
-      status: "running",
-      step: "Queued",
-      foundCount: 0,
-      startedAt: Date.now(),
-    });
-    await logActivity(ctx, {
-      weddingId: wedding._id,
-      actorUserId: userId,
-      type: "research_started",
-      text: args.more ? `asked PlusOne for more ${slot.title.toLowerCase()} options.` : `started researching "${q}" for ${slot.title}.`,
-      refs: { slotId: args.slotId },
-    });
-    await workflow.start(ctx, internal.workflows.researchWorkflow, { researchRunId });
-    return researchRunId;
+    return await startResearchHelper(ctx, { slot, wedding, userId, query: args.query, area: args.area, more: args.more });
   },
 });
+
+/**
+ * Start one search. Shared by the vendors screen and the assistant, so both refuse a
+ * need that is already booked and one that is already being searched.
+ */
+export async function startResearchHelper(
+  ctx: MutationCtx,
+  args: {
+    slot: Doc<"vendorSlots">;
+    wedding: Doc<"weddings">;
+    userId: Id<"users">;
+    query: string;
+    area?: string;
+    more?: boolean;
+  },
+): Promise<Id<"researchRuns">> {
+  const { slot, wedding, userId } = args;
+  if (slot.status === "booked") {
+    throw new ConvexError(`${slot.title} is already booked. Un-book it first if you want to look again.`);
+  }
+  const q = args.query.trim();
+  if (q.length < 3) throw new ConvexError("Describe what you are looking for in a few words.");
+  if (q.length > 300) throw new ConvexError("Keep the search under 300 characters.");
+
+  const running = await ctx.db
+    .query("researchRuns")
+    .withIndex("by_slotId", (s) => s.eq("slotId", slot._id))
+    .order("desc")
+    .take(1);
+  if (running[0]?.status === "running" && Date.now() - running[0].startedAt < 5 * 60_000) {
+    throw new ConvexError("Research is already running for this slot. Give it a minute.");
+  }
+
+  // An explicit area overrides the wedding's own neighbourhood for this search only.
+  const area = args.area?.trim().slice(0, 120) || wedding.area;
+  const researchRunId = await ctx.db.insert("researchRuns", {
+    weddingId: slot.weddingId,
+    slotId: slot._id,
+    query: q,
+    area: area || undefined,
+    ...(args.more ? { more: true } : {}),
+    status: "running",
+    step: "Queued",
+    foundCount: 0,
+    startedAt: Date.now(),
+  });
+  await logActivity(ctx, {
+    weddingId: wedding._id,
+    actorUserId: userId,
+    type: "research_started",
+    text: args.more ? `asked PlusOne for more ${slot.title.toLowerCase()} options.` : `started researching "${q}" for ${slot.title}.`,
+    refs: { slotId: slot._id },
+  });
+  await workflow.start(ctx, internal.workflows.researchWorkflow, { researchRunId });
+  return researchRunId;
+}
 
 /** Seconds between each need's search, so a whole plan doesn't hit the web at once. */
 const STAGGER_MS = 20_000;

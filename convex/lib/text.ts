@@ -77,3 +77,20 @@ export function slugify(input: string): string {
 
 export const DAY_MS = 86_400_000;
 export const FOLLOW_UP_DELAY_MS = 3 * DAY_MS;
+
+/**
+ * Find the thing a person meant by name: an exact match first, then either side
+ * containing the other, so "the barn" finds "The Oak Barn at Driftwood".
+ */
+export function matchByName<T>(list: T[], wanted: string | null | undefined, key: (item: T) => string): T | undefined {
+  const needle = wanted?.trim().toLowerCase();
+  if (!needle) return undefined;
+  return (
+    list.find((item) => key(item).trim().toLowerCase() === needle) ??
+    list.find((item) => {
+      const name = key(item).trim().toLowerCase();
+      return name.includes(needle) || needle.includes(name);
+    })
+  );
+}
+
