@@ -23,6 +23,7 @@ dist
 /docs/demo-video/
 /ElevenLabs_video_*.mp4
 /docs/submission/
+/docs/submission-details/
 
 # Throwaway browser-test scripts
 .shot-tmp.mjs
