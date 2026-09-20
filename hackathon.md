@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-20T07:42:14Z
+- **Last updated:** 2026-09-20T10:11:00Z
 
 ## Log
 
@@ -310,3 +310,31 @@ budget re-split weighs each item by what it already has — they now start at wh
 one costs there. It also remembers: short things no screen holds, shown in the chat and
 forgettable, alongside the plan it already re-reads each turn. The assistant's own context
 dropped from roughly 200 reads to nine. Deployed.
+
+### 2026-09-20 - e04d38b
+Getting ready for judges to arrive. The guest link hands each visitor a fresh sample
+wedding rather than whatever the last one left behind, while anyone with a real account
+keeps theirs (`src/pages/GuestPage.tsx`); the Convex logs caught that first attempt
+signing a new guest straight back out. A privacy page went up at `/privacy`, in plain
+words about what is kept and who sees it — Google will not switch an app to production
+without one, and a public app should have one anyway.
+
+### 2026-09-20 - dadea07
+Hardened the mail side around a three-inbox allowance. A wedding whose inbox had been
+released, or removed at AgentMail, could not send at all; sending now notices the
+address has gone, takes a fresh inbox for that wedding and sends from it. Deleting a
+wedding hands its inbox back instead of holding one forever, and an inbox report says
+who is holding each. On the shared fallback, an email from someone unrecognised used to
+be filed under whichever wedding came first, so one couple could have seen another's
+forwarded document; the sender must now match the wedding through its guest list, its
+vendors or the people planning it (`convex/agentmail.ts`, `convex/inbound.ts`,
+`convex/maintenance.ts`). Vendor replies already matched by conversation and guest
+replies by the guest's own address.
+
+### 2026-09-20 - 15e1c26
+A search asked for in the chat now stays there: the card shows the web being read, then
+the vendors found with their ratings and prices, and the couple ticks who to ask for a
+quote and sends without opening another screen (`src/components/assistant/`). Nothing
+lives only in the chat — the card reads the same queries the vendors screen reads, and a
+DJ search run from the chat put five real vendors on that need, three of them ranked as
+top picks. Deployed.
