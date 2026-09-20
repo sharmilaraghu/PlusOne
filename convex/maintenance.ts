@@ -209,3 +209,68 @@ export const seedVendor = internalMutation({
     });
   },
 });
+
+/**
+ * Replace one email address wherever a wedding's rows carry it: a guest's address and the
+ * from/to of stored emails and inbound events. For taking a person's own address out of
+ * test data. Whole-address match, case-insensitive; nothing else on the row changes. A
+ * guest whose address is replaced can no longer be matched to a new reply, which is the
+ * point. One table and one page per call: pass the returned cursor back until `done`.
+ *
+ * `npx convex run maintenance:replaceAddress '{"table":"guests","find":"me@x.com","replaceWith":"guest@removed.example","cursor":null}'`
+ */
+export const replaceAddress = internalMutation({
+  args: {
+    table: v.union(v.literal("guests"), v.literal("messages"), v.literal("inboundEvents")),
+    find: v.string(),
+    replaceWith: v.string(),
+    cursor: v.union(v.string(), v.null()),
+  },
+  returns: v.object({
+    scanned: v.number(),
+    changed: v.number(),
+    cursor: v.union(v.string(), v.null()),
+    done: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    const find = args.find.trim().toLowerCase();
+    const same = (value: string | undefined) => value !== undefined && value.trim().toLowerCase() === find;
+    const paginationOpts = { numItems: 200, cursor: args.cursor };
+    let changed = 0;
+    let result;
+    if (args.table === "guests") {
+      result = await ctx.db.query("guests").paginate(paginationOpts);
+      for (const row of result.page) {
+        if (same(row.email)) {
+          await ctx.db.patch(row._id, { email: args.replaceWith });
+          changed++;
+        }
+      }
+    } else if (args.table === "messages") {
+      result = await ctx.db.query("messages").paginate(paginationOpts);
+      for (const row of result.page) {
+        if (same(row.fromAddress) || same(row.toAddress)) {
+          await ctx.db.patch(row._id, {
+            fromAddress: same(row.fromAddress) ? args.replaceWith : row.fromAddress,
+            toAddress: same(row.toAddress) ? args.replaceWith : row.toAddress,
+          });
+          changed++;
+        }
+      }
+    } else {
+      result = await ctx.db.query("inboundEvents").paginate(paginationOpts);
+      for (const row of result.page) {
+        if (same(row.fromAddress)) {
+          await ctx.db.patch(row._id, { fromAddress: args.replaceWith });
+          changed++;
+        }
+      }
+    }
+    return {
+      scanned: result.page.length,
+      changed,
+      cursor: result.isDone ? null : result.continueCursor,
+      done: result.isDone,
+    };
+  },
+});
