@@ -97,3 +97,109 @@ export const forgetVendorThread = internalMutation({
     return { messages, threads: threads.length, quotes };
   },
 });
+
+/**
+ * Wipe every search result for one wedding: the vendors found, the runs that found
+ * them, and any conversation with those vendors. The needs themselves stay, back to
+ * being unresearched, so a demo can start from a clean slate.
+ *
+ * `npx convex run maintenance:resetResearch '{"weddingId":"..."}'`
+ */
+export const resetResearch = internalMutation({
+  args: { weddingId: v.id("weddings") },
+  returns: v.object({ vendors: v.number(), runs: v.number(), threads: v.number(), messages: v.number() }),
+  handler: async (ctx, args) => {
+    let messages = 0;
+    const threads = await ctx.db
+      .query("threads")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(200);
+    for (const thread of threads) {
+      for (const message of await ctx.db
+        .query("messages")
+        .withIndex("by_threadId", (q) => q.eq("threadId", thread._id))
+        .take(200)) {
+        await ctx.db.delete(message._id);
+        messages++;
+      }
+      await ctx.db.delete(thread._id);
+    }
+    for (const quote of await ctx.db
+      .query("quotes")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(200)) {
+      await ctx.db.delete(quote._id);
+    }
+    const vendors = await ctx.db
+      .query("vendors")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(400);
+    for (const vendor of vendors) await ctx.db.delete(vendor._id);
+    const runs = await ctx.db
+      .query("researchRuns")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(200);
+    for (const run of runs) await ctx.db.delete(run._id);
+    for (const slot of await ctx.db
+      .query("vendorSlots")
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
+      .take(100)) {
+      if (slot.status !== "booked") await ctx.db.patch(slot._id, { status: "research", bookedVendorId: undefined });
+    }
+    return { vendors: vendors.length, runs: runs.length, threads: threads.length, messages };
+  },
+});
+
+/**
+ * Put one vendor on a need without searching for it, for a demo or a walkthrough.
+ *
+ * `npx convex run maintenance:seedVendor '{"slotId":"...","name":"...","email":"..."}'`
+ */
+export const seedVendor = internalMutation({
+  args: {
+    slotId: v.id("vendorSlots"),
+    name: v.string(),
+    email: v.string(),
+    city: v.optional(v.string()),
+    website: v.optional(v.string()),
+    summary: v.optional(v.string()),
+    startingPrice: v.optional(v.number()),
+    rating: v.optional(v.number()),
+    reviewCount: v.optional(v.number()),
+    score: v.optional(v.number()),
+    rankReason: v.optional(v.string()),
+    isTopPick: v.optional(v.boolean()),
+    highlights: v.optional(v.array(v.string())),
+  },
+  returns: v.id("vendors"),
+  handler: async (ctx, args) => {
+    const slot = await ctx.db.get(args.slotId);
+    if (!slot) throw new Error("Slot not found");
+    return await ctx.db.insert("vendors", {
+      weddingId: slot.weddingId,
+      slotId: slot._id,
+      name: args.name,
+      email: args.email,
+      website: args.website,
+      city: args.city,
+      category: slot.category,
+      startingPrice: args.startingPrice,
+      priceUnit: args.startingPrice ? "total" : undefined,
+      priceCurrency: args.startingPrice ? "USD" : undefined,
+      packages: [],
+      highlights: args.highlights ?? [],
+      sourceUrls: args.website ? [args.website] : [],
+      summary: args.summary,
+      shortlisted: args.isTopPick ?? false,
+      scrapedAt: Date.now(),
+      rating: args.rating,
+      reviewCount: args.reviewCount,
+      reviewSource: args.rating ? args.website : undefined,
+      reviewHighlights: [],
+      score: args.score,
+      rankReason: args.rankReason,
+      isTopPick: args.isTopPick ?? false,
+      pagesRead: [],
+    });
+  },
+});
