@@ -63,7 +63,7 @@ export function WeddingLayout() {
 
   return (
     <div className="min-h-screen md:grid md:grid-cols-[252px_1fr]">
-      <aside className="border-b border-line bg-cream md:border-b-0 md:border-r">
+      <aside className="border-b border-line bg-cream md:sticky md:top-0 md:flex md:h-screen md:flex-col md:overflow-y-auto md:border-b-0 md:border-r">
         <div className="flex items-center justify-between px-5 py-5 md:block">
           <Link to="/" className="display text-2xl tracking-tight text-accent" aria-label="PlusOne home">
             Plus<em>One</em>
@@ -113,10 +113,24 @@ export function WeddingLayout() {
           ))}
         </nav>
 
-        <div className="hidden px-5 pb-6 text-xs text-quiet md:block">
+        {/* New here — a couple, a guest or a judge — should see the tour before anything else. */}
+        <div className="px-3 pb-4 md:px-5">
+          <button
+            type="button"
+            onClick={() => setWalking(true)}
+            className="flex w-full items-center gap-2.5 rounded-[14px] bg-accent-soft px-3.5 py-3 text-left text-accent transition hover:bg-accent hover:text-paper"
+          >
+            <Icon name="star" size={18} className="shrink-0" />
+            <span className="min-w-0">
+              <span className="block text-sm font-medium">Show me around</span>
+              <span className="block text-[11px] opacity-80">A quick tour of the whole plan</span>
+            </span>
+          </button>
+        </div>
+
+        <div className="mt-auto hidden px-5 pb-6 text-xs text-quiet md:block">
           <p>You are a <span className="font-medium text-ink">{role}</span></p>
-          <button onClick={() => setWalking(true)} className="mt-2 block hover:text-accent">Show me around</button>
-          <button onClick={() => void signOut()} className="btn-quiet btn-sm mt-4 w-full gap-1.5">
+          <button onClick={() => void signOut()} className="btn-quiet btn-sm mt-2 w-full gap-1.5">
             <Icon name="signout" size={15} />
             Sign out
           </button>

@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-19T05:26:03Z
+- **Last updated:** 2026-09-20T04:58:19Z
 
 ## Log
 
@@ -256,3 +256,24 @@ in a dev run (`convex/workflows.ts`, `convex/firecrawl.ts`). The Inbox shows a c
 conversations waiting on the couple, the activity feed stays short, a per-browser switch
 masks every email address for screen recordings, and six illustrations were redrawn in one
 style with ElevenLabs. Pushed to the dev deployment only; not yet committed or deployed.
+
+### 2026-09-19 - bcdffba
+Vendors often put the whole quote in a PDF and write "see attached". The attachment is now
+read with the email, so those prices, deposits, inclusions and validity dates become a quote
+card marked as read from the PDF, and only a document that really is a contract goes on to
+the contract check — brochures and menus no longer do. Attachments open from the conversation
+in one click (`convex/openai.ts`, `convex/agentmail.ts`, `convex/threads.ts`). Checked on
+three PDFs written for the test: a quote whose prices exist only in the attachment, a
+contract, and a brochure; each was routed correctly.
+
+### 2026-09-20 - e11f634
+A day of making the plan match how a real wedding is run. Needs can be moved between days,
+and a need covering several days can be split into one per day — two venues, or a different
+florist for the ceremony and the reception — each with its own vendors, budget and booking,
+the budget divided by guest count (`convex/slots.ts`, `src/pages/VendorsPage.tsx`). Every
+conversation now has a box to write to a vendor at any point, either as notes PlusOne turns
+into the email or as words sent exactly; Decisions links to it from every row, booked ones
+included, and a booked vendor's open question stays under "Needs you"
+(`convex/agent.ts`, `src/pages/InboxPage.tsx`, `src/pages/DecisionsPage.tsx`). Research shows
+all three searches it runs and starts from the couple's own style words, and the shortlist is
+now counted, filterable and shown on Decisions. Deployed.
