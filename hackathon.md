@@ -12,7 +12,7 @@
 - **Auth:** Convex Auth
 - **AI models:** gpt-5.6-luna, gpt-5.6-terra; gpt-image-2 through ElevenLabs for the illustrations
 - **Started:** 2026-09-15T15:25:44Z
-- **Last updated:** 2026-09-20T10:35:36Z
+- **Last updated:** 2026-09-20T14:37:22Z
 
 ## Log
 
@@ -339,7 +339,7 @@ lives only in the chat — the card reads the same queries the vendors screen re
 DJ search run from the chat put five real vendors on that need, three of them ranked as
 top picks. Deployed.
 
-### 2026-09-20 - working tree
+### 2026-09-20 - 8d2f1e3
 Tested from a fresh clone against a new dev deployment. Install, typecheck and production
 build pass. Driven in a headless browser with no console errors: the public pages, guest
 sign-in and all eight screens of the sample wedding at desktop and phone width, adding and
@@ -361,3 +361,23 @@ into a quote, PlusOne asking an over-budget vendor for something closer by itsel
 lower quote that came back, booking, a guest's reply read in with allergies, and the
 assistant adding guests from a card. The video's working files are kept out of the
 repository (`.gitignore`); raw screen recordings can show personal accounts.
+
+### 2026-09-20 - 725f2c4, 6ee1a22, a84fc3a
+The README now shows the product as it is. All nine screenshots were retaken at one size from
+the sample wedding behind "Try it as a guest", so every name and address in them is fictional,
+and the text beside them covers the assistant's action cards, the guest-list import, allergies,
+PDF quotes and the vendor agent. The stack section became a table per sponsor, each figure
+counted from the code: 21 tables and 41 indexes, 24 public queries behind 29 live `useQuery`
+subscriptions, 48 mutations, 27 internal actions holding every third-party call, seven durable
+workflows, the email workpool, the scheduler and cron, the webhook, file storage, static
+hosting, and Convex Auth's three providers with one membership helper, `requireMember`, in
+front of every wedding-scoped function (`convex/lib/auth.ts`). Both developers are named.
+
+Taking the screenshots showed a layout bug: on wide screens the vendor list went to three
+columns inside a column that stops growing, so cards were 275px wide and names were cut to
+"Golden …". It stays at two columns now, 420px at a 1600px window
+(`src/pages/VendorsPage.tsx`). Added `maintenance:replaceAddress`, an internal mutation that
+swaps one email address for another in guests, stored emails and inbound events, paginated one
+table at a time, so a person can take their own address out of demo data without deleting
+the weddings around it (`convex/maintenance.ts`). Checked on the dev deployment with a
+case-insensitive match and its restore. Not yet deployed to production.
