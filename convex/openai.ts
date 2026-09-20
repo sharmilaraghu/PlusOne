@@ -569,7 +569,8 @@ export const writeVendorReply = internalAction({
       schema: z.object({ bodyText: z.string() }),
       prompt:
         `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
-        `Reply to ${args.vendorName} (${args.slotTitle}), answering everything they asked. The couple has told you:\n` +
+        `Write to ${args.vendorName} (${args.slotTitle}). Answer anything they asked that is still open, and say what ` +
+        `the couple wants said. The couple has told you:\n` +
         `"${truncate(args.coupleAnswer, 2000)}"\nPass that on faithfully; it is the couple's decision, so you may state ` +
         `it, but do not go beyond it.\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n${weddingBrief(wedding, events, dietary)}\n` +
         `Rough budget for ${args.slotTitle} (only if they asked): ${roughMoney(args.slotBudget, wedding.currency)}\n\n` +

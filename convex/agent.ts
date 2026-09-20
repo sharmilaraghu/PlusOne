@@ -201,6 +201,43 @@ export const answerForCouple = mutation({
 });
 
 /**
+ * The couple writes to a vendor at any point: a question after a quote, a change of
+ * plan, a nudge on a booked vendor. PlusOne turns their notes into the email, or sends
+ * their words exactly when they'd rather write it themselves.
+ */
+export const writeToVendor = mutation({
+  args: { threadId: v.id("threads"), message: v.string(), asWritten: v.optional(v.boolean()) },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const thread = await ctx.db.get(args.threadId);
+    if (!thread) throw new ConvexError("That conversation is gone.");
+    await requireMember(ctx, thread.weddingId, "planner");
+    const message = args.message.trim();
+    if (!message) throw new ConvexError("Write your message first.");
+    const vendor = await ctx.db.get(thread.vendorId);
+    if (!vendor?.email) throw new ConvexError("This vendor has no email address yet. Add one on the Vendors page.");
+    // Writing to someone answers whatever PlusOne was holding for them.
+    if (thread.pendingQuestion) await ctx.db.patch(thread._id, { pendingQuestion: undefined, attentionReason: undefined });
+
+    if (args.asWritten) {
+      await queue(ctx, thread, {
+        kind: "agent_reply",
+        bodyText: message.slice(0, 5000),
+        key: `${thread._id}:couple_wrote:${Date.now()}`,
+        sendNow: true,
+      });
+      return null;
+    }
+    await workflow.start(ctx, internal.workflows.coupleAnswerWorkflow, {
+      threadId: thread._id,
+      answer: message.slice(0, 2000),
+      key: `${thread._id}:couple_answer:${Date.now()}`,
+    });
+    return null;
+  },
+});
+
+/**
  * After a booking: mark the other contacted vendors for this need as passed on, and
  * return who should hear what. The emails themselves are written by the workflow.
  */

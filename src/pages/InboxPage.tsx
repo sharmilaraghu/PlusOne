@@ -316,6 +316,8 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
         </section>
       )}
 
+      {canEdit && vendor.email && <WriteToVendor threadId={threadId} vendorName={vendor.name} />}
+
       <ol className="space-y-3" aria-label="Email timeline">
         {messages.map((m) => (
           <li key={m._id} className={`card p-4 ${m.direction === "in" ? "border-accent/30" : ""}`}>
@@ -373,5 +375,60 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
         ))}
       </ol>
     </div>
+  );
+}
+
+/** Always available: a question after a quote, a change of plan, a nudge on a booked vendor. */
+function WriteToVendor({ threadId, vendorName }: { threadId: Id<"threads">; vendorName: string }) {
+  const write = useMutation(api.agent.writeToVendor);
+  const [message, setMessage] = useState("");
+  const [asWritten, setAsWritten] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
+
+  return (
+    <section className="card p-4 md:p-5" aria-label={`Write to ${vendorName}`}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setError(null);
+          setBusy(true);
+          void write({ threadId, message, asWritten })
+            .then(() => {
+              setMessage("");
+              setSent(true);
+            })
+            .catch((err: unknown) => setError(err instanceof Error ? err.message : "That didn't send."))
+            .finally(() => setBusy(false));
+        }}
+      >
+        <label className="label" htmlFor="write-vendor">Write to {vendorName}</label>
+        <textarea
+          id="write-vendor"
+          rows={2}
+          className="input resize-y"
+          value={message}
+          onChange={(e) => {
+            setMessage(e.target.value);
+            setSent(false);
+          }}
+          placeholder={asWritten ? "Your email, exactly as you want it sent." : "Just the gist — could they do a vegan menu for 20? PlusOne writes the email."}
+        />
+        {error && <p role="alert" className="mt-1 text-xs text-bad">{error}</p>}
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <label className="flex items-center gap-2 text-xs text-muted">
+            <input type="checkbox" checked={asWritten} onChange={(e) => setAsWritten(e.target.checked)} />
+            Send my words exactly
+          </label>
+          <span className="flex items-center gap-3">
+            {sent && <span aria-live="polite" className="text-xs text-muted">Sent.</span>}
+            <button type="submit" className="btn-primary btn-sm" disabled={busy || !message.trim()}>
+              {busy ? "Sending…" : "Send"}
+            </button>
+          </span>
+        </div>
+      </form>
+    </section>
   );
 }
