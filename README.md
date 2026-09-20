@@ -133,14 +133,54 @@ It answers from your own numbers, and it can do the work: add a guest, add a ven
 
 ## The stack
 
+The whole product runs on four things, and each does real work on every request. There is no other server.
+
+### Convex: the entire backend, and the hosting
+
 | | |
 |---|---|
-| **Convex** | 21 tables with indexes, queries and mutations, actions, HTTP action for the inbound webhook, scheduled functions, an hourly cron, file storage, live queries, Convex Auth. Components: `@convex-dev/workflow`, `@convex-dev/workpool`, `@convex-dev/static-hosting` |
-| **Firecrawl** | `search` to find vendors, `map` to locate each site's contact and pricing pages, `scrape` with schema extraction to read them, and a separate pass over review directories for ratings |
-| **AgentMail** | An inbox per wedding, sending and replying, and a Svix-verified webhook that routes each inbound message to the right thread, guest or forwarded document |
-| **OpenAI** | Structured-output calls throughout: the style summary, search planning, vendor cards, ranking, inquiry drafting, follow-ups, deciding on and writing vendor replies, reading replies and PDFs into quotes, RSVP and allergy parsing, the assistant and its action cards, and contract reading |
+| **Schema** | 21 tables and 41 indexes. 131 indexed reads and not one `.collect()`. Argument validators on every one of the 168 functions, and return validators on 166 of them. |
+| **Queries and live updates** | 24 public queries feeding 29 `useQuery` subscriptions. Nothing in the UI polls: when a vendor's reply is read into a quote, the Inbox, Decisions, the budget bar and the activity feed all change on every member's screen at once. |
+| **Mutations** | 48 public mutations, each a transaction. Booking a vendor moves the budget, flips the need, writes the confirmation and the thank-yous, and logs the activity, or none of it happens. |
+| **Actions and internal functions** | 27 internal actions hold every call to OpenAI, Firecrawl and AgentMail; 25 internal queries and 44 internal mutations sit behind them. Nothing the browser can reach talks to a third party. |
+| **Auth** | Convex Auth with three providers in one `convexAuth` call: Google, email and password (the profile is normalised and validated on the server, not just in the form), and **anonymous sessions** for "Try it as a guest". A guest is a real user and a real owner of a sample wedding built through the same insert path as any other, so every screen they touch exercises the real membership check; only the email is simulated, and that happens on the server. |
+| **Authorization** | Identity comes only from the session: no function takes a `userId`. Every wedding-scoped function goes through one helper, `requireMember(weddingId, minRole)`, a single compound-index lookup, with ordered roles: viewer, planner, owner. Every child id (a vendor, thread, guest, quote, budget line) is loaded and checked against its own wedding before anything is read or written. Only owners change roles or remove members, and the rules always leave one owner. There are no public actions at all. |
+| **Workflows** | `@convex-dev/workflow`: seven durable workflows (onboarding, vendor research, inbound mail, the couple's answer, booking, follow-ups, RSVPs), 49 steps between them. A research run survives restarts and reports its progress live, which is the "Reading …" line on the Vendors screen. |
+| **Workpool** | `@convex-dev/workpool`: outbound email goes through a pool of two with retries off, so a send is never doubled; idempotency lives on the message row. |
+| **Scheduling** | `ctx.scheduler` staggers "research every need" so the searches do not all start at once, and hands an inbox back when a wedding is deleted. An hourly cron chases vendors who have gone quiet. |
+| **HTTP actions** | The AgentMail webhook: the Svix signature is verified, the event is claimed idempotently, and the heavy work is scheduled so the endpoint answers fast. Convex Auth's routes live on the same router. |
+| **File storage** | Inspiration pictures and guest-list spreadsheets are uploaded straight from the browser with upload URLs; inbound email attachments are stored from the webhook; PDFs are read back out for the model. |
+| **Static hosting** | `@convex-dev/static-hosting` serves the React app from the same deployment, at `convex.site`. |
 
-Measured rather than assumed — the numbers behind the vendor pipeline are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md).
+### Firecrawl: finding vendors and reading the web
+
+| | |
+|---|---|
+| **`search`** | Three searches per need, written by the model from the couple's own words, style and neighbourhood, with results scraped to markdown in the same call. |
+| **`map`** | Finds each vendor site's contact and pricing pages (up to 60 URLs a site) instead of guessing at `/contact`. |
+| **`scrape` with a JSON schema** | Reads each page into a fixed shape: name, email, contact form, starting price, packages, highlights. Prices keep a link to the page they came from. |
+| **Reviews** | A separate `search` over review directories, extracted with its own schema, for a rating, a review count and what reviewers say. |
+| **Measured** | Moving from one scrape per vendor to map-then-scrape took emails found from 25% to 63% and prices from 13% to 50% on the same 16 vendors. The numbers are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md). |
+
+### AgentMail: an inbox per wedding
+
+| | |
+|---|---|
+| **Inboxes** | Each wedding gets its own inbox, created with a stable client id so a retry never makes two. A shared fallback inbox covers the account's cap, and a deployment only ever releases inboxes it created itself. |
+| **Sending and replying** | Inquiries, follow-ups, invitations and PlusOne's own replies go out with `messages.send` and `messages.reply`, so a vendor sees one thread. |
+| **Inbound webhook** | `message.received`, Svix-verified, routed by inbox and thread to the right vendor conversation, guest, or forwarded document. |
+| **Attachments** | Fetched with `getAttachment` and stored in Convex, so a quote that lives only in a PDF is still read, and a forwarded contract can be checked. |
+| **Simulated on sample weddings** | Email on a guest's sample wedding is recorded as sent and never handed to AgentMail. |
+
+### OpenAI: every judgement in the product
+
+| | |
+|---|---|
+| **Structured outputs** | Zod schemas through the AI SDK's `generateObject`, so a model call returns typed data the database can store: no parsing of prose. |
+| **Two models** | A fast one for the style summary, planning searches, building vendor cards, follow-ups and reading replies into quotes; a stronger one for ranking, drafting the inquiry, deciding how to answer a vendor and writing it, the assistant, and contracts. |
+| **Files and images** | PDFs go to the model as files (quotes in attachments, guest lists, contracts); the couple's inspiration pictures go in as images and come back as a style summary that steers the searches and the ranking. |
+| **The vendor agent** | Decides whether a reply needs an answer, a question for the couple, or nothing; writes the email; asks once for something closer when a quote is over budget; never agrees to pay, sign or accept a price. |
+| **The assistant** | Answers from the wedding's own numbers and offers actions as cards that do nothing until pressed. |
 
 ## Run locally
 
