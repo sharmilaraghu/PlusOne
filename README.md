@@ -52,10 +52,6 @@
 > You confirm once. After that, you just decide.
 
 <p align="center">
-  <img src="docs/screenshots/01-landing.jpg" alt="PlusOne's landing page: the headline, Start planning and Try it as a guest, and a preview of a wedding's vendors and budget" width="820" />
-</p>
-
-<p align="center">
   <b>Try it without signing up:</b> <a href="https://rapid-albatross-416.convex.site/guest">rapid-albatross-416.convex.site/guest</a> opens a sample wedding you can click through.
 </p>
 
@@ -73,7 +69,7 @@ sent and the replies read back into quotes, and the decision made.
 </p>
 
 <p align="center">
-  <a href="https://www.youtube.com/watch?v=TExwYZGxJ-0"><b>PlusOne — Your AI copilot for the perfect wedding</b></a>
+  <a href="https://www.youtube.com/watch?v=TExwYZGxJ-0"><b>▶ Watch on YouTube</b></a> · three minutes
 </p>
 
 ---
@@ -206,4 +202,4 @@ Built for the [Convex All Gas Hackathon](https://luma.com/convex-allgas-hackatho
 
 ---
 
-*The demo video and the screenshot are of the sample wedding anyone can open with "Try it as a guest". Its vendors, guests and addresses are fictional (the reserved `.example` domain), and email on a sample wedding is simulated rather than sent. The pipeline behind it is the real one; its measured results are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md).*
+*The demo video is of the sample wedding anyone can open with "Try it as a guest". Its vendors, guests and addresses are fictional (the reserved `.example` domain), and email on a sample wedding is simulated rather than sent. The pipeline behind it is the real one; its measured results are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md).*
