@@ -23,6 +23,13 @@ dist
 /ElevenLabs_video_*.mp4
 /docs/submission/
 /docs/submission-details/
+/docs/WEDDING_IDEA.md
+/docs/requirements.md
+/docs/FEATURE_RESEARCH.md
+/docs/COMPETITOR_FEATURES.md
+/docs/HackathonDetails.md
+/docs/PLAN.md
+/docs/PHASE_PLAN.md
 
 # Throwaway browser-test scripts
 .shot-tmp.mjs
