@@ -200,6 +200,10 @@ Backend keys are set on the Convex deployment (see `.env.example`).
 
 Built for the [Convex All Gas Hackathon](https://luma.com/convex-allgas-hackathon). The day-by-day build log is in [`hackathon.md`](hackathon.md).
 
+## License
+
+[FSL-1.1-ALv2](LICENSE.md), the Functional Source License. You can read, run and modify PlusOne for anything except offering a competing commercial product. Each version becomes Apache 2.0 two years after it is published.
+
 ---
 
 *The demo video is of the sample wedding anyone can open with "Try it as a guest". Its vendors, guests and addresses are fictional (the reserved `.example` domain), and email on a sample wedding is simulated rather than sent. The pipeline behind it is the real one; its measured results are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md).*

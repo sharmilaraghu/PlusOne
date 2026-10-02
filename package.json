@@ -2,6 +2,7 @@
   "name": "plusone",
   "private": true,
   "version": "0.1.0",
+  "license": "FSL-1.1-ALv2",
   "type": "module",
   "scripts": {
     "dev": "concurrently -n web,convex -c cyan,magenta \"vite\" \"convex dev\"",
