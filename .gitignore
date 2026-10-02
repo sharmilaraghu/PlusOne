@@ -30,6 +30,7 @@ dist
 /docs/HackathonDetails.md
 /docs/PLAN.md
 /docs/PHASE_PLAN.md
+/docs/research/
 
 # Throwaway browser-test scripts
 .shot-tmp.mjs

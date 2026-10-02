@@ -159,7 +159,7 @@ The whole product runs on four things, and each does real work on every request.
 | **`map`** | Finds each vendor site's contact and pricing pages (up to 60 URLs a site) instead of guessing at `/contact`. |
 | **`scrape` with a JSON schema** | Reads each page into a fixed shape: name, email, contact form, starting price, packages, highlights. Prices keep a link to the page they came from. |
 | **Reviews** | A separate `search` over review directories, extracted with its own schema, for a rating, a review count and what reviewers say. |
-| **Measured** | Moving from one scrape per vendor to map-then-scrape took emails found from 25% to 63% and prices from 13% to 50% on the same 16 vendors. The numbers are in [`docs/research/FIRECRAWL_FINDINGS.md`](docs/research/FIRECRAWL_FINDINGS.md). |
+| **Measured** | Moving from one scrape per vendor to map-then-scrape took emails found from 25% to 63% and prices from 13% to 50% on the same 16 vendors. |
 
 ### AgentMail: an inbox per wedding
 
