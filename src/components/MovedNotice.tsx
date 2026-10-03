@@ -44,7 +44,7 @@ export function MovedNotice() {
         You're on PlusOne for weddings, and it's staying right here.
       </p>
       <p className="mt-2 leading-relaxed text-muted">
-        Planning a birthday, an anniversary, a team event or anything else? There's a new PlusOne for that.
+        For every other occasion, a birthday, an anniversary, a team event or anything else, visit the new PlusOne.
       </p>
       <div className="mt-6 flex flex-wrap gap-3">
         <a href={NEW_SITE} onClick={remember} className="btn-primary">
