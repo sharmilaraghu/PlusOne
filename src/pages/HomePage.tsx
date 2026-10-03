@@ -98,6 +98,11 @@ export function HomePage() {
           <h1 className="mt-4 text-[2.4rem] leading-tight">
             Your <em>weddings</em>
           </h1>
+          <p className="mt-3 max-w-[44rem] rounded-[14px] bg-accent-soft px-4 py-3 text-sm text-ink">
+            PlusOne is becoming a copilot for every occasion, not only weddings. This is the original version, and it
+            stays as it is.{" "}
+            <a href="https://scrupulous-hound-784.convex.site" className="text-accent underline underline-offset-2">See the new PlusOne</a>
+          </p>
           <p className="mt-1.5 text-sm text-muted">
             {mine.length === 1 ? "One celebration on the go." : `${mine.length} celebrations on the go.`}
           </p>

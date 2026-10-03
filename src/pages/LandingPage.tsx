@@ -16,14 +16,14 @@ export function LandingPage() {
   return (
     <div className="lp">
       <a href="#main" className="lp-skip">Skip to content</a>
-      {/* Judges should be one click from a working wedding, with nothing to sign up for. */}
-      <Link to="/guest" className="judge-bar">
-        <span className="judge-bar__tag">Hackathon judges</span>
+      {/* This is the original hackathon version. The product has moved on, and visitors should be told where. */}
+      <a href="https://scrupulous-hound-784.convex.site" className="judge-bar">
+        <span className="judge-bar__tag">New</span>
         <span className="judge-bar__text">
-          Judging the Convex All Gas Hackathon? Open a sample wedding. No sign-up.
+          PlusOne is becoming a copilot for every occasion, not only weddings. This is the original version. See the new one.
         </span>
         <span className="judge-bar__go" aria-hidden="true">→</span>
-      </Link>
+      </a>
       <section className="hero" aria-labelledby="hero-title">
         {/* The day itself, drifting behind the promise. Paused for reduced motion. */}
         <div className="hero__reel" aria-hidden="true">

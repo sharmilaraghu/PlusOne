@@ -327,7 +327,7 @@
   .ap-notif p { font-size: 0.92rem; }
 }
 
-/* A one-click way in for hackathon judges, above everything else. */
+/* The bar above everything else: where the product has moved to. */
 .judge-bar {
   display: flex; align-items: center; justify-content: center; gap: 12px;
   padding: 10px 20px; background: var(--wine); color: #fbf8f3;
