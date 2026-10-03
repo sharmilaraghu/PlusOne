@@ -16,11 +16,11 @@ export function LandingPage() {
   return (
     <div className="lp">
       <a href="#main" className="lp-skip">Skip to content</a>
-      {/* This is the original hackathon version. The product has moved on, and visitors should be told where. */}
+      {/* This site is PlusOne for weddings. Anyone planning something else should know there is a PlusOne for that too. */}
       <a href="https://scrupulous-hound-784.convex.site" className="judge-bar">
         <span className="judge-bar__tag">New</span>
         <span className="judge-bar__text">
-          PlusOne is becoming a copilot for every occasion, not only weddings. This is the original version. See the new one.
+          Planning something other than a wedding? There's now a PlusOne for every occasion. See it.
         </span>
         <span className="judge-bar__go" aria-hidden="true">→</span>
       </a>
