@@ -230,12 +230,11 @@ function DeleteEvent({ weddingId, name }: { weddingId: Id<"weddings">; name: str
           if (!matches) return;
           setBusy(true);
           setError(null);
-          void remove({ weddingId, confirmName: typed })
-            .then(() => navigate("/", { replace: true }))
-            .catch((err: unknown) => {
-              setError(err instanceof Error ? err.message : "That couldn't be deleted. Try again.");
-              setBusy(false);
-            });
+          // Leave first. The event stops being ours the instant the delete lands, and a
+          // page still showing it would fail on every query it has open.
+          const deleting = remove({ weddingId, confirmName: typed });
+          navigate("/", { replace: true });
+          void deleting.catch((err: unknown) => console.error("The event could not be deleted", err));
         }}
       >
         <div className="min-w-[16rem] flex-1">
