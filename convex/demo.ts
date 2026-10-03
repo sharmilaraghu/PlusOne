@@ -1,9 +1,10 @@
-import { v } from "convex/values";
+import { ConvexError, v } from "convex/values";
 import type { Doc, Id } from "./_generated/dataModel";
 import { mutation, type MutationCtx } from "./_generated/server";
 import { setCommittedForSlotHelper } from "./budget";
 import { logActivity, requireUserId } from "./lib/auth";
 import { addDays } from "./lib/text";
+import { rateLimiter } from "./rateLimits";
 import { insertWedding } from "./weddings";
 
 /**
@@ -335,6 +336,8 @@ export const start = mutation({
       .withIndex("by_userId", (q) => q.eq("userId", userId))
       .first();
     if (existing) return existing.weddingId;
+    const room = await rateLimiter.limit(ctx, "demoStarts");
+    if (!room.ok) throw new ConvexError("The demo is very busy right now. Try again in a little while.");
     return await seedDemo(ctx, userId);
   },
 });

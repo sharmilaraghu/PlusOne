@@ -6,6 +6,7 @@ import { logActivity, requireMember } from "./lib/auth";
 import { researchRunDoc } from "./lib/docs";
 import { formatMoney } from "./lib/text";
 import { anOccasion } from "./lib/occasion";
+import { spend } from "./rateLimits";
 import { workflow } from "./workflows";
 
 export const start = mutation({
@@ -35,6 +36,7 @@ export async function startResearchHelper(
   },
 ): Promise<Id<"researchRuns">> {
   const { slot, wedding, userId } = args;
+  await spend(ctx, "research", wedding, userId);
   if (slot.status === "booked") {
     throw new ConvexError(`${slot.title} is already booked. Un-book it first if you want to look again.`);
   }
@@ -77,6 +79,8 @@ export async function startResearchHelper(
 
 /** Seconds between each need's search, so a whole plan doesn't hit the web at once. */
 const STAGGER_MS = 20_000;
+/** How many searches "find them all" starts in the demo, within its daily allowance. */
+const DEMO_SEARCHES_AT_ONCE = 2;
 
 /** The search PlusOne runs for a need when nobody has typed one. Mirrors the Vendors page's default. */
 function defaultQuery(slot: Doc<"vendorSlots">, wedding: Doc<"weddings">): string {
@@ -96,7 +100,7 @@ export const startAll = mutation({
       .query("vendorSlots")
       .withIndex("by_weddingId_and_status", (q) => q.eq("weddingId", args.weddingId).eq("status", "research"))
       .take(50);
-    let started = 0;
+    const due: Doc<"vendorSlots">[] = [];
     for (const slot of slots) {
       const lastRun = await ctx.db
         .query("researchRuns")
@@ -104,6 +108,13 @@ export const startAll = mutation({
         .order("desc")
         .first();
       if (lastRun && (lastRun.status === "running" || lastRun.status === "done")) continue;
+      due.push(slot);
+    }
+    // The demo shows the search working on a couple of needs rather than all of them.
+    const starting = wedding.demo ? due.slice(0, DEMO_SEARCHES_AT_ONCE) : due;
+    if (starting.length > 0) await spend(ctx, "research", wedding, userId, starting.length);
+    let started = 0;
+    for (const slot of starting) {
       await ctx.scheduler.runAfter(started * STAGGER_MS, internal.research.startForSlot, {
         slotId: slot._id,
         query: defaultQuery(slot, wedding),

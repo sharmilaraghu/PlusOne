@@ -41,6 +41,7 @@ import type * as messages from "../messages.js";
 import type * as openai from "../openai.js";
 import type * as outreach from "../outreach.js";
 import type * as quotes from "../quotes.js";
+import type * as rateLimits from "../rateLimits.js";
 import type * as research from "../research.js";
 import type * as slots from "../slots.js";
 import type * as threads from "../threads.js";
@@ -89,6 +90,7 @@ declare const fullApi: ApiFromModules<{
   openai: typeof openai;
   outreach: typeof outreach;
   quotes: typeof quotes;
+  rateLimits: typeof rateLimits;
   research: typeof research;
   slots: typeof slots;
   threads: typeof threads;
@@ -127,5 +129,6 @@ export declare const internal: FilterApi<
 export declare const components: {
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   emailPool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"emailPool">;
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
   staticHosting: import("@convex-dev/static-hosting/_generated/component.js").ComponentApi<"staticHosting">;
 };

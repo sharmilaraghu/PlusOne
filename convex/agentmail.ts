@@ -7,6 +7,7 @@ import type { Id } from "./_generated/dataModel";
 import { internalAction, type ActionCtx } from "./_generated/server";
 import { extractEmail, slugify } from "./lib/text";
 import { hostsLabel } from "./lib/occasion";
+import { outboundPause } from "./rateLimits";
 import { workflow } from "./workflows";
 
 const am = new AgentMailClient({ apiKey: process.env.AGENTMAIL_API_KEY });
@@ -205,6 +206,10 @@ export const sendOutbound = internalAction({
       }
       if (!inboxId) throw new Error("No inbox for this event yet");
       if (!message.toAddress) throw new Error("Recipient has no email address");
+      // Counted here, where mail really leaves, so follow-ups and automatic replies
+      // are held to the same allowance as the Send button.
+      const pause = await outboundPause(ctx, wedding._id);
+      if (pause) throw new Error(pause);
       const replyTo = message.kind === "inquiry" ? undefined : thread?.lastInboundMessageId;
       let from = inboxId;
 

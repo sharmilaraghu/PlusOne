@@ -6,6 +6,7 @@ import type { Doc } from "./_generated/dataModel";
 import { requireMember } from "./lib/auth";
 import { messageDoc, vendorDoc } from "./lib/docs";
 import { emailPool } from "./lib/pools";
+import { spend } from "./rateLimits";
 import { workflow } from "./workflows";
 
 const MAX_VENDORS_PER_BATCH = 10;
@@ -42,13 +43,14 @@ export const draft = mutation({
   handler: async (ctx, args): Promise<null> => {
     const slot = await ctx.db.get(args.slotId);
     if (!slot) throw new ConvexError("Slot not found.");
-    await requireMember(ctx, slot.weddingId, "planner");
+    const { userId, wedding } = await requireMember(ctx, slot.weddingId, "planner");
     if (args.vendorIds.length === 0) throw new ConvexError("Pick at least one vendor.");
     if (args.vendorIds.length > MAX_VENDORS_PER_BATCH) throw new ConvexError(`Draft for at most ${MAX_VENDORS_PER_BATCH} vendors at a time.`);
     for (const vendorId of args.vendorIds) {
       const vendor = await ctx.db.get(vendorId);
       if (!vendor || vendor.weddingId !== slot.weddingId) throw new ConvexError("Vendor does not belong to this event.");
     }
+    await spend(ctx, "drafting", wedding, userId);
     await ctx.scheduler.runAfter(0, internal.openai.draftInquiries, { slotId: args.slotId, vendorIds: args.vendorIds });
     return null;
   },

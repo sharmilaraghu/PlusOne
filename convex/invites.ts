@@ -6,6 +6,7 @@ import { logActivity, requireMember, requireUserId } from "./lib/auth";
 import { inviteDoc, weddingDoc } from "./lib/docs";
 import { role } from "./lib/validators";
 import { hostsLabel } from "./lib/occasion";
+import { comeBack, rateLimiter } from "./rateLimits";
 
 export const create = mutation({
   args: { weddingId: v.id("weddings"), role, email: v.optional(v.string()) },
@@ -27,7 +28,11 @@ export const create = mutation({
       createdBy: userId,
     });
     if (email) {
-      // Best-effort email from the wedding inbox; the link still works without it.
+      const room = await rateLimiter.limit(ctx, "memberInvites", { key: userId });
+      if (!room.ok) {
+        throw new ConvexError(`That's a lot of invitations at once. You can email more ${comeBack(room.retryAfter)}, or copy the link instead.`);
+      }
+      // Best-effort email from the event inbox; the link still works without it.
       await ctx.scheduler.runAfter(0, internal.agentmail.sendInvite, { inviteId });
     }
     return { token, inviteId };

@@ -6,6 +6,7 @@ import { chatMessageDoc } from "./lib/docs";
 import { addGuestHelper, findDuplicateGuest } from "./guests";
 import { addSlotHelper, updateSlotHelper } from "./slots";
 import { startResearchHelper } from "./research";
+import { spend } from "./rateLimits";
 import { addEventHelper } from "./events";
 import { writeToVendorHelper } from "./agent";
 import { rebalanceWeddingBudget } from "./lib/budget";
@@ -48,10 +49,11 @@ export const ask = mutation({
   args: { weddingId: v.id("weddings"), content: v.string() },
   returns: v.id("chatMessages"),
   handler: async (ctx, args): Promise<Id<"chatMessages">> => {
-    const { userId } = await requireMember(ctx, args.weddingId, "planner");
+    const { userId, wedding } = await requireMember(ctx, args.weddingId, "planner");
     const content = args.content.trim();
     if (content.length < 2) throw new ConvexError("Ask a question first.");
     if (content.length > MAX_QUESTION) throw new ConvexError(`Keep it under ${MAX_QUESTION} characters.`);
+    await spend(ctx, "assistant", wedding, userId);
 
     await ctx.db.insert("chatMessages", { weddingId: args.weddingId, userId, role: "user", content });
     const replyId = await ctx.db.insert("chatMessages", {

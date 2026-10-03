@@ -20,11 +20,14 @@ http.route({
   handler: httpAction(async (ctx, request) => {
     const rawBody = await request.text();
     const secret = process.env.AGENTMAIL_WEBHOOK_SECRET;
-    if (secret) {
-      const ok = await verifySvix(secret, request.headers, rawBody);
-      if (!ok) return new Response("invalid signature", { status: 401 });
-    } else {
-      console.warn("AGENTMAIL_WEBHOOK_SECRET is not set; accepting unsigned webhook");
+    // Without the secret nothing can be verified, so nothing is accepted: an unsigned
+    // request here could plant a reply in any event's inbox.
+    if (!secret) {
+      console.error("AGENTMAIL_WEBHOOK_SECRET is not set; refusing the webhook");
+      return new Response("webhook secret not configured", { status: 503 });
+    }
+    if (!(await verifySvix(secret, request.headers, rawBody))) {
+      return new Response("invalid signature", { status: 401 });
     }
 
     let payload: WebhookPayload;
