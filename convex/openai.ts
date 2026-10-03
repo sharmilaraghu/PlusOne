@@ -7,6 +7,7 @@ import type { Doc, Id } from "./_generated/dataModel";
 import { internalAction, type ActionCtx } from "./_generated/server";
 import { formatMoney, matchByName, truncate } from "./lib/text";
 import { anOccasion, hasCoHost, hostsLabel, isWedding, occasionNoun } from "./lib/occasion";
+import { looksLikeOptOut } from "./lib/optOut";
 import {
   replyClassification,
   rsvpStatus,
@@ -656,6 +657,12 @@ const replySchema = z.object({
         "agreement to sign; 'other' for brochures, menus or portfolios; 'none' when nothing is attached",
     ),
   pricesFromAttachment: z.boolean().describe("true when the total came from the attached PDF rather than the email text"),
+  optOut: z
+    .boolean()
+    .describe(
+      "true only when the sender asks not to be contacted, emailed or followed up with again; false for an ordinary " +
+        "'we are booked' or 'not available', and false for an unsubscribe link in an automatic footer",
+    ),
 });
 
 type ReplyReading = z.infer<typeof replySchema>;
@@ -767,6 +774,11 @@ export const extractReply = internalAction({
       classification: object.classification,
       extracted,
     });
+    // Asked to be left alone: record it, close the conversation, and take no next step.
+    if (object.optOut || looksLikeOptOut(message.bodyText)) {
+      await ctx.runMutation(internal.doNotContact.recordOptOut, { threadId: thread._id });
+      return { classification: "declined", total: null };
+    }
     await ctx.runMutation(internal.threads.applyClassification, { threadId: thread._id, classification: object.classification });
     if (extracted.total !== undefined && extracted.total > 0) {
       await ctx.runMutation(internal.quotes.upsertFromMessage, {

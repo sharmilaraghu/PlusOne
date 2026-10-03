@@ -216,6 +216,7 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
   const setStatus = useMutation(api.threads.setStatus);
   const resolve = useMutation(api.threads.resolveAttention);
   const followUp = useMutation(api.outreach.sendFollowUpNow);
+  const block = useMutation(api.doNotContact.block);
   const markBooked = useMutation(api.slots.markBooked);
   const answer = useMutation(api.agent.answerForCouple);
   const send = useMutation(api.outreach.send);
@@ -253,6 +254,17 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
             )}
             {thread.status !== "booked" && thread.status !== "declined" && (
               <button className="btn-ghost btn-sm" onClick={() => void setStatus({ threadId, status: "declined" })}>Pass</button>
+            )}
+            {thread.status !== "booked" && vendor.email && (
+              <button
+                className="btn-quiet btn-sm"
+                title="For a vendor who has asked not to be emailed. PlusOne will never write to this address again, for any event."
+                onClick={() => {
+                  if (window.confirm(`Stop all email to ${vendor.name}? PlusOne will never write to this address again.`)) void block({ threadId });
+                }}
+              >
+                Don't contact again
+              </button>
             )}
             {thread.status !== "booked" && (
               <BookButton vendorName={vendor.name} onBook={(notify) => markBooked({ slotId: slot._id, vendorId: vendor._id, notify })} />
@@ -362,7 +374,11 @@ function ThreadView({ threadId, currency, canEdit }: { threadId: Id<"threads">; 
                 })}
               </ul>
             )}
-            {m.errorMessage && <p className="mt-2 text-xs text-bad">This one didn't send. Try again, or email them yourself.</p>}
+            {m.errorMessage && (
+              <p className="mt-2 text-xs text-bad">
+                {/^(Not sent:|PlusOne has )/.test(m.errorMessage) ? m.errorMessage : "This one didn't send. Try again, or email them yourself."}
+              </p>
+            )}
             {m.direction === "out" && m.status === "draft" && canEdit && (
               <div className="mt-3 flex justify-end">
                 <button

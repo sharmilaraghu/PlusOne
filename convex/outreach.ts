@@ -6,6 +6,7 @@ import type { Doc } from "./_generated/dataModel";
 import { requireMember } from "./lib/auth";
 import { messageDoc, vendorDoc } from "./lib/docs";
 import { emailPool } from "./lib/pools";
+import { isBlocked } from "./doNotContact";
 import { spend } from "./rateLimits";
 import { workflow } from "./workflows";
 
@@ -108,6 +109,10 @@ export const send = mutation({
         skipped.push(`${message.subject}: vendor has no email address yet`);
         continue;
       }
+      if (await isBlocked(ctx, message.toAddress)) {
+        skipped.push(`${message.subject}: they asked not to be contacted`);
+        continue;
+      }
       const idempotencyKey =
         message.idempotencyKey ?? (message.threadId ? `${message.threadId}:${message.kind}` : `${message._id}:${message.kind}`);
       await ctx.db.patch(messageId, { status: "queued", idempotencyKey });
@@ -158,6 +163,10 @@ export const sendAllForSlot = mutation({
     for (const { message, vendor } of drafts) {
       if (!message.toAddress) {
         skipped.push(`${vendor.name} has no email address yet`);
+        continue;
+      }
+      if (await isBlocked(ctx, message.toAddress)) {
+        skipped.push(`${vendor.name} asked not to be contacted`);
         continue;
       }
       const idempotencyKey =

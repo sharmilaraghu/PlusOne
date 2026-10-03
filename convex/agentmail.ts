@@ -7,6 +7,7 @@ import type { Id } from "./_generated/dataModel";
 import { internalAction, type ActionCtx } from "./_generated/server";
 import { extractEmail, slugify } from "./lib/text";
 import { hostsLabel } from "./lib/occasion";
+import { optOutFooter } from "./lib/optOut";
 import { outboundPause } from "./rateLimits";
 import { workflow } from "./workflows";
 
@@ -206,6 +207,10 @@ export const sendOutbound = internalAction({
       }
       if (!inboxId) throw new Error("No inbox for this event yet");
       if (!message.toAddress) throw new Error("Recipient has no email address");
+      // The last check before anything leaves: nobody who asked to be left alone is written to.
+      if (await ctx.runQuery(internal.doNotContact.check, { address: message.toAddress })) {
+        throw new Error("Not sent: they asked not to be contacted.");
+      }
       // Counted here, where mail really leaves, so follow-ups and automatic replies
       // are held to the same allowance as the Send button.
       const pause = await outboundPause(ctx, wedding._id);
@@ -218,8 +223,13 @@ export const sendOutbound = internalAction({
        * room, or removed at AgentMail entirely. Rather than fail a couple's email
        * because the address it was written from has gone, take a new one and send.
        */
+      // First contact and follow-ups are unsolicited, so they carry a way to stop them.
+      const bodyToSend =
+        message.kind === "inquiry" || message.kind === "follow_up"
+          ? message.bodyText + optOutFooter(hostsLabel(wedding))
+          : message.bodyText;
       const sendFrom = (id: string) =>
-        am.inboxes.messages.send(id, { to: [message.toAddress], subject: message.subject, text: message.bodyText });
+        am.inboxes.messages.send(id, { to: [message.toAddress], subject: message.subject, text: bodyToSend });
       const fresh = async () => {
         try {
           return await sendFrom(from);

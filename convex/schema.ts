@@ -416,6 +416,15 @@ export default defineSchema({
     .index("by_agentmailMessageId", ["agentmailMessageId"])
     .index("by_eventId", ["eventId"]),
 
+  /** Addresses PlusOne must never write to again, across every event. */
+  doNotContact: defineTable({
+    address: v.string(),
+    reason: v.union(v.literal("asked_to_stop"), v.literal("added_by_host")),
+    /** Where the request came from, for the record. */
+    weddingId: v.optional(v.id("weddings")),
+    threadId: v.optional(v.id("threads")),
+  }).index("by_address", ["address"]),
+
   contractChecks: defineTable(contractCheckFields).index("by_weddingId", ["weddingId"]),
 
   imports: defineTable(importFields).index("by_weddingId", ["weddingId"]),
