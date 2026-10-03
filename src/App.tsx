@@ -18,11 +18,13 @@ import { HowItWorksPage } from "./pages/HowItWorksPage";
 import { WeddingLayout } from "./components/WeddingLayout";
 import { GuestPage } from "./pages/GuestPage";
 import { AccountPage } from "./pages/AccountPage";
+import { MovedNotice } from "./components/MovedNotice";
 import { PrivacyPage } from "./pages/PrivacyPage";
 
 export default function App() {
   return (
     <>
+      <MovedNotice />
       <Routes>
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/join/:token" element={<JoinPage />} />
