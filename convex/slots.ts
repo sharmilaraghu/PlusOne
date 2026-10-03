@@ -88,7 +88,7 @@ export async function addSlotHelper(
   if (!Number.isFinite(args.budget) || args.budget < 0) throw new ConvexError("Budget must be a non-negative number.");
   for (const eventId of args.eventIds.slice(0, 20)) {
     const event = await ctx.db.get(eventId);
-    if (!event || event.weddingId !== args.weddingId) throw new ConvexError("Event does not belong to this wedding.");
+    if (!event || event.weddingId !== args.weddingId) throw new ConvexError("Event does not belong to this event.");
   }
   const slotId = await ctx.db.insert("vendorSlots", {
     weddingId: args.weddingId,
@@ -122,7 +122,7 @@ export async function updateSlotHelper(
     if (patch.eventIds.length === 0) throw new ConvexError("A vendor need has to cover at least one day.");
     for (const eventId of patch.eventIds.slice(0, 20)) {
       const event = await ctx.db.get(eventId);
-      if (!event || event.weddingId !== slot.weddingId) throw new ConvexError("Event does not belong to this wedding.");
+      if (!event || event.weddingId !== slot.weddingId) throw new ConvexError("Event does not belong to this event.");
     }
   }
   await ctx.db.patch(slot._id, patch);
@@ -230,7 +230,7 @@ export const markBooked = mutation({
     if (!slot) throw new ConvexError("Slot not found.");
     const { userId } = await requireMember(ctx, slot.weddingId, "planner");
     const vendor = await ctx.db.get(args.vendorId);
-    if (!vendor || vendor.weddingId !== slot.weddingId) throw new ConvexError("Vendor does not belong to this wedding.");
+    if (!vendor || vendor.weddingId !== slot.weddingId) throw new ConvexError("Vendor does not belong to this event.");
 
     await ctx.db.patch(args.slotId, { status: "booked", bookedVendorId: args.vendorId });
 

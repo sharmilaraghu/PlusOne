@@ -16,6 +16,19 @@ export const cultureTemplate = v.union(
 );
 export type CultureTemplate = Infer<typeof cultureTemplate>;
 
+/** What is being planned. A wedding also has a tradition (`cultureTemplate`); nothing else does. */
+export const eventType = v.union(
+  v.literal("wedding"),
+  v.literal("engagement"),
+  v.literal("birthday"),
+  v.literal("anniversary"),
+  v.literal("baby_shower"),
+  v.literal("graduation"),
+  v.literal("corporate"),
+  v.literal("party"),
+);
+export type EventType = Infer<typeof eventType>;
+
 export const slotStatus = v.union(
   v.literal("research"),
   v.literal("contacted"),

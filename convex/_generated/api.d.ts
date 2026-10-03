@@ -29,6 +29,7 @@ import type * as invites from "../invites.js";
 import type * as lib_auth from "../lib/auth.js";
 import type * as lib_budget from "../lib/budget.js";
 import type * as lib_docs from "../lib/docs.js";
+import type * as lib_occasion from "../lib/occasion.js";
 import type * as lib_pools from "../lib/pools.js";
 import type * as lib_svix from "../lib/svix.js";
 import type * as lib_templates from "../lib/templates.js";
@@ -76,6 +77,7 @@ declare const fullApi: ApiFromModules<{
   "lib/auth": typeof lib_auth;
   "lib/budget": typeof lib_budget;
   "lib/docs": typeof lib_docs;
+  "lib/occasion": typeof lib_occasion;
   "lib/pools": typeof lib_pools;
   "lib/svix": typeof lib_svix;
   "lib/templates": typeof lib_templates;

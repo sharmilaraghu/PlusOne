@@ -6,6 +6,7 @@ import { internal } from "./_generated/api";
 import type { Doc, Id } from "./_generated/dataModel";
 import { internalAction, type ActionCtx } from "./_generated/server";
 import { formatMoney, matchByName, truncate } from "./lib/text";
+import { anOccasion, hasCoHost, hostsLabel, isWedding, occasionNoun } from "./lib/occasion";
 import {
   replyClassification,
   rsvpStatus,
@@ -22,7 +23,7 @@ export const MODEL_SMART = process.env.OPENAI_MODEL_SMART ?? "gpt-5.6-terra";
 const PAGE_CHARS = 12_000;
 const nn = <T>(x: T | null | undefined): T | undefined => (x === null ? undefined : x);
 
-/** How formal the couple said the day is, turned into an instruction about tone. */
+/** How formal the hosts said the day is, turned into an instruction about tone. */
 function toneFor(wedding: Doc<"weddings">): string {
   switch (wedding.styleFormality) {
     case "relaxed":
@@ -37,9 +38,9 @@ function toneFor(wedding: Doc<"weddings">): string {
 function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[], dietary?: string | null): string {
   const lines = events.map((e) => `- ${e.name} on ${e.date} (~${e.guestCount} guests, budget ${formatMoney(e.budget, wedding.currency)})`);
   return [
-    `Couple: ${wedding.partnerA} & ${wedding.partnerB}`,
-    `Wedding: ${wedding.name}, ${wedding.startDate} to ${wedding.endDate}, ${wedding.city}${wedding.country ? `, ${wedding.country}` : ""}`,
-    `Tradition/template: ${wedding.template}. Total budget ${formatMoney(wedding.totalBudget, wedding.currency)}.`,
+    `Hosts: ${hostsLabel(wedding)}${hasCoHost(wedding) ? "" : " (one host; write as I, not we)"}`,
+    `Occasion: ${anOccasion(wedding)}, called "${wedding.name}", ${wedding.startDate} to ${wedding.endDate}, ${wedding.city}${wedding.country ? `, ${wedding.country}` : ""}`,
+    `${isWedding(wedding) ? `Tradition: ${wedding.template}. ` : ""}Total budget ${formatMoney(wedding.totalBudget, wedding.currency)}.`,
     wedding.styleVibes?.length ? `The feel they want: ${wedding.styleVibes.join(", ")}` : "",
     wedding.stylePalette ? `Colours: ${wedding.stylePalette}` : "",
     wedding.styleFormality ? `Formality: ${wedding.styleFormality}` : "",
@@ -55,7 +56,7 @@ function weddingBrief(wedding: Doc<"weddings">, events: Doc<"events">[], dietary
 
 // ---- onboarding -------------------------------------------------------------
 
-/** Reads whatever inspiration the couple gave (a page, their own words, pictures) into one brief. */
+/** Reads whatever inspiration the hosts gave (a page, their own words, pictures) into one brief. */
 export const summariseStyle = internalAction({
   args: {
     weddingId: v.id("weddings"),
@@ -71,7 +72,7 @@ export const summariseStyle = internalAction({
       if (url) urls.push(url);
     }
     const sources = [
-      args.notes ? `How the couple describe it:\n${truncate(args.notes, 2000)}` : "",
+      args.notes ? `How the hosts describe it:\n${truncate(args.notes, 2000)}` : "",
       args.markdown ? `Their inspiration page:\n${truncate(args.markdown, PAGE_CHARS)}` : "",
       urls.length ? `They also shared ${urls.length} mood-board picture${urls.length === 1 ? "" : "s"}, attached.` : "",
     ].filter(Boolean);
@@ -85,7 +86,7 @@ export const summariseStyle = internalAction({
             {
               type: "text",
               text:
-                "You are a wedding stylist. From the couple's inspiration below, write a 2-3 sentence style summary a " +
+                "You are an event stylist. From the hosts' inspiration below, write a 2-3 sentence style summary a " +
                 "vendor could act on: palette, mood, formality, cultural touches, must-haves. Plain text, no headings.\n\n" +
                 sources.join("\n\n"),
             },
@@ -135,12 +136,12 @@ export const planSearch = internalAction({
         budgetHint: z.string(),
       }),
       prompt:
-        "You turn a couple's request into web search queries that land on an INDIVIDUAL wedding vendor's OWN website " +
+        "You turn a host's request into web search queries that land on an INDIVIDUAL event vendor's OWN website " +
         "(not a directory, marketplace or listicle like The Knot, WeddingWire, Yelp, Zola, wedmegood). " +
         "Return exactly 3 short queries. Every query must name the city. Bias them towards a vendor's own site by using the " +
         "words a vendor writes on their own pages (e.g. \"studio\", \"packages\", \"book\", \"portfolio\") rather than " +
         "listing words (\"best\", \"top 10\", \"near me\"). Make the queries different from each other: one plain " +
-        "\"<vendor type> <city>\", one with a distinguishing detail drawn from the couple's own words about the feel " +
+        "\"<vendor type> <city>\", one with a distinguishing detail drawn from the hosts' own words about the feel " +
         "they want (their vibe words, colours or tradition) when those genuinely narrow the search, and one that includes " +
         "\"packages\" or \"pricing\" so the result page is likely to show numbers. " +
         "Also return the normalised vendor category, the city to search, and a one-line budget hint for this slot.\n\n" +
@@ -151,7 +152,7 @@ export const planSearch = internalAction({
           : "") +
         `${weddingBrief(wedding, events)}\n\nSlot: ${slot.title} (${slot.category}), budget ${formatMoney(slot.budget, wedding.currency)}\n` +
         (area ? `Neighbourhood to search: ${area}\n` : "") +
-        `Couple's request: "${args.query}"`,
+        `Hosts' request: "${args.query}"`,
     });
     // The location string every query must contain: neighbourhood first, then city.
     const city = area ? `${area} ${object.city || wedding.city}` : object.city || wedding.city;
@@ -164,7 +165,7 @@ export const planSearch = internalAction({
     const top3 = [...new Set(queries)].slice(0, 3);
     // Replace the last query rather than appending, or the slice below would drop it.
     if (!top3.some((q) => /packages|pricing|price/i.test(q))) {
-      top3[top3.length - 1] = `${slot.category} ${city} wedding packages pricing`.slice(0, 200);
+      top3[top3.length - 1] = `${slot.category} ${city} ${occasionNoun(wedding).toLowerCase()} packages pricing`.slice(0, 200);
     }
     return {
       queries: top3,
@@ -189,7 +190,7 @@ const cardSchema = z.object({
   capacity: z.string().nullable(),
   ratingText: z.string().nullable(),
   highlights: z.array(z.string()).max(6),
-  summary: z.string().describe("2 sentences for a couple comparing vendors"),
+  summary: z.string().describe("2 sentences for a host comparing vendors"),
 });
 
 export const buildCards = internalAction({
@@ -217,7 +218,7 @@ export const buildCards = internalAction({
         model: openai(MODEL_FAST),
         schema: cardSchema,
         prompt:
-          `Read this web page and extract a vendor card for a couple looking for: ${slot.title} (${slot.category}) ` +
+          `Read this web page and extract a vendor card for a host looking for: ${slot.title} (${slot.category}) ` +
           `in ${context.wedding.city}.\n` +
           `Set isVendor=false — and extract nothing else — when the page is any of: a directory or marketplace listing ` +
           `(The Knot, WeddingWire, Zola, Yelp, WedMeGood, Hitched), a blog post, a listicle ("best 10 ..."), a news or ` +
@@ -271,7 +272,7 @@ const rankingSchema = z.object({
 
 /**
  * Score every vendor on a slot from the evidence we actually scraped: rating and review
- * count, price against the slot budget, and fit with the couple's request. Writes
+ * count, price against the slot budget, and fit with the hosts' request. Writes
  * `score`, `rankReason` and marks the top three `isTopPick`.
  */
 export const rankVendors = internalAction({
@@ -335,11 +336,11 @@ export const rankVendors = internalAction({
       model: openai(MODEL_SMART),
       schema: rankingSchema,
       prompt:
-        `Rank these ${vendors.length} vendors for a couple's "${slot.title}" (${slot.category}) slot, budget ` +
-        `${formatMoney(slot.budget, currency)}, for this wedding:\n${weddingBrief(context.wedding, context.events)}\n\n` +
+        `Rank these ${vendors.length} vendors for a host's "${slot.title}" (${slot.category}) slot, budget ` +
+        `${formatMoney(slot.budget, currency)}, for this occasion:\n${weddingBrief(context.wedding, context.events)}\n\n` +
         `Score each one 0-100 using, in order of weight: (a) rating and how many reviews back it up, ` +
         `(b) price against the ${formatMoney(slot.budget, currency)} budget — under budget is good, no published price is a ` +
-        `mild unknown, well over budget is bad, (c) how well what they offer fits the couple's request and style.\n` +
+        `mild unknown, well over budget is bad, (c) how well what they offer fits the hosts' request and style.\n` +
         `Where a price is marked "per person" or "per hour", it is a rate, NOT a total: compare the total shown beside it ` +
         `to the budget, never the rate itself, and call it a per-person rate when you mention it.\n` +
         `A vendor with no public rating must NOT be pushed to the bottom for that alone — judge it on price and fit and say ` +
@@ -406,13 +407,13 @@ export const draftInquiries = internalAction({
         model: openai(MODEL_SMART),
         schema: z.object({ subject: z.string().max(70), bodyText: z.string() }),
         prompt:
-          "Write a warm, specific first inquiry email from a couple to a wedding vendor. Plain text only, no markdown, " +
-          "no placeholders in square brackets. Greet the vendor by name, give the wedding dates and city, list the events " +
+          "Write a warm, specific first inquiry email from the hosts to a vendor, about the occasion described below. Plain text only, no markdown, " +
+          "no placeholders in square brackets. Greet the vendor by name, say what the occasion is, give the dates and city, list the days " +
           "this vendor would cover with approximate guest counts, mention the budget range only if it helps, ask exactly 3 " +
           "specific questions (availability on the dates, pricing/packages for this scope, and one question tailored to what " +
-          "their website says they offer), and sign off with both partners' first names. Subject line under 70 characters.\n" +
+          "their website says they offer), and sign off with the hosts' first names exactly as the brief gives them. Subject line under 70 characters.\n" +
           `${toneFor(wedding)}\n` +
-          "If the couple named a feel or colours, mention them only where they genuinely help the vendor answer, never as decoration.\n\n" +
+          "If the hosts named a feel or colours, mention them only where they genuinely help the vendor answer, never as decoration.\n\n" +
           `${weddingBrief(wedding, events)}\n\nSlot: ${slot.title} (${slot.category}), budget ${formatMoney(slot.budget, wedding.currency)}\n` +
           `Vendor: ${vendor.name}${vendor.website ? ` (${vendor.website})` : ""}\n` +
           (vendor.summary ? `What we know about them: ${vendor.summary}\n` : "") +
@@ -447,8 +448,8 @@ export const draftFollowUp = internalAction({
       model: openai(MODEL_FAST),
       schema: z.object({ subject: z.string().max(70), bodyText: z.string() }),
       prompt:
-        `Write a short, friendly follow-up email (3-5 sentences, plain text) from ${wedding.partnerA} & ${wedding.partnerB} ` +
-        `to ${vendor.name} about ${slot.title} for their wedding on ${wedding.startDate} in ${wedding.city}. ` +
+        `Write a short, friendly follow-up email (3-5 sentences, plain text) from ${hostsLabel(wedding)} ` +
+        `to ${vendor.name} about ${slot.title} for their ${occasionNoun(wedding)} on ${wedding.startDate} in ${wedding.city}. ` +
         `This is follow-up number ${thread.followUpCount + 1}. Do not be pushy; restate the dates, say you are finalising ` +
         `vendors soon, and ask if they are available and what their pricing is. Sign off with first names.\n\n` +
         (lastOutbound ? `Previous email we sent:\nSubject: ${lastOutbound.subject}\n${truncate(lastOutbound.bodyText, 3000)}` : ""),
@@ -462,11 +463,11 @@ export const draftFollowUp = internalAction({
 
 /**
  * The line PlusOne never crosses on its own: anything that spends money, commits
- * the couple, or picks between options is theirs to decide.
+ * the hosts, or picks between options is theirs to decide.
  */
 const AGENT_RULES =
   "Rules you must follow:\n" +
-  "- Use only facts in the wedding brief or the couple's own answer. Never invent times, addresses, menus, " +
+  "- Use only facts in the brief or the hosts' own answer. Never invent times, addresses, menus, " +
   "headcounts, names or preferences.\n" +
   "- Never agree to book, sign, pay, place a deposit or hold, or accept a price. Never share phone numbers, " +
   "home addresses or payment details.\n" +
@@ -474,9 +475,9 @@ const AGENT_RULES =
   "how many guests and how severe, never a guest's name, and say more RSVPs may still come in.\n" +
   "- Mention money only if they asked about budget or price; then you may share the rough budget given below. " +
   "Never volunteer it.\n" +
-  "- Write in the couple's own voice (we, us, our), never about them in the third person.\n" +
-  "- Plain text, warm and brief, answering their questions in the order they asked. Sign off with both partners' " +
-  "first names. No subject line, no placeholders in brackets.";
+  "- Write in the hosts' own voice (we, us, our; or I, me, my when the brief names one host), never about them in the third person.\n" +
+  "- Plain text, warm and brief, answering their questions in the order they asked. Sign off with the hosts' " +
+  "first names as the brief gives them. No subject line, no placeholders in brackets.";
 
 /** "around $4,600" reads like a person's budget; "$4,614" reads like a spreadsheet's. */
 function roughMoney(amount: number, currency: string): string {
@@ -496,16 +497,16 @@ const vendorDecisionSchema = z.object({
   questionForCouple: z
     .string()
     .describe(
-      "when 'ask_couple': the one thing the couple must tell us, in plain words, naming the vendor and quoting " +
+      "when 'ask_couple': the one thing the hosts must tell us, in plain words, naming the vendor and quoting " +
         "any options and prices they gave; otherwise empty",
     ),
-  reason: z.string().describe("one short line on why, for the couple's activity feed"),
+  reason: z.string().describe("one short line on why, for the hosts' activity feed"),
 });
 export type VendorDecision = z.infer<typeof vendorDecisionSchema>;
 
 /**
  * Decide what to do with a vendor's question: answer it from what PlusOne already
- * knows, ask the couple the one thing only they can say, or let it be.
+ * knows, ask the hosts the one thing only they can say, or let it be.
  */
 export const decideVendorReply = internalAction({
   args: {
@@ -532,14 +533,14 @@ export const decideVendorReply = internalAction({
       model: openai(MODEL_SMART),
       schema: vendorDecisionSchema,
       prompt:
-        `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
+        `You handle email with the vendors for ${anOccasion(wedding)} on behalf of ${hostsLabel(wedding)}. ` +
         `${args.vendorName} (${args.slotTitle}) has just written back. Decide how to respond.\n\n${AGENT_RULES}\n` +
         `${toneFor(wedding)}\n\n${weddingBrief(wedding, events, dietary)}\n` +
         `Rough budget for ${args.slotTitle} (only if they asked): ${roughMoney(args.slotBudget, wedding.currency)}\n\n` +
         (args.conversation ? `Earlier in this conversation:\n${truncate(args.conversation, 6000)}\n\n` : "") +
         `Their latest email:\n${truncate(args.latest, PAGE_CHARS)}`,
     });
-    // Belt and braces: an "answer" with nothing to send is really a question for the couple.
+    // Belt and braces: an "answer" with nothing to send is really a question for the hosts.
     if (object.decision === "answer" && !object.reply.trim()) {
       return { ...object, decision: "ask_couple", questionForCouple: object.questionForCouple || object.reason };
     }
@@ -547,7 +548,7 @@ export const decideVendorReply = internalAction({
   },
 });
 
-/** Write the reply once the couple has answered what PlusOne could not. */
+/** Write the reply once the hosts have answered what PlusOne could not. */
 export const writeVendorReply = internalAction({
   args: {
     weddingId: v.id("weddings"),
@@ -568,10 +569,10 @@ export const writeVendorReply = internalAction({
       model: openai(MODEL_SMART),
       schema: z.object({ bodyText: z.string() }),
       prompt:
-        `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
+        `You handle email with the vendors for ${anOccasion(wedding)} on behalf of ${hostsLabel(wedding)}. ` +
         `Write to ${args.vendorName} (${args.slotTitle}). Answer anything they asked that is still open, and say what ` +
-        `the couple wants said. The couple has told you:\n` +
-        `"${truncate(args.coupleAnswer, 2000)}"\nPass that on faithfully; it is the couple's decision, so you may state ` +
+        `the hosts want said. The hosts have told you:\n` +
+        `"${truncate(args.coupleAnswer, 2000)}"\nPass that on faithfully; it is the hosts' decision, so you may state ` +
         `it, but do not go beyond it.\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n${weddingBrief(wedding, events, dietary)}\n` +
         `Rough budget for ${args.slotTitle} (only if they asked): ${roughMoney(args.slotBudget, wedding.currency)}\n\n` +
         (args.conversation ? `Earlier in this conversation:\n${truncate(args.conversation, 6000)}\n\n` : "") +
@@ -583,15 +584,15 @@ export const writeVendorReply = internalAction({
 
 const PURPOSES = {
   negotiate: (budget: string, quote: string) =>
-    `Their quote of ${quote} is above the couple's planned budget of ${budget} for this. Thank them for the quote, say ` +
+    `Their quote of ${quote} is above the hosts' planned budget of ${budget} for this. Thank them for the quote, say ` +
     `honestly that it is more than planned, and ask whether they have a package or a trimmed-down option that ` +
     `comes closer to ${budget}, and what would change. Warm, not haggling; no ultimatums; do not reject the quote.`,
   confirm: () =>
-    `The couple has chosen this vendor. Say they would love to go ahead, and ask what the next steps are to confirm ` +
-    `(contract, deposit, anything they need from the couple). Do not agree to any specific payment yourself.`,
+    `The hosts have chosen this vendor. Say they would love to go ahead, and ask what the next steps are to confirm ` +
+    `(contract, deposit, anything they need from the hosts). Do not agree to any specific payment yourself.`,
   decline: () =>
-    `The couple has gone with someone else for this. Thank them sincerely for their time and let them know ` +
-    `kindly that the couple has booked another vendor. Two or three sentences. Do not give reasons or name the other vendor.`,
+    `The hosts have gone with someone else for this. Thank them sincerely for their time and let them know ` +
+    `kindly that the hosts have booked another vendor. Two or three sentences. Do not give reasons or name the other vendor.`,
 } as const;
 
 /** One of PlusOne's own emails that move a conversation to its end. */
@@ -620,7 +621,7 @@ export const writeAgentEmail = internalAction({
       model: openai(MODEL_SMART),
       schema: z.object({ bodyText: z.string() }),
       prompt:
-        `You handle email with wedding vendors on behalf of ${wedding.partnerA} & ${wedding.partnerB}. ` +
+        `You handle email with the vendors for ${anOccasion(wedding)} on behalf of ${hostsLabel(wedding)}. ` +
         `Write to ${args.vendorName} (${args.slotTitle}). ${task}\n\n${AGENT_RULES}\n${toneFor(wedding)}\n\n` +
         `${weddingBrief(wedding, events, dietary)}\n\n` +
         (args.conversation ? `The conversation so far:\n${truncate(args.conversation, 6000)}` : ""),
@@ -640,13 +641,13 @@ const replySchema = z.object({
   availableOnDates: z
     .enum(["yes", "no", "unclear"])
     .describe(
-      "whether this reply says they are free on the couple's dates: 'yes' only if they confirm those dates, " +
+      "whether this reply says they are free on the hosts' dates: 'yes' only if they confirm those dates, " +
         "'no' if they say they are booked or cannot do them, 'unclear' if they never address the dates",
     ),
   includes: z.array(z.string()).max(12),
   excludes: z.array(z.string()).max(12),
   deadline: z.string().nullable().describe("any quote validity / hold deadline mentioned"),
-  summary: z.string().describe("1-2 sentence summary for the couple"),
+  summary: z.string().describe("1-2 sentence summary for the hosts"),
   redFlags: z.array(z.string()).max(6).describe("non-refundable deposits, vague scope, hidden fees, pressure tactics"),
   attachmentKind: z
     .enum(["none", "quote", "contract", "other"])
@@ -670,11 +671,11 @@ async function readVendorReply(args: {
 }): Promise<ReplyReading> {
   const { wedding, slot } = args;
   const text =
-    `A wedding vendor replied to a couple's inquiry. Classify the reply and extract pricing details. ` +
-    `The couple's dates are ${wedding.startDate} to ${wedding.endDate}; say whether this reply confirms those dates. ` +
-    `Couple's currency is ${wedding.currency}; the slot is ${slot?.title ?? "a vendor slot"} with a budget of ` +
+    `A vendor replied to the hosts' inquiry about ${anOccasion(wedding)}. Classify the reply and extract pricing details. ` +
+    `The hosts' dates are ${wedding.startDate} to ${wedding.endDate}; say whether this reply confirms those dates. ` +
+    `Hosts' currency is ${wedding.currency}; the slot is ${slot?.title ?? "a vendor slot"} with a budget of ` +
     `${slot ? formatMoney(slot.budget, wedding.currency) : "unknown"}. "quote" = they gave a price, in the email or in the ` +
-    `attachment; "question" = they need information from the couple before quoting; "declined" = unavailable or not ` +
+    `attachment; "question" = they need information from the hosts before quoting; "declined" = unavailable or not ` +
     `interested; "available" = available but no price yet.\n` +
     (args.pdf
       ? `They attached a PDF (${args.pdf.filename}). Read it as part of the reply: vendors often put the whole quote, ` +
@@ -808,7 +809,7 @@ const rsvpSchema = z.object({
       }),
     )
     .describe("every food allergy or intolerance mentioned anywhere in the email, even in passing or in a P.S."),
-  note: z.string().nullable().describe("anything else the couple should know, one line"),
+  note: z.string().nullable().describe("anything else the hosts should know, one line"),
 });
 
 export type RsvpReading = {
@@ -829,7 +830,7 @@ async function readRsvp(
     model: openai(MODEL_FAST),
     schema: rsvpSchema,
     prompt:
-      `A wedding guest replied to an RSVP email. Guest: ${guest.name}, invited for ${guest.partySize}. ` +
+      `A guest replied to an RSVP email. Guest: ${guest.name}, invited for ${guest.partySize}. ` +
       `Work out whether they are coming, how many people are actually attending, their food preferences, and ` +
       `every food allergy or intolerance.\n` +
       `Count the people the reply itself names or implies, and let that override the number they were invited for: ` +
@@ -917,9 +918,9 @@ const proposalSchema = z.object({
   budgetTarget: z
     .enum(["total", "event", "need"])
     .nullable()
-    .describe("for set_budget: the wedding total, one day, or one vendor need"),
+    .describe("for set_budget: the whole-event total, one day, or one vendor need"),
   eventName: z.string().nullable().describe("for set_budget on a day, and for add_event: the day's name"),
-  amount: z.number().nullable().describe("for set_budget: the new amount in the wedding's currency"),
+  amount: z.number().nullable().describe("for set_budget: the new amount in the event's currency"),
 
   // add_event
   date: z.string().nullable().describe("for add_event: the date as YYYY-MM-DD"),
@@ -927,12 +928,12 @@ const proposalSchema = z.object({
   budgetShare: z.number().nullable().describe("for add_event: roughly what share of the budget; a weight, not an amount"),
 
   // write_vendor
-  message: z.string().nullable().describe("for write_vendor: the email to send, in the couple's voice, signed off"),
+  message: z.string().nullable().describe("for write_vendor: the email to send, in the hosts' voice, signed off"),
   asWritten: z.boolean().nullable().describe("true only when they dictated the exact words to send"),
 });
 
 const assistantSchema = z.object({
-  answer: z.string().describe("the reply to show the couple, in plain words, 1-5 short paragraphs"),
+  answer: z.string().describe("the reply to show the hosts, in plain words, 1-5 short paragraphs"),
   proposals: z
     .array(proposalSchema)
     .max(3)
@@ -1043,7 +1044,7 @@ function resolveProposal(p: Proposal, board: BoardContext): Record<string, unkno
 /**
  * Answer one question about this wedding, and offer to do what they asked for.
  *
- * The assistant never acts on its own: anything it can do becomes a card the couple
+ * The assistant never acts on its own: anything it can do becomes a card the hosts
  * presses. That is the whole guard, so it applies to email too — the words are shown
  * before they go, which is what the vendor screen's confirmation always did.
  */
@@ -1072,19 +1073,19 @@ export const answerQuestion = internalAction({
         .map((t) => `- ${t.vendorName} (${t.slotTitle}): ${t.state}${t.hasEmail ? "" : ", no email address"}`)
         .join("\n");
       const notes = (wedding.wedding.assistantNotes ?? []).map((n) => `- ${n}`).join("\n");
-      const conversation = board.recent.map((m) => `${m.role === "user" ? "Couple" : "You"}: ${m.content}`).join("\n");
+      const conversation = board.recent.map((m) => `${m.role === "user" ? "Hosts" : "You"}: ${m.content}`).join("\n");
 
       const { object } = await generateObject({
         model: openai(MODEL_SMART),
         schema: assistantSchema,
         prompt:
-          `You are PlusOne, a calm and competent wedding planning assistant talking to the couple whose plan is below. ` +
+          `You are PlusOne, a calm and competent event planning assistant talking to the hosts whose plan is below. ` +
           `Answer from their plan first; you may add general knowledge about weddings and traditions, but never invent ` +
           `numbers, vendors, guests or quotes that are not in the plan. Be warm and brief, use plain words, and give one ` +
           `clear next step when there is one.\n\n` +
           `You can offer to do six things, as proposals: add a guest, add a vendor need, search the web for vendors for ` +
           `an existing need, change a budget (the total, one day, or one need), add a day to the plan, or write to a ` +
-          `vendor you are already emailing. You never do any of them yourself — each becomes a card the couple presses ` +
+          `vendor you are already emailing. You never do any of them yourself — each becomes a card the hosts presses ` +
           `to confirm, and they can edit it first. Only propose what they clearly asked for, at most two or three at a ` +
           `time, and say in one line what you are offering. Name an existing need, day or vendor EXACTLY as it appears ` +
           `below, or the card cannot be made.\n` +
@@ -1137,13 +1138,13 @@ export const answerQuestion = internalAction({
   },
 });
 const contractSchema = z.object({
-  summary: z.string().describe("two or three plain sentences: what this agreement commits the couple to"),
+  summary: z.string().describe("two or three plain sentences: what this agreement commits the hosts to"),
   flags: z
     .array(
       z.object({
         severity: z.enum(["low", "medium", "high"]),
         clause: z.string().describe("the sentence or phrase from the contract, quoted, that this is about"),
-        why: z.string().describe("one plain sentence on what it means for the couple"),
+        why: z.string().describe("one plain sentence on what it means for the hosts"),
       }),
     )
     .max(8),
@@ -1153,7 +1154,7 @@ const contractSchema = z.object({
  * Read a forwarded contract and say plainly what is worth knowing.
  *
  * Every flag has to quote the sentence it came from: a red flag nobody can trace back
- * to the page is worse than no flag at all, because the couple cannot check it.
+ * to the page is worse than no flag at all, because the hosts cannot check it.
  */
 export const checkContract = internalAction({
   args: { contractCheckId: v.id("contractChecks") },
@@ -1176,7 +1177,7 @@ export const checkContract = internalAction({
               {
                 type: "text",
                 text:
-                  `This is a wedding vendor contract a couple forwarded to their planning inbox. Write a short plain-English ` +
+                  `This is a vendor contract the hosts forwarded to their planning inbox. Write a short plain-English ` +
                   `summary, then flag what they should know before signing: cancellation rules, what happens if they move the ` +
                   `date, overtime charges, the deposit and whether it is refundable, and what happens if the vendor cannot ` +
                   `attend. Quote the exact sentence each flag comes from — never paraphrase it into the clause field, and ` +

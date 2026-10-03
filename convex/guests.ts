@@ -6,6 +6,7 @@ import { logActivity, requireMember } from "./lib/auth";
 import { guestDoc, weddingDoc } from "./lib/docs";
 import { emailPool } from "./lib/pools";
 import { importStatus, rsvpStatus } from "./lib/validators";
+import { hasCoHost, hostsLabel, occasionNoun } from "./lib/occasion";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -53,7 +54,7 @@ export async function addGuestHelper(
   } else {
     for (const eventId of eventIds.slice(0, 20)) {
       const event = await ctx.db.get(eventId);
-      if (!event || event.weddingId !== weddingId) throw new ConvexError("Event does not belong to this wedding.");
+      if (!event || event.weddingId !== weddingId) throw new ConvexError("Event does not belong to this event.");
     }
   }
   return await ctx.db.insert("guests", {
@@ -163,7 +164,7 @@ export const sendInvites = mutation({
     const { wedding } = await requireMember(ctx, args.weddingId, "planner");
     if (args.guestIds.length > 50) throw new ConvexError("Send to at most 50 guests at a time.");
     const fromAddress = wedding.inboxAddress ?? process.env.AGENTMAIL_FALLBACK_INBOX_ID;
-    if (!fromAddress) throw new ConvexError("The wedding inbox is not ready yet. Try again in a moment.");
+    if (!fromAddress) throw new ConvexError("The event inbox is not ready yet. Try again in a moment.");
     const events = (
       await ctx.db
         .query("events")
@@ -182,12 +183,12 @@ export const sendInvites = mutation({
       const lines = invited.map((e) => `  • ${e.name} — ${e.date}`).join("\n");
       const bodyText =
         `Hi ${guest.name.split(" ")[0]},\n\n` +
-        `${wedding.partnerA} & ${wedding.partnerB} would love to have you at their wedding in ${wedding.city}` +
+        `${hostsLabel(wedding)} would love to have you at ${hasCoHost(wedding) ? "their" : "the"} ${occasionNoun(wedding)} in ${wedding.city}` +
         ` (${wedding.startDate} to ${wedding.endDate}).\n\n` +
         (lines ? `You're invited to:\n${lines}\n\n` : "") +
         `Just reply to this email with "yes" or "no", how many of your party of ${guest.partySize} will attend, ` +
         `and any dietary needs. We'll take care of the rest.\n\n` +
-        `With love,\n${wedding.partnerA} & ${wedding.partnerB}`;
+        `With love,\n${hostsLabel(wedding)}`;
       const round = (guest.lastInvitedAt ? 2 : 1);
       const messageId = await ctx.db.insert("messages", {
         weddingId: args.weddingId,

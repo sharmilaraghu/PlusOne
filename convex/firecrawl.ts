@@ -630,7 +630,7 @@ export const scrapeVendor = internalAction({
         {
           type: "json",
           schema: VENDOR_JSON_SCHEMA,
-          prompt: "Extract this wedding vendor's business name, contact email, phone, starting price, packages, capacity and service area.",
+          prompt: "Extract this vendor's business name, contact email, phone, starting price, packages, capacity and service area.",
         },
       ],
       onlyMainContent: false,

@@ -9,14 +9,14 @@ import { INBOX_READY_TEXT } from "./activity";
 import { eventDoc, weddingDoc } from "./lib/docs";
 import {
   EVENT_COLORS,
-  TEMPLATE_EVENTS,
+  eventsFor,
+  slotsFor,
   allocateSlotBudgets,
-  defaultSlotsFor,
   spreadDayIndexes,
   splitByWeights,
 } from "./lib/templates";
 import { addDays, daysBetween } from "./lib/text";
-import { cultureTemplate, sendMode, styleFormality, role } from "./lib/validators";
+import { cultureTemplate, eventType, sendMode, styleFormality, role } from "./lib/validators";
 import { workflow } from "./workflows";
 
 export const listMine = query({
@@ -191,6 +191,8 @@ const createArgs = {
     currency: v.string(),
     totalBudget: v.number(),
     template: cultureTemplate,
+    /** What kind of occasion this is. Omitted means a wedding. */
+    eventType: v.optional(eventType),
     inspirationUrl: v.optional(v.string()),
     inspirationNotes: v.optional(v.string()),
     inspirationImages: v.optional(v.array(v.id("_storage"))),
@@ -289,6 +291,7 @@ export async function insertWedding(
       currency: args.currency.toUpperCase(),
       totalBudget: args.totalBudget,
       template: args.template,
+      eventType: args.eventType,
       inspirationUrl: args.inspirationUrl,
       inspirationNotes: args.inspirationNotes?.trim().slice(0, 2000) || undefined,
       inspirationImages: images.length ? images : undefined,
@@ -321,7 +324,7 @@ export async function insertWedding(
       });
       if (plan.every((e) => e.weight === 0)) plan = plan.map((e) => ({ ...e, weight: 1 }));
     } else {
-      const tpl = TEMPLATE_EVENTS[args.template];
+      const tpl = eventsFor(args.eventType, args.template);
       const dayIndexes = spreadDayIndexes(tpl.length, totalDays);
       plan = tpl.map((e, i) => ({
         ...e,
@@ -362,7 +365,7 @@ export async function insertWedding(
             booked: n.booked,
             committed: Number.isFinite(n.committed) && (n.committed ?? 0) > 0 ? n.committed : undefined,
           }))
-        : defaultSlotsFor(args.template);
+        : slotsFor(args.eventType, args.template);
     const slotPlans = templateSlots.map((slot) => {
       const matchedIndexes = slot.eventNames
         ? eventNames.map((n, i) => (slot.eventNames!.includes(n) ? i : -1)).filter((i) => i >= 0)
@@ -404,7 +407,7 @@ export async function insertWedding(
       weddingId,
       actorUserId: userId,
       type: "wedding_created",
-      text: `created the wedding "${args.name.trim()}" (${plan.length} events in ${args.city.trim()}).`,
+      text: `created "${args.name.trim()}" (${plan.length} ${plan.length === 1 ? "day" : "days"} in ${args.city.trim()}).`,
     });
     return weddingId;
 }

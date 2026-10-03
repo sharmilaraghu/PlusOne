@@ -103,7 +103,7 @@ async function queue(
     .withIndex("by_threadId", (q) => q.eq("threadId", thread._id))
     .order("desc")
     .first();
-  const base = last?.subject.replace(/^(re:\s*)+/i, "") ?? "Our wedding";
+  const base = last?.subject.replace(/^(re:\s*)+/i, "") ?? "Our event";
   // Review mode holds PlusOne's words for the couple to read first, unless they
   // wrote the substance themselves just now.
   const review = wedding.sendMode === "review" && !args.sendNow;

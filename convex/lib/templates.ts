@@ -1,4 +1,4 @@
-import type { CultureTemplate } from "./validators";
+import type { CultureTemplate, EventType } from "./validators";
 
 export type TemplateEvent = {
   name: string;
@@ -68,6 +68,99 @@ export const TEMPLATE_EVENTS: Record<CultureTemplate, TemplateEvent[]> = {
   ],
   custom: [{ name: "Ceremony", weight: 1, guestCount: 100 }],
 };
+
+/** The days of every occasion that is not a wedding. Most are one day; all can be added to. */
+export const TYPE_EVENTS: Record<Exclude<EventType, "wedding">, TemplateEvent[]> = {
+  engagement: [{ name: "Engagement party", weight: 1, guestCount: 60 }],
+  birthday: [{ name: "Birthday party", weight: 1, guestCount: 40 }],
+  anniversary: [{ name: "Anniversary dinner", weight: 1, guestCount: 50 }],
+  baby_shower: [{ name: "Baby shower", weight: 1, guestCount: 30 }],
+  graduation: [{ name: "Graduation party", weight: 1, guestCount: 50 }],
+  corporate: [{ name: "Team event", weight: 1, guestCount: 40 }],
+  party: [{ name: "Party", weight: 1, guestCount: 40 }],
+};
+
+/** Who each kind of occasion usually needs, with a share of the budget for each. */
+export const TYPE_SLOTS: Record<Exclude<EventType, "wedding">, TemplateSlot[]> = {
+  engagement: [
+    { category: "Venue", title: "Venue", pct: 30 },
+    { category: "Catering", title: "Catering", pct: 30 },
+    { category: "Photographer", title: "Photography", pct: 12 },
+    { category: "Decor & Florals", title: "Decor & Florals", pct: 12 },
+    { category: "Music/DJ", title: "Music / DJ", pct: 8 },
+    { category: "Cake", title: "Cake & desserts", pct: 8 },
+  ],
+  birthday: [
+    { category: "Venue", title: "Venue", pct: 30 },
+    { category: "Catering", title: "Catering", pct: 30 },
+    { category: "Decor & Florals", title: "Decorations", pct: 12 },
+    { category: "Entertainment", title: "Music or entertainment", pct: 12 },
+    { category: "Cake", title: "Cake", pct: 8 },
+    { category: "Photographer", title: "Photography", pct: 8 },
+  ],
+  anniversary: [
+    { category: "Venue", title: "Venue", pct: 30 },
+    { category: "Catering", title: "Catering", pct: 35 },
+    { category: "Decor & Florals", title: "Decor & Florals", pct: 12 },
+    { category: "Photographer", title: "Photography", pct: 10 },
+    { category: "Music/DJ", title: "Music / DJ", pct: 8 },
+    { category: "Cake", title: "Cake", pct: 5 },
+  ],
+  baby_shower: [
+    { category: "Venue", title: "Venue", pct: 30 },
+    { category: "Catering", title: "Catering", pct: 35 },
+    { category: "Decor & Florals", title: "Decorations", pct: 15 },
+    { category: "Cake", title: "Cake & desserts", pct: 10 },
+    { category: "Photographer", title: "Photography", pct: 10 },
+  ],
+  graduation: [
+    { category: "Venue", title: "Venue", pct: 30 },
+    { category: "Catering", title: "Catering", pct: 35 },
+    { category: "Decor & Florals", title: "Decorations", pct: 10 },
+    { category: "Music/DJ", title: "Music / DJ", pct: 10 },
+    { category: "Photographer", title: "Photography", pct: 10 },
+    { category: "Cake", title: "Cake", pct: 5 },
+  ],
+  corporate: [
+    { category: "Venue", title: "Venue", pct: 35 },
+    { category: "Catering", title: "Catering", pct: 35 },
+    { category: "AV & sound", title: "AV & sound", pct: 10 },
+    { category: "Photographer", title: "Photography", pct: 8 },
+    { category: "Transport", title: "Transport", pct: 7 },
+    { category: "Entertainment", title: "Entertainment", pct: 5 },
+  ],
+  party: [
+    { category: "Venue", title: "Venue", pct: 30 },
+    { category: "Catering", title: "Catering", pct: 35 },
+    { category: "Music/DJ", title: "Music / DJ", pct: 15 },
+    { category: "Decor & Florals", title: "Decorations", pct: 12 },
+    { category: "Bar", title: "Bar & drinks", pct: 8 },
+  ],
+};
+
+/** A sensible starting budget in US dollars for each kind of occasion; the host changes it freely. */
+export const DEFAULT_BUDGET: Record<EventType, number> = {
+  wedding: 40000,
+  engagement: 5000,
+  birthday: 2500,
+  anniversary: 4000,
+  baby_shower: 1500,
+  graduation: 2500,
+  corporate: 8000,
+  party: 2000,
+};
+
+/** The days an occasion starts with: a wedding's come from its tradition, the rest from their type. */
+export function eventsFor(eventType: EventType | undefined, template: CultureTemplate): TemplateEvent[] {
+  if (!eventType || eventType === "wedding") return TEMPLATE_EVENTS[template] ?? TEMPLATE_EVENTS.custom;
+  return TYPE_EVENTS[eventType];
+}
+
+/** The vendor needs an occasion starts with. */
+export function slotsFor(eventType: EventType | undefined, template: CultureTemplate): TemplateSlot[] {
+  if (!eventType || eventType === "wedding") return defaultSlotsFor(template);
+  return TYPE_SLOTS[eventType];
+}
 
 const PARTY_EVENTS = ["Sangeet", "Reception", "Walima", "Welcome Party", "Ceremony & Reception (Chuppah)"];
 
@@ -153,14 +246,14 @@ export function splitByWeights(total: number, weights: number[]): number[] {
 }
 
 /**
- * Extra vendor needs a couple can add themselves, beyond what their tradition
- * creates. Shown as suggestions on the vendors screen.
+ * Extra vendor needs a host can add themselves, beyond what their kind of occasion
+ * starts with. Shown as suggestions on the vendors screen.
  */
 export const SUGGESTED_CATEGORIES: { category: string; title: string; hint: string }[] = [
   { category: "Live band", title: "Live band", hint: "A band for the reception or party" },
   { category: "Live band", title: "Ceremony musicians", hint: "Strings, harp, choir or a singer for the ceremony" },
   { category: "Music/DJ", title: "DJ", hint: "A DJ for dancing" },
-  { category: "Cake", title: "Cake & desserts", hint: "Wedding cake, dessert table" },
+  { category: "Cake", title: "Cake & desserts", hint: "A cake or a dessert table" },
   { category: "Transport", title: "Transport", hint: "Cars or coaches for you and your guests" },
   { category: "Stationery", title: "Invitations & stationery", hint: "Invites, menus, signage" },
   { category: "Celebrant", title: "Celebrant or officiant", hint: "Who leads the ceremony" },

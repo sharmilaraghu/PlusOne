@@ -311,7 +311,7 @@ async function seedDemo(ctx: MutationCtx, userId: Id<"users">): Promise<Id<"wedd
   // ---- What the activity feed would have shown along the way. --------------------
   for (const text of [
     "PlusOne found 2 venues and ranked them for 120 guests outdoors.",
-    "PlusOne emailed 2 venues, 3 photographers and 2 caterers from your wedding inbox.",
+    "PlusOne emailed 2 venues, 3 photographers and 2 caterers from your event inbox.",
     "The Oak Barn at Driftwood quoted $12,000; Golden Hour Photo Co. quoted $3,900.",
     "Barton Creek Studios quoted $6,200, over budget, so PlusOne asked whether they have something closer to $4,500.",
     "PlusOne answered Salt & Smoke's questions about the date, venue and guest count.",

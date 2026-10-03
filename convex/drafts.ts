@@ -50,7 +50,7 @@ export const save = mutation({
     if (args.state.length > MAX_STATE_CHARS) throw new ConvexError("That's too much to save in one go.");
     if (args.pictures.length > MAX_PICTURES) throw new ConvexError(`Up to ${MAX_PICTURES} pictures, please.`);
     const fields = {
-      name: args.name.trim().slice(0, 200) || "Our wedding",
+      name: args.name.trim().slice(0, 200) || "Our event",
       step: Math.max(0, Math.min(10, Math.floor(args.step))),
       state: args.state,
       pictures: args.pictures,

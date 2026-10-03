@@ -104,7 +104,7 @@ export async function addEventHelper(
     .query("events")
     .withIndex("by_weddingId", (q) => q.eq("weddingId", weddingId))
     .take(50);
-  if (existing.length >= 20) throw new ConvexError("A wedding can have at most 20 events.");
+  if (existing.length >= 20) throw new ConvexError("An event can have at most 20 days.");
   const order = existing.length;
   const eventId = await ctx.db.insert("events", {
     weddingId,
@@ -247,7 +247,7 @@ export const setBudgets = mutation({
   handler: async (ctx, args) => {
     const { userId } = await requireMember(ctx, args.weddingId, "planner");
     if (args.allocations.length === 0) throw new ConvexError("Tell us how to split the budget first.");
-    if (args.allocations.length > 20) throw new ConvexError("A wedding can have at most 20 functions.");
+    if (args.allocations.length > 20) throw new ConvexError("An event can have at most 20 days.");
 
     const weights = new Map<Id<"events">, number>();
     for (const a of args.allocations) {
@@ -256,7 +256,7 @@ export const setBudgets = mutation({
       }
       const event = await ctx.db.get(a.eventId);
       if (!event || event.weddingId !== args.weddingId) {
-        throw new ConvexError("One of those functions isn't part of this wedding.");
+        throw new ConvexError("One of those functions isn't part of this event.");
       }
       weights.set(a.eventId, a.budget);
     }

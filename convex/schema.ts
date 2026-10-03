@@ -10,6 +10,7 @@ import {
   chatStatus,
   contractStatus,
   cultureTemplate,
+  eventType,
   extractedValidator,
   flagSeverity,
   importStatus,
@@ -46,6 +47,8 @@ export const weddingFields = {
   currency: v.string(),
   totalBudget: v.number(),
   template: cultureTemplate,
+  /** What kind of occasion this is. Missing on anything created before event types: a wedding. */
+  eventType: v.optional(eventType),
   styleSummary: v.optional(v.string()),
   inspirationUrl: v.optional(v.string()),
   /** Inspiration in the couple's own words, when there is no link to point at. */

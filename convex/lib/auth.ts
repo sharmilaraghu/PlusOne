@@ -27,12 +27,12 @@ export async function requireMember(
     .query("members")
     .withIndex("by_weddingId_and_userId", (q) => q.eq("weddingId", weddingId).eq("userId", userId))
     .unique();
-  if (!member) throw new ConvexError("You are not a member of this wedding.");
+  if (!member) throw new ConvexError("You are not a member of this event.");
   if (ROLE_RANK[member.role] < ROLE_RANK[minRole]) {
     throw new ConvexError(`This action requires the ${minRole} role (you are a ${member.role}).`);
   }
   const wedding = await ctx.db.get(weddingId);
-  if (!wedding) throw new ConvexError("Wedding not found.");
+  if (!wedding) throw new ConvexError("Event not found.");
   return { userId, member, wedding };
 }
 

@@ -105,7 +105,7 @@ export const addManual = mutation({
   handler: async (ctx, args) => {
     const { userId } = await requireMember(ctx, args.weddingId, "planner");
     const slot = await ctx.db.get(args.slotId);
-    if (!slot || slot.weddingId !== args.weddingId) throw new ConvexError("Slot does not belong to this wedding.");
+    if (!slot || slot.weddingId !== args.weddingId) throw new ConvexError("Slot does not belong to this event.");
     const email = args.email?.trim().toLowerCase();
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new ConvexError("That does not look like an email address.");
     const website = args.website ? (canonicalWebsite(args.website) ?? undefined) : undefined;

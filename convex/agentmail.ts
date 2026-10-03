@@ -6,6 +6,7 @@ import { internal } from "./_generated/api";
 import type { Id } from "./_generated/dataModel";
 import { internalAction, type ActionCtx } from "./_generated/server";
 import { extractEmail, slugify } from "./lib/text";
+import { hostsLabel } from "./lib/occasion";
 import { workflow } from "./workflows";
 
 const am = new AgentMailClient({ apiKey: process.env.AGENTMAIL_API_KEY });
@@ -94,7 +95,8 @@ export const createInbox = internalAction({
     // existing one is kept, which also makes workflow replays safe.
     if (wedding.inboxId && !args.replace) return wedding.inboxId;
     const shortId = wedding._id.slice(-6).toLowerCase().replace(/[^a-z0-9]/g, "");
-    const username = `${slugify(wedding.partnerA)}-and-${slugify(wedding.partnerB)}-${shortId}`.replace(/-+/g, "-").slice(0, 60);
+    const names = [wedding.partnerA, wedding.partnerB].map((n) => slugify(n)).filter(Boolean).join("-and-") || "event";
+    const username = `${names}-${shortId}`.replace(/-+/g, "-").slice(0, 60);
     // On a small plan the limit is reached quickly, and a couple with no inbox cannot be
     // written to at all — so make room before asking, and share the fallback rather than
     // fail if there is genuinely nothing to give up.
@@ -106,7 +108,7 @@ export const createInbox = internalAction({
       const inbox = await am.inboxes.create({
         username,
         domain: process.env.AGENTMAIL_INBOX_DOMAIN || undefined,
-        displayName: `${wedding.partnerA} & ${wedding.partnerB}`,
+        displayName: hostsLabel(wedding),
         clientId: `plusone-${wedding._id}`,
       });
       inboxId = inbox.inboxId;
@@ -201,7 +203,7 @@ export const sendOutbound = internalAction({
         if (message.guestId) await ctx.runMutation(internal.guests.markInvited, { guestId: message.guestId, at: sentAt });
         return null;
       }
-      if (!inboxId) throw new Error("No AgentMail inbox for this wedding yet");
+      if (!inboxId) throw new Error("No inbox for this event yet");
       if (!message.toAddress) throw new Error("Recipient has no email address");
       const replyTo = message.kind === "inquiry" ? undefined : thread?.lastInboundMessageId;
       let from = inboxId;
@@ -218,7 +220,7 @@ export const sendOutbound = internalAction({
           return await sendFrom(from);
         } catch (err) {
           if (!missingInbox(err)) throw err;
-          console.warn("the wedding's inbox is gone at AgentMail; taking a new one");
+          console.warn("the event's inbox is gone at the mail provider; taking a new one");
           const replacement = await ctx.runAction(internal.agentmail.createInbox, {
             weddingId: wedding._id,
             replace: true,
@@ -286,7 +288,7 @@ export const sendInvite = internalAction({
     const base = (process.env.SITE_URL ?? process.env.CONVEX_SITE_URL ?? "").replace(/\/$/, "");
     const link = `${base}/join/${invite.token}`;
     const text =
-      `Hi,\n\n${inviterLabel} invited you to help plan ${wedding.name} (${wedding.partnerA} & ${wedding.partnerB}) on PlusOne as a ${invite.role}.\n\n` +
+      `Hi,\n\n${inviterLabel} invited you to help plan ${wedding.name} (${hostsLabel(wedding)}) on PlusOne as a ${invite.role}.\n\n` +
       `Open this link to join: ${link}\n\nSee you there!`;
     try {
       const result = await am.inboxes.messages.send(inboxId, {

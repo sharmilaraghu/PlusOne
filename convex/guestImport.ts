@@ -56,7 +56,7 @@ const guestSchema = z.object({
       }),
     )
     .max(MAX_ROWS),
-  note: z.string().describe("one line for the couple: what was read, and anything skipped or unclear"),
+  note: z.string().describe("one line for the host: what was read, and anything skipped or unclear"),
 });
 
 /** Read whatever the couple gave us into a list they can check before it becomes guests. */
@@ -86,7 +86,7 @@ export const read = internalAction({
       if (!text.trim() && !pdf) throw new Error("There was nothing to read");
 
       const instruction =
-        "This is a couple's wedding guest list. Read every person or household in it and return them as rows. " +
+        "This is a host's guest list for an event. Read every person or household in it and return them as rows. " +
         "Names and email addresses are what matter; keep an email exactly as written and never invent one. " +
         "Skip headers, totals, blank rows and anything that is not a guest. A row like \"Mr & Mrs Bennett (2)\" or " +
         "\"Olivia Carter + guest\" is one row with a party size of 2. Keep the order of the list.";

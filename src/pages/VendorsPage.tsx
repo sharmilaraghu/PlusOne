@@ -1,3 +1,4 @@
+import { anOccasion } from "../../convex/lib/occasion";
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
@@ -128,10 +129,9 @@ function SlotPanel({
 
   // The couple's own words about the day, so the search starts from their style, not just the category.
   const styleWords = [...(wedding.styleVibes ?? []).slice(0, 2), wedding.stylePalette ?? ""].filter(Boolean).join(", ").toLowerCase();
-  const tradition = wedding.template === "western" || wedding.template === "custom" ? "" : `${wedding.template} `;
   const defaultQuery = [
     `${slot.category} in ${wedding.area ? `${wedding.area}, ` : ""}${wedding.city}`,
-    `for a ${tradition}wedding${styleWords ? ` that feels ${styleWords}` : ""}`,
+    `for ${anOccasion(wedding)}${styleWords ? ` that feels ${styleWords}` : ""}`,
     `under ${money(slot.budget, wedding.currency)}`,
   ].join(" ");
   const [query, setQuery] = useState(defaultQuery);

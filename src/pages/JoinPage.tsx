@@ -37,7 +37,7 @@ export function JoinPage() {
           <div className="card max-w-md p-8 text-center">
             <p className="display text-2xl">{preview.weddingName}</p>
             <p className="mt-2 text-sm text-muted">
-              {preview.partnerA} and {preview.partnerB} invited you as a <span className="font-medium text-ink">{preview.role}</span>.
+              {[preview.partnerA, preview.partnerB].filter((n) => n.trim()).join(" and ")} invited you as a <span className="font-medium text-ink">{preview.role}</span>.
             </p>
             {error && <p role="alert" className="mt-3 text-sm text-bad">{error}</p>}
             <button

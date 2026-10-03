@@ -5,6 +5,7 @@ import { internalQuery, mutation, query } from "./_generated/server";
 import { logActivity, requireMember, requireUserId } from "./lib/auth";
 import { inviteDoc, weddingDoc } from "./lib/docs";
 import { role } from "./lib/validators";
+import { hostsLabel } from "./lib/occasion";
 
 export const create = mutation({
   args: { weddingId: v.id("weddings"), role, email: v.optional(v.string()) },
@@ -95,6 +96,6 @@ export const getInternal = internalQuery({
     const wedding = await ctx.db.get(invite.weddingId);
     if (!wedding) return null;
     const inviter = await ctx.db.get(invite.createdBy);
-    return { invite, wedding, inviterLabel: inviter?.name ?? inviter?.email ?? `${wedding.partnerA} & ${wedding.partnerB}` };
+    return { invite, wedding, inviterLabel: inviter?.name ?? inviter?.email ?? hostsLabel(wedding) };
   },
 });

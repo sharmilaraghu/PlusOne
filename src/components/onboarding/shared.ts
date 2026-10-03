@@ -1,5 +1,5 @@
-import { SUGGESTED_CATEGORIES, TEMPLATE_EVENTS, defaultSlotsFor, splitByWeights } from "../../../convex/lib/templates";
-import type { CultureTemplate } from "../../../convex/lib/validators";
+import { SUGGESTED_CATEGORIES, eventsFor, slotsFor, splitByWeights } from "../../../convex/lib/templates";
+import type { CultureTemplate, EventType } from "../../../convex/lib/validators";
 import { addDaysIso, daysBetweenIso } from "../../lib/format";
 
 export type FunctionRow = { key: string; name: string; date: string; guestCount: number; budget: number };
@@ -21,13 +21,13 @@ export const VIBES = [
 
 export const CURRENCIES = ["USD", "INR", "GBP", "EUR", "CAD", "AUD", "AED", "SGD"];
 
-/** Prefill the function rows from a tradition, spread across the couple's dates. */
-export function rowsForTemplate(template: CultureTemplate, startDate: string, endDate: string, totalBudget: number): FunctionRow[] {
-  const events = TEMPLATE_EVENTS[template] ?? TEMPLATE_EVENTS.custom;
+/** Prefill the days from the kind of occasion (and a wedding's tradition), spread across the dates. */
+export function rowsForTemplate(template: CultureTemplate, startDate: string, endDate: string, totalBudget: number, eventType?: EventType): FunctionRow[] {
+  const events = eventsFor(eventType, template);
   const span = Math.max(0, daysBetweenIso(startDate, endDate));
   const budgets = splitByWeights(totalBudget, events.map((e) => e.weight));
   return events.map((e, i) => ({
-    key: `${template}-${i}-${e.name}`,
+    key: `${eventType ?? "wedding"}-${template}-${i}-${e.name}`,
     name: e.name,
     date: addDaysIso(startDate, events.length <= span + 1 ? i : Math.min(span, i)),
     guestCount: e.guestCount,
@@ -41,7 +41,7 @@ export function rebalance(rows: FunctionRow[], total: number): FunctionRow[] {
 }
 
 /**
- * One row per vendor the couple might need, prefilled from their tradition.
+ * One row per vendor the host might need, prefilled from the kind of occasion.
  *
  * "Booked" is the useful half: couples usually have a venue long before they have a
  * planner, and without asking, PlusOne would research and email the venue they signed
@@ -59,8 +59,8 @@ export type NeedRow = {
   committed: number | "";
 };
 
-export function needsForTemplate(template: CultureTemplate): NeedRow[] {
-  return defaultSlotsFor(template).map((s, i) => ({
+export function needsForTemplate(template: CultureTemplate, eventType?: EventType): NeedRow[] {
+  return slotsFor(eventType, template).map((s, i) => ({
     key: `tpl-${i}-${s.title}`,
     category: s.category,
     title: s.title,
@@ -71,8 +71,12 @@ export function needsForTemplate(template: CultureTemplate): NeedRow[] {
   }));
 }
 
-/** The extras a couple can add on top of their tradition's list. */
-export function extraNeeds(existing: NeedRow[]): { category: string; title: string; hint: string }[] {
+/** Suggestions that only make sense where there is a ceremony. */
+const CEREMONY_ONLY = new Set(["Ceremony musicians", "Celebrant or officiant"]);
+
+/** The extras a host can add on top of the starting list. */
+export function extraNeeds(existing: NeedRow[], eventType?: EventType): { category: string; title: string; hint: string }[] {
   const taken = new Set(existing.map((n) => n.title.toLowerCase()));
-  return SUGGESTED_CATEGORIES.filter((c) => !taken.has(c.title.toLowerCase()));
+  const wedding = !eventType || eventType === "wedding";
+  return SUGGESTED_CATEGORIES.filter((c) => !taken.has(c.title.toLowerCase()) && (wedding || !CEREMONY_ONLY.has(c.title)));
 }

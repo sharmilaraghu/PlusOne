@@ -47,7 +47,7 @@ export const draft = mutation({
     if (args.vendorIds.length > MAX_VENDORS_PER_BATCH) throw new ConvexError(`Draft for at most ${MAX_VENDORS_PER_BATCH} vendors at a time.`);
     for (const vendorId of args.vendorIds) {
       const vendor = await ctx.db.get(vendorId);
-      if (!vendor || vendor.weddingId !== slot.weddingId) throw new ConvexError("Vendor does not belong to this wedding.");
+      if (!vendor || vendor.weddingId !== slot.weddingId) throw new ConvexError("Vendor does not belong to this event.");
     }
     await ctx.scheduler.runAfter(0, internal.openai.draftInquiries, { slotId: args.slotId, vendorIds: args.vendorIds });
     return null;

@@ -2,7 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
-import type { CultureTemplate } from "../../convex/lib/validators";
+import type { CultureTemplate, EventType } from "../../convex/lib/validators";
+import { EVENT_TYPES, anOccasion, occasionNoun } from "../../convex/lib/occasion";
 import {
   CURRENCIES,
   TRADITIONS,
@@ -15,7 +16,7 @@ import {
   type NeedRow,
 } from "../components/onboarding/shared";
 import { addDaysIso, money, shortDate } from "../lib/format";
-import { niceStep, splitByWeights } from "../../convex/lib/templates";
+import { DEFAULT_BUDGET, niceStep, splitByWeights } from "../../convex/lib/templates";
 import { Icon } from "../components/ui/Icon";
 import { CountrySelect } from "../components/ui/CountrySelect";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -59,6 +60,7 @@ const BLANK_FORM = {
   city: "",
   area: "",
   country: "",
+  eventType: "wedding" as EventType,
   template: "western" as CultureTemplate,
   currency: "USD",
   totalBudget: 40000,
@@ -181,8 +183,12 @@ export function OnboardingPage() {
   const name = useMemo(() => {
     const a = form.partnerA.trim();
     const b = form.partnerB.trim();
-    return a && b ? `${a} & ${b}` : a || b || "Our event";
-  }, [form.partnerA, form.partnerB]);
+    const hosts = a && b ? `${a} & ${b}` : a || b;
+    // A wedding is known by the couple's names; anything else says what it is.
+    if (form.eventType === "wedding") return hosts || "Our wedding";
+    const noun = occasionNoun({ eventType: form.eventType });
+    return hosts ? `${hosts}'s ${noun}` : `Our ${noun}`;
+  }, [form.partnerA, form.partnerB, form.eventType]);
 
   async function addPictures(files: FileList | null) {
     if (!files?.length) return;
@@ -219,9 +225,26 @@ export function OnboardingPage() {
   /** Choosing a tradition fills in every later step, so the defaults path is three clicks. */
   function chooseTemplate(template: CultureTemplate) {
     set("template", template);
-    setRows(rowsForTemplate(template, start, end, form.totalBudget));
-    setNeeds(needsForTemplate(template));
+    setRows(rowsForTemplate(template, start, end, form.totalBudget, form.eventType));
+    setNeeds(needsForTemplate(template, form.eventType));
     setRemoved([]);
+  }
+
+  /**
+   * What they are planning decides the starting days, vendors and budget. Only a
+   * wedding has a tradition; everything else starts from its own short list. A budget
+   * they have already typed is left alone.
+   */
+  function chooseType(eventType: EventType) {
+    if (eventType === form.eventType) return;
+    const template: CultureTemplate = eventType === "wedding" ? "western" : "custom";
+    const totalBudget = form.totalBudget === DEFAULT_BUDGET[form.eventType] ? DEFAULT_BUDGET[eventType] : form.totalBudget;
+    setForm((f) => ({ ...f, eventType, template, totalBudget }));
+    if (rows.length) {
+      setRows(rowsForTemplate(template, start, end, totalBudget, eventType));
+      setNeeds(needsForTemplate(template, eventType));
+      setRemoved([]);
+    }
   }
 
   function patchNeed(key: string, patch: Partial<NeedRow>) {
@@ -234,7 +257,7 @@ export function OnboardingPage() {
     if (!on) return;
     const iso = addDaysIso(new Date().toISOString().slice(0, 10), 365);
     set("startDate", iso);
-    if (rows.length) setRows(rowsForTemplate(form.template, iso, form.endDate || iso, form.totalBudget));
+    if (rows.length) setRows(rowsForTemplate(form.template, iso, form.endDate || iso, form.totalBudget, form.eventType));
   }
 
   const wanted = needs.filter((n) => n.state !== "none");
@@ -249,7 +272,7 @@ export function OnboardingPage() {
 
   const canContinue =
     step === 0
-      ? Boolean(form.partnerA.trim() && form.partnerB.trim() && form.startDate && form.city.trim())
+      ? Boolean(form.partnerA.trim() && form.startDate && form.city.trim())
       : step === 1
         ? rows.length > 0 && rows.every((r) => r.name.trim() && r.date)
         : step === 3
@@ -275,6 +298,7 @@ export function OnboardingPage() {
         currency: form.currency,
         totalBudget: Number(form.totalBudget),
         template: form.template,
+        eventType: form.eventType,
         inspirationUrl: form.inspirationUrl.trim() || undefined,
         inspirationNotes: form.inspirationNotes.trim() || undefined,
         inspirationImages: pictures.length ? pictures.map((p) => p.id) : undefined,
@@ -383,10 +407,30 @@ export function OnboardingPage() {
       <div className="card mt-5 p-6 md:p-7">
         {step === 0 && (
           <div className="grid gap-5 sm:grid-cols-2">
+            <fieldset className="sm:col-span-2">
+              <legend className="label">What are you planning?</legend>
+              <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {EVENT_TYPES.map((t) => (
+                  <li key={t.id}>
+                    <button
+                      type="button"
+                      onClick={() => chooseType(t.id)}
+                      aria-pressed={form.eventType === t.id}
+                      className={`h-full w-full rounded-[14px] border p-3.5 text-left transition ${
+                        form.eventType === t.id ? "border-accent bg-accent-soft" : "border-line bg-cream hover:bg-accent-soft/50"
+                      }`}
+                    >
+                      <span className="display block text-lg">{t.name}</span>
+                      <span className="mt-0.5 block text-xs leading-relaxed text-quiet">{t.blurb}</span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </fieldset>
             <Field label="Your name" id="pa"><input id="pa" className="input" value={form.partnerA} onChange={(e) => set("partnerA", e.target.value)} placeholder="Anita" /></Field>
-            <Field label="Your co-host" id="pb"><input id="pb" className="input" value={form.partnerB} onChange={(e) => set("partnerB", e.target.value)} placeholder="Sam" /></Field>
+            <Field label="Your co-host" id="pb" hint="Optional. A partner, a friend, whoever is planning this with you."><input id="pb" className="input" value={form.partnerB} onChange={(e) => set("partnerB", e.target.value)} placeholder="Sam" /></Field>
             <Field label="First day" id="sd">
-              <input id="sd" type="date" className="input" value={form.startDate} onChange={(e) => { set("startDate", e.target.value); if (rows.length) setRows(rowsForTemplate(form.template, e.target.value, form.endDate || e.target.value, form.totalBudget)); }} />
+              <input id="sd" type="date" className="input" value={form.startDate} onChange={(e) => { set("startDate", e.target.value); if (rows.length) setRows(rowsForTemplate(form.template, e.target.value, form.endDate || e.target.value, form.totalBudget, form.eventType)); }} />
             </Field>
             <Field label="Last day" id="ed" hint="Leave blank for a single day.">
               <input id="ed" type="date" className="input" min={form.startDate} value={form.endDate} onChange={(e) => set("endDate", e.target.value)} />
@@ -413,9 +457,11 @@ export function OnboardingPage() {
         {step === 1 && (
           <div>
             <p className="text-sm leading-relaxed text-muted">
-              Pick the tradition closest to yours and PlusOne fills in the functions. Rename them, move them, or add your own.
+              {form.eventType === "wedding"
+                ? "Pick the tradition closest to yours and PlusOne fills in the days. Rename them, move them, or add your own."
+                : "PlusOne has filled in a starting plan. Rename it, change the date, or add more days if this runs longer than one."}
             </p>
-            <ul className="mt-4 grid gap-2.5 sm:grid-cols-2">
+            <ul className={`mt-4 grid gap-2.5 sm:grid-cols-2${form.eventType === "wedding" ? "" : " hidden"}`}>
               {TRADITIONS.map((t) => (
                 <li key={t.id}>
                   <button
@@ -436,7 +482,7 @@ export function OnboardingPage() {
 
             {rows.length > 0 && (
               <div className="mt-7 border-t border-line pt-5">
-                <p className="label">Your functions</p>
+                <p className="label">Your days</p>
                 <ul className="grid gap-2">
                   {rows.map((r) => (
                     <li key={r.key} className="grid grid-cols-[1fr_auto_auto] items-center gap-2">
@@ -627,8 +673,7 @@ export function OnboardingPage() {
         {step === NEEDS_STEP && (
           <div>
             <p className="text-sm leading-relaxed text-muted">
-              Here is everyone a {form.template === "custom" ? "celebration" : `${TRADITIONS.find((t) => t.id === form.template)?.name ?? ""} wedding`}{" "}
-              usually needs. Tell us which ones you're still looking for. Anything you've already booked, PlusOne leaves alone —
+              Here is everyone {anOccasion({ eventType: form.eventType, template: form.template })} usually needs. Tell us which ones you're still looking for. Anything you've already booked, PlusOne leaves alone —
               it won't go searching or emailing, and what you've spent counts against your budget straight away.
             </p>
 
@@ -691,7 +736,7 @@ export function OnboardingPage() {
               ))}
             </ul>
 
-            {(removed.length > 0 || extraNeeds(needs).length > 0) && (
+            {(removed.length > 0 || extraNeeds(needs, form.eventType).length > 0) && (
               <div className="mt-5 border-t border-line pt-4">
                 <p className="label">Anything else?</p>
                 <ul className="flex flex-wrap gap-2">
@@ -710,7 +755,7 @@ export function OnboardingPage() {
                       </button>
                     </li>
                   ))}
-                  {extraNeeds([...needs, ...removed]).map((c) => (
+                  {extraNeeds([...needs, ...removed], form.eventType).map((c) => (
                     <li key={c.title}>
                       <button
                         type="button"

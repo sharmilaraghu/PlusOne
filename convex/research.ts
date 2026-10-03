@@ -5,6 +5,7 @@ import { internalMutation, internalQuery, mutation, query, type MutationCtx } fr
 import { logActivity, requireMember } from "./lib/auth";
 import { researchRunDoc } from "./lib/docs";
 import { formatMoney } from "./lib/text";
+import { anOccasion } from "./lib/occasion";
 import { workflow } from "./workflows";
 
 export const start = mutation({
@@ -79,8 +80,7 @@ const STAGGER_MS = 20_000;
 
 /** The search PlusOne runs for a need when nobody has typed one. Mirrors the Vendors page's default. */
 function defaultQuery(slot: Doc<"vendorSlots">, wedding: Doc<"weddings">): string {
-  const tradition = wedding.template === "western" || wedding.template === "custom" ? "" : `${wedding.template} `;
-  return `${slot.category} in ${wedding.city} for a ${tradition}wedding under ${formatMoney(slot.budget, wedding.currency)}`;
+  return `${slot.category} in ${wedding.city} for ${anOccasion(wedding)} under ${formatMoney(slot.budget, wedding.currency)}`;
 }
 
 /**
