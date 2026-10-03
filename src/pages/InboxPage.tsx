@@ -170,7 +170,7 @@ export function InboxPage() {
           <div className="mt-8">
             <h2 className="display text-[1.3rem]">Documents you forwarded</h2>
             <p className="mt-1 text-sm text-muted">
-              Send any contract to your wedding inbox and PlusOne reads it, quoting the line each warning comes from.
+              Send any contract to your event inbox and PlusOne reads it, quoting the line each warning comes from.
             </p>
             <ul className="mt-4 grid gap-4">
               {contracts.map((c) => (

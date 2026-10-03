@@ -21,16 +21,16 @@ import { CountrySelect } from "../components/ui/CountrySelect";
 import type { Id } from "../../convex/_generated/dataModel";
 
 /** Named, so the couple can see where they are and how much is left. */
-const STEPS = ["The couple", "The days", "Your guests", "The budget", "Who you need", "The feel"];
+const STEPS = ["The hosts", "The days", "Your guests", "The budget", "Who you need", "The feel"];
 
 /** One illustration per step: ink line drawings first, then scenes of the day. */
 const PLATES = [
-  { src: "/plate-1.jpg", alt: "A line drawing of a couple laughing together, the bride holding her bouquet" },
-  { src: "/plate-2.jpg", alt: "A line drawing of a flower-covered ceremony arch with chairs set out in rows" },
+  { src: "/plate-1.jpg", alt: "A line drawing of two friends hanging paper lanterns across a doorway" },
+  { src: "/plate-2.jpg", alt: "A line drawing of a garden set for a party, lanterns in the trees" },
   { src: "/plate-3.jpg", alt: "Guests along one long table at dusk, someone standing to give a speech" },
-  { src: "/plate-4.jpg", alt: "A reception room being finished an hour before the guests arrive" },
+  { src: "/plate-4.jpg", alt: "A room being finished an hour before the guests arrive, balloons on the chairs" },
   { src: "/plate-5.jpg", alt: "A photographer, a florist, a string quartet and a caterer at work" },
-  { src: "/plate-6.jpg", alt: "The first dance under strings of warm lights, guests circled around" },
+  { src: "/plate-6.jpg", alt: "People dancing under strings of warm lights, guests circled around" },
 ];
 
 const FEEL_STEP = 5;
@@ -181,7 +181,7 @@ export function OnboardingPage() {
   const name = useMemo(() => {
     const a = form.partnerA.trim();
     const b = form.partnerB.trim();
-    return a && b ? `${a} & ${b}` : a || b || "Our wedding";
+    return a && b ? `${a} & ${b}` : a || b || "Our event";
   }, [form.partnerA, form.partnerB]);
 
   async function addPictures(files: FileList | null) {
@@ -327,7 +327,7 @@ export function OnboardingPage() {
       <div className="min-w-0">
         <Link to="/" className="btn-quiet btn-sm gap-1.5 bg-cream">
           <Icon name="arrow" size={15} className="rotate-180" />
-          My weddings
+          My events
         </Link>
         <h1 className="mt-4 text-[2.2rem] leading-tight">
           Tell us about <em>{name}</em>
@@ -384,7 +384,7 @@ export function OnboardingPage() {
         {step === 0 && (
           <div className="grid gap-5 sm:grid-cols-2">
             <Field label="Your name" id="pa"><input id="pa" className="input" value={form.partnerA} onChange={(e) => set("partnerA", e.target.value)} placeholder="Anita" /></Field>
-            <Field label="Your partner" id="pb"><input id="pb" className="input" value={form.partnerB} onChange={(e) => set("partnerB", e.target.value)} placeholder="Sam" /></Field>
+            <Field label="Your co-host" id="pb"><input id="pb" className="input" value={form.partnerB} onChange={(e) => set("partnerB", e.target.value)} placeholder="Sam" /></Field>
             <Field label="First day" id="sd">
               <input id="sd" type="date" className="input" value={form.startDate} onChange={(e) => { set("startDate", e.target.value); if (rows.length) setRows(rowsForTemplate(form.template, e.target.value, form.endDate || e.target.value, form.totalBudget)); }} />
             </Field>
@@ -627,7 +627,7 @@ export function OnboardingPage() {
         {step === NEEDS_STEP && (
           <div>
             <p className="text-sm leading-relaxed text-muted">
-              Here is everyone a {form.template === "custom" ? "wedding" : `${TRADITIONS.find((t) => t.id === form.template)?.name ?? ""} wedding`}{" "}
+              Here is everyone a {form.template === "custom" ? "celebration" : `${TRADITIONS.find((t) => t.id === form.template)?.name ?? ""} wedding`}{" "}
               usually needs. Tell us which ones you're still looking for. Anything you've already booked, PlusOne leaves alone —
               it won't go searching or emailing, and what you've spent counts against your budget straight away.
             </p>
@@ -863,7 +863,7 @@ export function OnboardingPage() {
               <p className="display text-base">What happens next</p>
               <ul className="mt-2 grid gap-1 text-muted">
                 <li>Your {rows.length} functions appear with their guests and budgets.</li>
-                <li>A wedding inbox is created, so vendor replies land in one place.</li>
+                <li>An event inbox is created, so vendor replies land in one place.</li>
                 <li>
                   {wanted.length - bookedCount} vendor {wanted.length - bookedCount === 1 ? "need is" : "needs are"} ready to
                   research{bookedCount > 0 ? `, and the ${bookedCount} you've booked are marked as done` : ""}.

@@ -1,15 +1,15 @@
-import thumb1 from "../../../assets/plates/thumb-1.png";
-import thumb2 from "../../../assets/plates/thumb-2.png";
-import thumb3 from "../../../assets/plates/thumb-3.png";
-import thumb4 from "../../../assets/plates/thumb-4.png";
+import thumb1 from "../../../assets/plates/thumb-1.jpg";
+import thumb2 from "../../../assets/plates/thumb-2.jpg";
+import thumb3 from "../../../assets/plates/thumb-3.jpg";
+import thumb4 from "../../../assets/plates/thumb-4.jpg";
 import { useEffect, useState } from "react";
 import { Icon } from "./Icon";
 
-// Plate provenance: assets/plates/thumb-1.png, assets/plates/thumb-2.png, assets/plates/thumb-3.png, assets/plates/thumb-4.png
+// Generation prompts for the first two sit beside them in assets/plates/*.prompt.txt.
 const rows = [
-  { thumb: thumb1, name: "Lumen & Lace Photography", day: "Ceremony", status: "Quote received", tone: "sage", price: "$4,200" },
-  { thumb: thumb2, name: "Wildrose Florals", day: "Ceremony", status: "Quote received", tone: "sage", price: "$1,850" },
-  { thumb: thumb3, name: "The Long Table", day: "Reception", status: "Email sent", tone: "blush", price: "" },
+  { thumb: thumb1, name: "Lumen & Lace Photography", day: "Dinner", status: "Quote received", tone: "sage", price: "$600" },
+  { thumb: thumb2, name: "Wildrose Florals", day: "Dinner", status: "Quote received", tone: "sage", price: "$420" },
+  { thumb: thumb3, name: "The Long Table", day: "Dinner", status: "Email sent", tone: "quiet", price: "" },
   { thumb: thumb4, name: "Mercer Hall", day: "All days", status: "Booked", tone: "sage", price: "" },
 ];
 
@@ -26,7 +26,7 @@ export function AppPreview() {
     <>
       <figure className={`ap${landed ? " is-landed" : ""}`} aria-labelledby="ap-caption">
         <figcaption id="ap-caption" className="sr-only">
-          Example of the PlusOne app: four vendors with their status, two quotes received, and a committed budget of $22,550 of $60,000.
+          Example of the PlusOne app: four vendors with their status, two quotes received, and a committed budget of $3,870 of $8,000.
         </figcaption>
         <div className="ap__side" aria-hidden="true">
           <p className="ap__logo">
@@ -50,7 +50,7 @@ export function AppPreview() {
                 <span className="ap__name">{r.name}</span>
                 <span className="ap__day">{r.day}</span>
                 {r.name === "Wildrose Florals" && !landed ? (
-                  <span className="ap__pill ap__pill--blush">Email sent</span>
+                  <span className="ap__pill ap__pill--quiet">Email sent</span>
                 ) : (
                   <span className={`ap__pill ap__pill--${r.tone}${r.name === "Wildrose Florals" ? " ap__pill--pop" : ""}`}>{r.status}</span>
                 )}
@@ -59,7 +59,7 @@ export function AppPreview() {
             ))}
           </ul>
           <div className="ap__budget">
-            <p>Committed $22,550 of $60,000</p>
+            <p>Committed $3,870 of $8,000</p>
             <div className="ap__track"><span /></div>
           </div>
         </div>

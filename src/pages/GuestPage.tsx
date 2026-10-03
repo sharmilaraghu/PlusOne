@@ -5,7 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { api } from "../../convex/_generated/api";
 
 /**
- * /guest: straight into a fresh sample wedding, no sign-up.
+ * /demo: straight into a fresh demo event, no sign-up.
  *
  * A guest arriving again gets a clean sample rather than whatever the last visitor
  * left behind, so the link can be handed to several people in a row. Someone with a
@@ -25,7 +25,7 @@ export function GuestPage() {
 
   useEffect(() => {
     if (isLoading || opened.current) return;
-    const failed = () => setError("We couldn't open the sample wedding. Try again in a moment.");
+    const failed = () => setError("We couldn't open the demo. Try again in a moment.");
     // Someone with a real account keeps it; only a leftover guest is cleared out.
     const isGuest = me !== null && me !== undefined && !me.email && !me.name;
 
@@ -62,7 +62,7 @@ export function GuestPage() {
             <Link to="/signin" className="btn-quiet mt-5">Back to sign in</Link>
           </>
         ) : (
-          <p className="mt-4 text-muted">Setting the table for a sample wedding…</p>
+          <p className="mt-4 text-muted">Setting up the demo…</p>
         )}
       </div>
     </main>

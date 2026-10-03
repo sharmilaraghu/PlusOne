@@ -33,7 +33,7 @@ export function BookButton({
     );
   }
   return (
-    <div className="w-[17rem] rounded-[14px] border border-line bg-paper p-3 text-left shadow-[0_14px_30px_-18px_rgba(70,35,35,0.45)]">
+    <div className="w-[17rem] rounded-[14px] border border-line bg-paper p-3 text-left shadow-[0_14px_30px_-18px_rgba(40,50,42,0.45)]">
       <p className="text-sm font-medium">Book {vendorName}?</p>
       {note && <p className="mt-0.5 text-xs text-muted">{note}</p>}
       <label className="mt-2.5 flex items-start gap-2 text-xs leading-relaxed text-muted">

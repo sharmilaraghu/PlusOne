@@ -37,7 +37,7 @@ export function PrintWall({ count = 36, quiet = false }: { count?: number; quiet
         {Array.from({ length: count }, (_, i) => (
           <figure
             key={i}
-            className="w-[150px] shrink-0 rounded-[5px] border border-line bg-white p-2 pb-6 shadow-[0_14px_28px_-16px_rgba(70,35,35,0.4)] sm:w-[184px] sm:p-2.5 sm:pb-8"
+            className="w-[150px] shrink-0 rounded-[5px] border border-line bg-white p-2 pb-6 shadow-[0_14px_28px_-16px_rgba(40,50,42,0.4)] sm:w-[184px] sm:p-2.5 sm:pb-8"
             style={{ transform: `rotate(${TILTS[i % TILTS.length]}deg)` }}
           >
             <img

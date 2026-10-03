@@ -2,13 +2,13 @@
  * The five steps, as the landing page lists them.
  *
  * These lines describe what PlusOne actually does today, and they are the only
- * hand-written description of the product left in the app: the walkthrough couples
+ * hand-written description of the product left in the app: the walkthrough people
  * see after signing up points at the real screen instead. Change something in the
  * product and change it here in the same commit.
  */
 export const steps = [
   {
-    title: "Describe your wedding",
+    title: "Describe your event",
     line: "Days, guests, budget and the feel you want.",
   },
   {

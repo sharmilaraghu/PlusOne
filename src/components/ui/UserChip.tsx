@@ -7,7 +7,7 @@ export function UserChip({ className = "", to }: { className?: string; to?: stri
   const me = useQuery(api.users.me);
   if (!me) return null;
   // A name if they gave one, otherwise one made from their address.
-  const label = me.name?.trim() || me.nameFromEmail || "Guest";
+  const label = me.name?.trim() || me.nameFromEmail || "Demo";
   const initial = label.charAt(0).toUpperCase();
   const shell = `inline-flex h-9 min-w-0 items-center gap-2 rounded-full bg-paper/90 py-1 pl-1 pr-3.5 text-xs text-ink shadow-[inset_0_0_0_1px_var(--color-line)] backdrop-blur-sm ${className}`;
   const inner = (

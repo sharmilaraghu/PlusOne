@@ -15,7 +15,7 @@ const nav = [
   { to: "decisions", label: "Decisions", icon: "check" as const, tour: "nav-decisions" },
   { to: "inbox", label: "Inbox", icon: "mail" as const, tour: "nav-inbox" },
   { to: "guests", label: "Guests", icon: "guests" as const },
-  { to: "assistant", label: "Assistant", icon: "heart" as const },
+  { to: "assistant", label: "Assistant", icon: "star" as const },
   { to: "members", label: "People", icon: "people" as const },
   { to: "settings", label: "Settings", icon: "settings" as const, tour: "nav-settings" },
 ];
@@ -47,14 +47,14 @@ export function WeddingLayout() {
   }, [data]);
 
   if (data === undefined) {
-    return <div className="grid min-h-screen place-items-center text-muted">Loading your wedding…</div>;
+    return <div className="grid min-h-screen place-items-center text-muted">Loading your event…</div>;
   }
   if (data === null) {
     return (
       <div className="grid min-h-screen place-items-center p-6 text-center">
         <div>
-          <p className="display text-xl">You don't have access to this wedding.</p>
-          <Link to="/" className="btn-ghost mt-5">Back to my weddings</Link>
+          <p className="display text-xl">You don't have access to this event.</p>
+          <Link to="/" className="btn-ghost mt-5">Back to my events</Link>
         </div>
       </div>
     );
@@ -82,7 +82,7 @@ export function WeddingLayout() {
           </p>
         </div>
 
-        <nav aria-label="Wedding sections" className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:pb-5">
+        <nav aria-label="Event sections" className="flex gap-1 overflow-x-auto px-3 pb-3 md:flex-col md:pb-5">
           {nav.map((n) => (
             <NavLink
               key={n.to}
@@ -113,7 +113,7 @@ export function WeddingLayout() {
           ))}
         </nav>
 
-        {/* New here — a couple, a guest or a judge — should see the tour before anything else. */}
+        {/* Anyone new, signed up or in the demo, should see the tour before anything else. */}
         <div className="px-3 pb-4 md:px-5">
           <button
             type="button"
@@ -141,7 +141,7 @@ export function WeddingLayout() {
         {wedding.demo && (
           <div className="page mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[14px] bg-accent-soft/70 px-4 py-3 text-sm">
             <p className="min-w-0">
-              <span className="display text-base">A sample wedding.</span>{" "}
+              <span className="display text-base">This is a demo.</span>{" "}
               <span className="text-muted">
                 Click anything. The vendors are made up, so emails to them are simulated rather than sent.
               </span>

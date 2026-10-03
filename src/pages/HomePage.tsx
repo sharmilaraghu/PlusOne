@@ -7,7 +7,7 @@ import { Icon } from "../components/ui/Icon";
 import { UserChip } from "../components/ui/UserChip";
 import { PrintWall } from "../components/PrintWall";
 
-/** The print inside each wedding's polaroid, in the order they were planned. */
+/** The print inside each event's polaroid, in the order they were planned. */
 const PLATES = ["/plate-1.jpg", "/plate-6.jpg", "/plate-5.jpg", "/plate-4.jpg", "/plate-2.jpg", "/plate-9.jpg"];
 const TILTS = ["-2.5deg", "1.8deg", "-1.2deg", "2.4deg", "-1.9deg", "1.3deg"];
 
@@ -31,7 +31,7 @@ export function HomePage() {
           <Header onSignOut={() => void signOut()} />
 
           <main id="main" className="flex min-h-0 flex-1 items-center justify-center px-5 pb-8">
-            <div className="w-full max-w-[36rem] rounded-[18px] border border-line bg-cream px-6 py-7 text-center shadow-[0_30px_70px_-28px_rgba(70,35,35,0.55)] md:px-10 md:py-10">
+            <div className="w-full max-w-[36rem] rounded-[18px] border border-line bg-cream px-6 py-7 text-center shadow-[0_30px_70px_-28px_rgba(40,50,42,0.55)] md:px-10 md:py-10">
               {draft ? (
                 <>
                   <h1 className="text-[2.2rem] leading-[1.05] md:text-[2.8rem]">
@@ -86,7 +86,7 @@ export function HomePage() {
 
   return (
     <div className="min-h-[100dvh] bg-paper">
-      {/* One quiet blush wash at the top, and nothing else behind the prints. */}
+      {/* One quiet wash at the top, and nothing else behind the prints. */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute inset-x-0 top-0 h-[260px] bg-[linear-gradient(to_bottom,var(--color-accent-soft)_0%,transparent_92%)] opacity-45"
@@ -96,7 +96,7 @@ export function HomePage() {
 
         <main id="main" className="px-5 pb-16 md:px-8">
           <h1 className="mt-4 text-[2.4rem] leading-tight">
-            Your <em>weddings</em>
+            Your <em>events</em>
           </h1>
           <p className="mt-1.5 text-sm text-muted">
             {mine.length === 1 ? "One celebration on the go." : `${mine.length} celebrations on the go.`}
@@ -107,7 +107,7 @@ export function HomePage() {
               <li key={wedding._id}>
                 <Link
                   to={`/w/${wedding._id}`}
-                  className="polaroid group block w-[21rem] hover:-translate-y-1.5 hover:rotate-0 hover:shadow-[0_30px_56px_-22px_rgba(70,35,35,0.5)]"
+                  className="polaroid group block w-[21rem] hover:-translate-y-1.5 hover:rotate-0 hover:shadow-[0_30px_56px_-22px_rgba(40,50,42,0.5)]"
                   style={{ transform: `rotate(${TILTS[i % TILTS.length]})` }}
                 >
                   <span className="block overflow-hidden rounded-[3px] bg-line">
@@ -210,7 +210,7 @@ function Header({ onSignOut }: { onSignOut: () => void }) {
       </Link>
       <div className="flex min-w-0 items-center gap-2">
       <UserChip to="/account" className="hidden max-w-[15rem] sm:inline-flex" />
-      <button onClick={onSignOut} className="btn-quiet btn-sm gap-1.5 bg-paper/90 text-ink shadow-[inset_0_0_0_1px_var(--color-line),0_6px_18px_-8px_rgba(70,35,35,0.35)] backdrop-blur-sm">
+      <button onClick={onSignOut} className="btn-quiet btn-sm gap-1.5 bg-paper/90 text-ink shadow-[inset_0_0_0_1px_var(--color-line),0_6px_18px_-8px_rgba(40,50,42,0.35)] backdrop-blur-sm">
         <Icon name="signout" size={15} />
         Sign out
       </button>

@@ -98,7 +98,7 @@ export function GuestsPage() {
     <div className="mx-auto w-full max-w-[58rem]">
       <PageHeader
         title="Guests"
-        meta="Add everyone, send the invitations from your wedding inbox, and let PlusOne read the replies."
+        meta="Add everyone, send the invitations from your event inbox, and let PlusOne read the replies."
         action={
           canEdit && counts.invitable > 0 ? (
             <button className="btn-primary" onClick={() => void inviteAll()} disabled={busy}>
@@ -169,7 +169,7 @@ export function GuestsPage() {
           <EmptyState
             icon="guests"
             title="Nobody on the list yet"
-            body="Add your guests above. Anyone with an email address can be invited from your wedding inbox, and when they reply in their own words — “we'd love to, two of us” — PlusOne updates the list for you."
+            body="Add your guests above. Anyone with an email address can be invited from your event inbox, and when they reply in their own words — “we'd love to, two of us” — PlusOne updates the list for you."
           />
         </div>
       ) : (
@@ -243,7 +243,7 @@ export function GuestsPage() {
         <p className="mt-4 text-sm text-quiet">
           {events.length > 1
             ? `Everyone here is invited to all ${events.length} days for now; per-day invitations are coming.`
-            : "Replies arrive in your wedding inbox and are read back onto this list automatically."}
+            : "Replies arrive in your event inbox and are read back onto this list automatically."}
         </p>
       )}
     </div>

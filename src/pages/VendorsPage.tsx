@@ -218,7 +218,7 @@ function SlotPanel({
               )}
             </p>
           )}
-          <p className="mt-2 text-[11px] text-muted">Firecrawl reads each vendor's own website. Every price links back to the page it came from.</p>
+          <p className="mt-2 text-[11px] text-muted">PlusOne reads each vendor's own website. Every price links back to the page it came from.</p>
           {(wedding.styleVibes?.length || wedding.stylePalette || wedding.styleSummary) && (
             <p className="mt-1.5 text-[11px] text-muted">
               <span className="text-accent">Matching your style:</span>{" "}

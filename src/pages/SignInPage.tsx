@@ -16,9 +16,9 @@ export function SignInPage({ redirectTo }: { redirectTo?: string }) {
         <p className="display text-4xl tracking-tight">
           Plus<span className="text-accent">One</span>
         </p>
-        <h1 className="mt-4 text-2xl">Your AI copilot for the perfect wedding.</h1>
+        <h1 className="mt-4 text-2xl">Your AI copilot for every occasion.</h1>
         <p className="mt-2 text-sm text-muted">
-          PlusOne finds vendors on the open web, emails them from your own wedding inbox, reads their quotes, and keeps every
+          PlusOne finds vendors on the open web, emails them from your event's own inbox, reads their quotes, and keeps every
           event, dollar and guest in one live plan. <Link to="/how-it-works" className="underline">How it works</Link>
         </p>
         <div className="card mt-6 space-y-4 p-6">
@@ -101,10 +101,10 @@ export function SignInPage({ redirectTo }: { redirectTo?: string }) {
         </div>
         <p className="mt-5 text-center text-sm text-muted">
           Just looking?{" "}
-          <Link to="/guest" className="text-accent underline underline-offset-2">
-            Try it as a guest
+          <Link to="/demo" className="text-accent underline underline-offset-2">
+            See the demo
           </Link>{" "}
-          with a sample wedding. No sign-up.
+          first. No sign-up.
         </p>
       </div>
     </main>

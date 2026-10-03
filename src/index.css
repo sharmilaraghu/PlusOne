@@ -1,7 +1,7 @@
 @import "tailwindcss";
 
-/* The signed-in app, in the world recorded in DESIGN.md: ivory paper, one wine ink,
-   quiet blush and sage washes, EB Garamond headings over Work Sans text. */
+/* One theme for the landing page and the signed-in app: ivory paper, one forest-green ink,
+   quiet sand and sage washes, EB Garamond headings over Work Sans text. */
 @theme {
   --font-sans: "Work Sans Variable", "Work Sans", ui-sans-serif, system-ui, sans-serif;
   --font-display: "EB Garamond Variable", "EB Garamond", ui-serif, Georgia, serif;
@@ -16,12 +16,14 @@
   --color-line: #ece7e2;
   --color-rule: #d9cfc8;
 
-  --color-accent: #74162a;
-  --color-accent-deep: #5e1122;
-  --color-accent-soft: #f8eceb;
+  --color-accent: #1f4d3f;
+  --color-accent-deep: #173a30;
+  --color-accent-soft: #eaf1ec;
+  /* the broad section wash behind the hero and alternate sections */
+  --color-wash: #f4efe4;
 
   /* the four day tints */
-  --color-rose: #fcebea;
+  --color-rose: #fbefe3;
   --color-sage: #f2f6ef;
   --color-sand: #f8f4e8;
   --color-sky: #eef3f7;
@@ -30,8 +32,8 @@
   --color-ok-bg: #e3eadf;
   --color-warn: #7a5a12;
   --color-warn-bg: #f6efd9;
-  --color-bad: #74162a;
-  --color-bad-bg: #fbe4e2;
+  --color-bad: #8a2a2a;
+  --color-bad-bg: #fbe7e4;
 }
 
 html { color-scheme: light; }
@@ -49,7 +51,7 @@ a { text-underline-offset: 0.2em; }
 
 @utility page { @apply mx-auto w-full max-w-[1180px]; }
 
-@utility card { @apply rounded-[18px] border border-line bg-cream shadow-[0_18px_40px_-26px_rgba(80,40,40,0.28)]; }
+@utility card { @apply rounded-[18px] border border-line bg-cream shadow-[0_18px_40px_-26px_rgba(40,50,42,0.28)]; }
 @utility card-quiet { @apply rounded-[14px] border border-line bg-cream; }
 
 @utility btn { @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-6 text-sm font-medium transition focus:outline-none focus-visible:outline-2 focus-visible:outline-offset-[3px] focus-visible:outline-accent disabled:opacity-50 disabled:cursor-not-allowed; }
@@ -90,7 +92,7 @@ a { text-underline-offset: 0.2em; }
 
 /* A print pinned to the page: paper border, a little tilt, a soft drop. */
 @utility polaroid {
-  @apply block rounded-[6px] border border-line bg-white p-2.5 pb-3 shadow-[0_16px_34px_-18px_rgba(70,35,35,0.45)] transition duration-300;
+  @apply block rounded-[6px] border border-line bg-white p-2.5 pb-3 shadow-[0_16px_34px_-18px_rgba(40,50,42,0.42)] transition duration-300;
 }
 
 @media (prefers-reduced-motion: reduce) {

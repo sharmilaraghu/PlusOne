@@ -17,7 +17,7 @@ export function PrivacyPage() {
         <section>
           <h2 className="display text-xl">What PlusOne keeps</h2>
           <p className="mt-2 text-muted">
-            The wedding you describe: your names, dates, city, budget and the days you are planning. The vendors PlusOne
+            The event you describe: your names, dates, city, budget and the days you are planning. The vendors PlusOne
             finds for you and what they write back. The guests you add, their email addresses, and their replies,
             including any dietary needs or allergies they mention. If you sign in with Google, your name, email address
             and profile picture. Nothing else.
@@ -38,7 +38,7 @@ export function PrivacyPage() {
           <h2 className="display text-xl">The services behind it</h2>
           <p className="mt-2 text-muted">
             PlusOne runs on Convex, which stores your plan. OpenAI reads vendor replies and writes emails. Firecrawl
-            reads vendors' own web pages. AgentMail sends and receives your wedding's email. Each sees only what it
+            reads vendors' own web pages. AgentMail sends and receives your event's email. Each sees only what it
             needs for that job, and none of them is given your data to sell or train on.
           </p>
         </section>
@@ -46,8 +46,8 @@ export function PrivacyPage() {
         <section>
           <h2 className="display text-xl">Your choices</h2>
           <p className="mt-2 text-muted">
-            You can edit or delete any guest, vendor or day at any time, and remove a wedding entirely from its settings.
-            Deleting a wedding deletes its guests, vendors and emails with it. To have your account removed, or to ask
+            You can edit or delete any guest, vendor or day at any time, and remove an event entirely from its settings.
+            Deleting an event deletes its guests, vendors and emails with it. To have your account removed, or to ask
             what is held about you, write to the address below and it will be done.
           </p>
         </section>

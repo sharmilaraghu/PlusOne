@@ -284,7 +284,7 @@ export const sendInvite = internalAction({
     const inboxId = wedding.inboxId ?? fallbackInbox();
     if (!inboxId) return null; // link-only invite
     const base = (process.env.SITE_URL ?? process.env.CONVEX_SITE_URL ?? "").replace(/\/$/, "");
-    const link = `${base}/invite/${invite.token}`;
+    const link = `${base}/join/${invite.token}`;
     const text =
       `Hi,\n\n${inviterLabel} invited you to help plan ${wedding.name} (${wedding.partnerA} & ${wedding.partnerB}) on PlusOne as a ${invite.role}.\n\n` +
       `Open this link to join: ${link}\n\nSee you there!`;

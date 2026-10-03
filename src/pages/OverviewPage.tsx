@@ -110,7 +110,7 @@ export function OverviewPage() {
       {shared.length > 0 && (
         <section className="card px-7 py-6 lg:col-start-1" aria-labelledby="shared-h">
           <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-            <h2 id="shared-h" className="display text-xl">Across the whole wedding</h2>
+            <h2 id="shared-h" className="display text-xl">Across the whole event</h2>
             <p className="text-sm text-quiet">{shared.length} needs on every day</p>
           </div>
           <ul className="mt-4 grid gap-x-8 gap-y-1 sm:grid-cols-2">

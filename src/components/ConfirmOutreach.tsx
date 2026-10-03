@@ -80,7 +80,7 @@ export function ConfirmOutreach({
         <p className="mt-1 text-sm text-muted">
           {editable
             ? "You asked to read each one first. Edit anything you like, then send."
-            : `PlusOne will email ${reachable.length === 1 ? "this vendor" : `these ${reachable.length} vendors`} from your wedding inbox, then chase anyone who goes quiet and read the replies back to you.`}
+            : `PlusOne will email ${reachable.length === 1 ? "this vendor" : `these ${reachable.length} vendors`} from your event inbox, then chase anyone who goes quiet and read the replies back to you.`}
         </p>
       </div>
 

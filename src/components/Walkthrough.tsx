@@ -21,7 +21,7 @@ const STEPS: Step[] = [
   },
   {
     target: "days",
-    title: "Your wedding, a day at a time",
+    title: "Your event, a day at a time",
     body: "Each function lists what it still needs. The pencil edits the name, date, guests and budget — nothing you chose while signing up is stuck.",
     place: "bottom",
   },
@@ -34,7 +34,7 @@ const STEPS: Step[] = [
   {
     target: "nav-inbox",
     title: "You confirm once",
-    body: "Say yes to a shortlist and PlusOne emails them all from your own wedding address, chases anyone who goes quiet, and reads each reply back into a quote.",
+    body: "Say yes to a shortlist and PlusOne emails them all from your event's own address, chases anyone who goes quiet, and reads each reply back into a quote.",
     place: "right",
   },
   {
@@ -184,7 +184,7 @@ export function Walkthrough({ onClose }: { onClose: () => void }) {
 
       <div
         ref={cardRef}
-        className="absolute w-[min(22rem,calc(100vw-1.5rem))] rounded-[16px] border border-line bg-cream p-5 shadow-[0_24px_60px_-20px_rgba(60,20,20,0.45)]"
+        className="absolute w-[min(22rem,calc(100vw-1.5rem))] rounded-[16px] border border-line bg-cream p-5 shadow-[0_24px_60px_-20px_rgba(30,40,35,0.45)]"
         style={card}
       >
         <div className="flex items-start justify-between gap-3">

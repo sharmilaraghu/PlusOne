@@ -26,7 +26,8 @@ export default function App() {
       <Routes>
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/join/:token" element={<JoinPage />} />
-        <Route path="/guest" element={<GuestPage />} />
+        <Route path="/demo" element={<GuestPage />} />
+        <Route path="/guest" element={<Navigate to="/demo" replace />} />
         <Route path="/privacy" element={<PrivacyPage />} />
         <Route
           path="/*"

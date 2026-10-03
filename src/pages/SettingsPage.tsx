@@ -72,15 +72,15 @@ export function SettingsPage() {
 
   return (
     <div className="mx-auto w-full max-w-[46rem]">
-      <PageHeader title="Wedding settings" meta="Everything you told us at the start, and anything you've changed your mind about since." />
+      <PageHeader title="Event settings" meta="Everything you told us at the start, and anything you've changed your mind about since." />
 
       <section className="card p-6 md:p-7">
-        <h2 className="display text-xl">The wedding</h2>
+        <h2 className="display text-xl">The event</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <Field label="Name" id="s-name"><input id="s-name" className="input" value={form.name} onChange={(e) => set("name", e.target.value)} disabled={!canEdit} /></Field>
           <Field label="City" id="s-city"><input id="s-city" className="input" value={form.city} onChange={(e) => set("city", e.target.value)} disabled={!canEdit} /></Field>
-          <Field label="Partner" id="s-pa"><input id="s-pa" className="input" value={form.partnerA} onChange={(e) => set("partnerA", e.target.value)} disabled={!canEdit} /></Field>
-          <Field label="Partner" id="s-pb"><input id="s-pb" className="input" value={form.partnerB} onChange={(e) => set("partnerB", e.target.value)} disabled={!canEdit} /></Field>
+          <Field label="Host" id="s-pa"><input id="s-pa" className="input" value={form.partnerA} onChange={(e) => set("partnerA", e.target.value)} disabled={!canEdit} /></Field>
+          <Field label="Co-host" id="s-pb"><input id="s-pb" className="input" value={form.partnerB} onChange={(e) => set("partnerB", e.target.value)} disabled={!canEdit} /></Field>
           <Field label="First day" id="s-sd"><input id="s-sd" type="date" className="input" value={form.startDate} onChange={(e) => set("startDate", e.target.value)} disabled={!canEdit} /></Field>
           <Field label="Last day" id="s-ed"><input id="s-ed" type="date" className="input" min={form.startDate} value={form.endDate} onChange={(e) => set("endDate", e.target.value)} disabled={!canEdit} /></Field>
           <Field label="Neighbourhood" id="s-area" hint="Narrows vendor searches to one part of the city.">

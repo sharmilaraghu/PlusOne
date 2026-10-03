@@ -24,10 +24,10 @@ export function AccountPage() {
     <main id="main" className="page px-5 py-10 md:px-8">
       <Link to="/" className="btn-quiet btn-sm gap-1.5 bg-cream">
         <Icon name="arrow" size={15} className="rotate-180" />
-        My weddings
+        My events
       </Link>
       <h1 className="mt-4 text-[2.2rem] leading-tight">Your <em>account</em></h1>
-      <p className="mt-1 text-sm text-muted">Your details, not any one wedding's. Vendors never see any of this.</p>
+      <p className="mt-1 text-sm text-muted">Your details, not any one event's. Vendors never see any of this.</p>
 
       <section className="card mt-6 p-6 md:p-7" aria-labelledby="name-h">
         <h2 id="name-h" className="display text-xl">Your name</h2>
@@ -66,7 +66,7 @@ export function AccountPage() {
         <h2 id="signin-h" className="display text-xl">How you sign in</h2>
         {isGuest ? (
           <p className="mt-1 text-sm text-muted">
-            You're looking around as a guest, so there's nothing to sign in with. Plan your own wedding and you can
+            You're in the demo, so there's nothing to sign in with. Plan your own event and you can
             create an account then.
           </p>
         ) : (
@@ -78,7 +78,7 @@ export function AccountPage() {
             </p>
             <p className="mt-3 text-sm leading-relaxed text-muted">
               Your email address is how PlusOne knows you, so it can't be changed here yet. To use a different one,
-              create an account with it and invite yourself to your wedding from the People tab.
+              create an account with it and invite yourself to your event from the People tab.
             </p>
           </>
         )}

@@ -184,7 +184,7 @@ function NeedBoard({ need, currency, canEdit, weddingId }: { need: Need; currenc
             {need.title}
           </h2>
           <p className="mt-0.5 text-xs text-quiet">
-            {need.eventNames.length > 0 ? need.eventNames.join(" · ") : "the whole wedding"} · {money(need.budget, currency)} planned
+            {need.eventNames.length > 0 ? need.eventNames.join(" · ") : "the whole event"} · {money(need.budget, currency)} planned
           </p>
         </div>
         <p className="text-sm text-muted">

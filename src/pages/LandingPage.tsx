@@ -5,10 +5,10 @@ import { steps } from "../components/landing/howItWorks";
 import "../landing.css";
 
 const days = [
-  { name: "Welcome drinks", when: "Friday", guests: 80, note: "Bar quoted $1,150" },
-  { name: "Rehearsal dinner", when: "Friday", guests: 40, note: "Caterer contacted" },
-  { name: "Ceremony", when: "Saturday", guests: 200, note: "Photographer quoted $4,200" },
-  { name: "Reception", when: "Saturday", guests: 220, note: "Venue booked" },
+  { name: "Welcome drinks", when: "Friday", guests: 30, note: "Bar quoted $380" },
+  { name: "Dinner", when: "Saturday", guests: 40, note: "Photographer quoted $600" },
+  { name: "The party", when: "Saturday", guests: 60, note: "Venue booked" },
+  { name: "Brunch", when: "Sunday", guests: 25, note: "Caterer contacted" },
 ];
 
 export function LandingPage() {
@@ -16,16 +16,8 @@ export function LandingPage() {
   return (
     <div className="lp">
       <a href="#main" className="lp-skip">Skip to content</a>
-      {/* Judges should be one click from a working wedding, with nothing to sign up for. */}
-      <Link to="/guest" className="judge-bar">
-        <span className="judge-bar__tag">Hackathon judges</span>
-        <span className="judge-bar__text">
-          Judging the Convex All Gas Hackathon? Open a sample wedding. No sign-up.
-        </span>
-        <span className="judge-bar__go" aria-hidden="true">→</span>
-      </Link>
       <section className="hero" aria-labelledby="hero-title">
-        {/* The day itself, drifting behind the promise. Paused for reduced motion. */}
+        {/* Scenes from different occasions, drifting behind the promise. Paused for reduced motion. */}
         <div className="hero__reel" aria-hidden="true">
           {["/plate-4.jpg", "/plate-6.jpg", "/plate-3.jpg", "/plate-8.jpg"].map((src, i) => (
             <img key={src} src={src} alt="" style={{ animationDelay: `${i * 7}s` }} loading={i === 0 ? "eager" : "lazy"} />
@@ -38,7 +30,7 @@ export function LandingPage() {
           </Link>
           <Link to="/signin" className="pill pill--outline hero__signin">Sign in</Link>
           <Link to="/signin" className="hero__signin-text">Sign in</Link>
-          <Link to="/signin?new=1" className="pill pill--wine hero__cta">Start planning</Link>
+          <Link to="/signin?new=1" className="pill pill--solid hero__cta">Start planning</Link>
           <span className="hero__rule" aria-hidden="true" />
         </header>
 
@@ -46,13 +38,13 @@ export function LandingPage() {
           <h1 id="hero-title" className="hero__title">
             Your AI copilot for{" "}
             <br />
-            the <em>perfect</em> wedding.
+            <em>every</em> occasion.
           </h1>
           <p className="hero__lede">
-            PlusOne finds your vendors, emails them from your own wedding inbox, reads every reply and keeps your budget honest.
+            PlusOne finds your vendors, emails them from your event's own inbox, reads every reply and keeps your budget honest.
           </p>
-          <Link to="/signin?new=1" className="pill pill--wine hero__primary">Start planning</Link>
-          <Link to="/guest" className="pill pill--outline hero__secondary">Try it as a guest</Link>
+          <Link to="/signin?new=1" className="pill pill--solid hero__primary">Start planning</Link>
+          <Link to="/demo" className="pill pill--outline hero__secondary">See the demo</Link>
           <span className="hero__band" aria-hidden="true" />
           <AppPreview />
         </main>
@@ -79,11 +71,11 @@ export function LandingPage() {
       <section id="days" className="sec sec--sage" aria-labelledby="days-title">
         <div className="wrap split">
           <div className="sec__head">
-            <h2 id="days-title" className="h2">Every day of the celebration, <em>in one place</em></h2>
-            <p className="sec__lede">Weddings are rarely one afternoon. Start from your tradition and PlusOne lays out each day with its own guests, budget and vendors.</p>
-            <p className="traditions">Western · Jewish · Hindu · Muslim · Sikh · Fusion · your own</p>
+            <h2 id="days-title" className="h2">Every part of the occasion, <em>in one place</em></h2>
+            <p className="sec__lede">One evening or a whole weekend. PlusOne lays out each part with its own guests, budget and vendors.</p>
+            <p className="traditions">Weddings · Birthdays · Anniversaries · Baby showers · Team events · Parties</p>
           </div>
-          <ul className="daylist" aria-label="Example celebration">
+          <ul className="daylist" aria-label="Example weekend">
             {days.map((d) => (
               <li key={d.name} className="day">
                 <span className="day__when">{d.when}</span>
@@ -104,11 +96,11 @@ export function LandingPage() {
           </div>
           <div className="quote" aria-label="Example quote">
             <p className="quote__from"><Icon name="mail" size={18} /> Reply from Lumen &amp; Lace Photography</p>
-            <p className="quote__mail">“For your ceremony day our Single Day package is <strong>$4,200</strong> for eight hours, with a <strong>$500 deposit</strong> to hold the date.”</p>
+            <p className="quote__mail">“For your dinner our Evening package is <strong>$600</strong> for three hours, with a <strong>$100 deposit</strong> to hold the date.”</p>
             <dl className="quote__facts">
-              <div><dt>Total</dt><dd>$4,200</dd></div>
-              <div><dt>Deposit</dt><dd>$500</dd></div>
-              <div><dt>Includes</dt><dd>8 hours, editing</dd></div>
+              <div><dt>Total</dt><dd>$600</dd></div>
+              <div><dt>Deposit</dt><dd>$100</dd></div>
+              <div><dt>Includes</dt><dd>3 hours, editing</dd></div>
             </dl>
             <p className="quote__added"><Icon name="check" size={16} /> Added to your budget</p>
             <p className="quote__example">Example</p>
@@ -116,11 +108,11 @@ export function LandingPage() {
         </div>
       </section>
 
-      <section className="sec sec--blush" aria-labelledby="together-title">
+      <section className="sec sec--wash" aria-labelledby="together-title">
         <div className="wrap split">
           <div className="sec__head">
             <h2 id="together-title" className="h2">Plan <em>together</em></h2>
-            <p className="sec__lede">Invite your partner, parents and wedding party with a link. Planners can search and send; family can simply watch the plan come together, live.</p>
+            <p className="sec__lede">Invite whoever you're planning with by sending a link. Planners can search and send; everyone else can simply watch the plan come together, live.</p>
           </div>
           <div className="shared" aria-label="Example shared plan">
             <p className="shared__example">Example</p>
@@ -145,9 +137,9 @@ export function LandingPage() {
       <section className="closing" aria-labelledby="close-title">
         <div className="wrap closing__inner">
           <h2 id="close-title" className="h2">Ready when <em>you are</em></h2>
-          <p className="sec__lede">Describe your wedding in about two minutes, then let PlusOne start the legwork.</p>
+          <p className="sec__lede">Describe your event in about two minutes, then let PlusOne start the legwork.</p>
           <div className="closing__actions">
-            <Link to="/signin?new=1" className="pill pill--wine btn-lg">Start planning</Link>
+            <Link to="/signin?new=1" className="pill pill--solid btn-lg">Start planning</Link>
           </div>
         </div>
       </section>
@@ -155,15 +147,13 @@ export function LandingPage() {
       <footer className="foot">
         <div className="wrap foot__inner">
           <p className="brand brand--static">Plus<em>One</em></p>
-          <p>Built for the Convex All Gas Hackathon with Convex, OpenAI, Firecrawl and AgentMail.</p>
+          <p>
+            <Link to="/how-it-works" className="lp-footer__link">How it works</Link>
+            <span aria-hidden="true"> · </span>
+            <Link to="/privacy" className="lp-footer__link">Privacy</Link>
+          </p>
         </div>
       </footer>
-
-          <footer className="lp-footer">
-        <Link to="/privacy" className="lp-footer__link">Privacy</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/how-it-works" className="lp-footer__link">How it works</Link>
-      </footer>
-</div>
+    </div>
   );
 }

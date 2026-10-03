@@ -70,7 +70,7 @@ export function AssistantPage() {
           <span className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-accent-soft text-accent">
             <Icon name="heart" size={22} />
           </span>
-          <h2 className="mt-3 display text-[1.35rem]">Ask anything about your wedding</h2>
+          <h2 className="mt-3 display text-[1.35rem]">Ask anything about your event</h2>
           <p className="mx-auto mt-2 max-w-[28rem] text-sm leading-relaxed text-muted">
             It answers from your own plan — what is booked, what is left, what you have spent — and it can offer to add
             guests, add a day, move money, search for vendors or write to one. Nothing happens until you press the

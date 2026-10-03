@@ -34,14 +34,14 @@ export function MembersPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <header>
         <h1 className="text-3xl">People</h1>
-        <p className="text-sm text-muted">Partners plan, parents watch, everyone sees changes the moment they happen.</p>
+        <p className="text-sm text-muted">Some plan, some just watch, and everyone sees changes the moment they happen.</p>
       </header>
 
       {canInvite && (
         <section className="card p-5">
           <h2 className="text-lg">Invite someone</h2>
           <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_160px_auto]">
-            <input className="input" type="email" placeholder="Email (optional, we'll send the link from your wedding inbox)" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Invitee email" />
+            <input className="input" type="email" placeholder="Email (optional, we'll send the link from your event inbox)" value={email} onChange={(e) => setEmail(e.target.value)} aria-label="Invitee email" />
             <select className="input" value={inviteRole} onChange={(e) => setInviteRole(e.target.value as Role)} aria-label="Role">
               <option value="planner">Planner — can edit and send</option>
               <option value="viewer">Viewer — read only</option>

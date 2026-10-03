@@ -31,12 +31,12 @@ export class ErrorBoundary extends Component<{ children: ReactNode }, { message:
           </h1>
           <p className="mt-3 text-sm leading-relaxed text-muted">
             {notAMember
-              ? "You are signed in, but this wedding belongs to someone else. Ask them to invite you, or go back to your own."
+              ? "You are signed in, but this event belongs to someone else. Ask them to invite you, or go back to your own."
               : this.state.message}
           </p>
           <div className="mt-6 flex flex-wrap justify-center gap-3">
             <Link to="/" className="btn-primary" onClick={() => this.setState({ message: null })}>
-              My weddings
+              My events
             </Link>
             <button className="btn-quiet" onClick={() => window.location.reload()}>
               Try again
