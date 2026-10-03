@@ -16,6 +16,7 @@ import {
   splitByWeights,
 } from "./lib/templates";
 import { addDays, daysBetween } from "./lib/text";
+import { startPurge } from "./maintenance";
 import { cultureTemplate, eventType, sendMode, styleFormality, role } from "./lib/validators";
 import { workflow } from "./workflows";
 
@@ -411,6 +412,23 @@ export async function insertWedding(
     });
     return weddingId;
 }
+
+/**
+ * Delete an event and everything in it: days, vendors, conversations, quotes, guests
+ * and stored files. Owner only, and the name has to be typed, because it cannot be undone.
+ */
+export const remove = mutation({
+  args: { weddingId: v.id("weddings"), confirmName: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { wedding } = await requireMember(ctx, args.weddingId, "owner");
+    if (args.confirmName.trim().toLowerCase() !== wedding.name.trim().toLowerCase()) {
+      throw new ConvexError("That doesn't match the event's name, so nothing was deleted.");
+    }
+    await startPurge(ctx, args.weddingId);
+    return null;
+  },
+});
 
 export const update = mutation({
   args: {

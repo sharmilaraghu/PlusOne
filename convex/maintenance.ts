@@ -1,5 +1,6 @@
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { internalMutation, type MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 
 const CHILD_TABLES = [
@@ -19,6 +20,7 @@ const CHILD_TABLES = [
   "activity",
   "contractChecks",
   "imports",
+  "guestImports",
 ] as const;
 
 /**
@@ -29,30 +31,77 @@ const CHILD_TABLES = [
 export const deleteWedding = internalMutation({
   args: { weddingId: v.id("weddings") },
   returns: v.object({ done: v.boolean(), deleted: v.number() }),
-  handler: async (ctx, args) => {
-    let deleted = 0;
-    for (const table of CHILD_TABLES) {
-      const rows = await ctx.db
-        .query(table)
-        .withIndex("by_weddingId", (q) => q.eq("weddingId", args.weddingId))
-        .take(200);
-      for (const row of rows) {
-        await ctx.db.delete(row._id);
-        deleted++;
-      }
-      if (rows.length === 200) return { done: false, deleted };
-    }
-    const wedding = await ctx.db.get(args.weddingId);
-    if (wedding) {
-      // The inbox goes back to AgentMail: the allowance is small, and a deleted
-      // wedding holding one means the next couple has to share the fallback.
-      if (wedding.inboxId) {
-        await ctx.scheduler.runAfter(0, internal.agentmail.releaseInbox, { inboxId: wedding.inboxId });
-      }
-      await ctx.db.delete(args.weddingId);
+  handler: async (ctx, args) => await deleteWeddingBatch(ctx, args.weddingId),
+});
+
+/** A stored file may already be gone; deleting the row that pointed at it must not fail on that. */
+async function deleteFile(ctx: MutationCtx, storageId: Id<"_storage">): Promise<void> {
+  try {
+    await ctx.storage.delete(storageId);
+  } catch {
+    // already deleted
+  }
+}
+
+/**
+ * One batch of deleting an event: up to 200 rows of the first table that still has
+ * any, along with the files those rows stored (email attachments, contracts, uploaded
+ * guest lists), then the event itself, its mood-board pictures and its inbox.
+ */
+export async function deleteWeddingBatch(
+  ctx: MutationCtx,
+  weddingId: Id<"weddings">,
+): Promise<{ done: boolean; deleted: number }> {
+  let deleted = 0;
+  for (const table of CHILD_TABLES) {
+    const rows = await ctx.db
+      .query(table)
+      .withIndex("by_weddingId", (q) => q.eq("weddingId", weddingId))
+      .take(200);
+    for (const row of rows) {
+      if ("attachments" in row) for (const file of row.attachments) await deleteFile(ctx, file.storageId);
+      if ("storageId" in row && row.storageId) await deleteFile(ctx, row.storageId);
+      await ctx.db.delete(row._id);
       deleted++;
     }
-    return { done: true, deleted };
+    if (rows.length === 200) return { done: false, deleted };
+  }
+  const wedding = await ctx.db.get(weddingId);
+  if (wedding) {
+    for (const picture of wedding.inspirationImages ?? []) await deleteFile(ctx, picture);
+    // The inbox goes back to the mail provider: the allowance is small, and a deleted
+    // event holding one means the next host has to share the fallback.
+    if (wedding.inboxId) {
+      await ctx.scheduler.runAfter(0, internal.agentmail.releaseInbox, { inboxId: wedding.inboxId });
+    }
+    await ctx.db.delete(weddingId);
+    deleted++;
+  }
+  return { done: true, deleted };
+}
+
+/**
+ * Take an event out of everyone's sight at once, then delete the rest in the
+ * background. Removing the memberships first means nobody can open it while the
+ * larger tables are being cleared.
+ */
+export async function startPurge(ctx: MutationCtx, weddingId: Id<"weddings">): Promise<void> {
+  const members = await ctx.db
+    .query("members")
+    .withIndex("by_weddingId", (q) => q.eq("weddingId", weddingId))
+    .take(200);
+  for (const member of members) await ctx.db.delete(member._id);
+  await ctx.scheduler.runAfter(0, internal.maintenance.purgeWedding, { weddingId });
+}
+
+/** Deletes an event batch by batch, calling itself until nothing is left. */
+export const purgeWedding = internalMutation({
+  args: { weddingId: v.id("weddings") },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const { done } = await deleteWeddingBatch(ctx, args.weddingId);
+    if (!done) await ctx.scheduler.runAfter(0, internal.maintenance.purgeWedding, { weddingId: args.weddingId });
+    return null;
   },
 });
 

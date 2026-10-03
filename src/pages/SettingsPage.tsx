@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useMutation } from "convex/react";
-import { Link, useOutletContext } from "react-router-dom";
+import { Link, useNavigate, useOutletContext } from "react-router-dom";
 import type { FunctionReturnType } from "convex/server";
 import { api } from "../../convex/_generated/api";
 import type { Id } from "../../convex/_generated/dataModel";
@@ -202,7 +202,52 @@ export function SettingsPage() {
           <span aria-live="polite" className="text-sm text-muted">{state === "saved" ? "Saved." : ""}</span>
         </div>
       )}
+
+      {role === "owner" && <DeleteEvent weddingId={wedding._id} name={wedding.name} />}
     </div>
+  );
+}
+
+/** Owner only. The name has to be typed, because this cannot be undone. */
+function DeleteEvent({ weddingId, name }: { weddingId: Id<"weddings">; name: string }) {
+  const navigate = useNavigate();
+  const remove = useMutation(api.weddings.remove);
+  const [typed, setTyped] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const matches = typed.trim().toLowerCase() === name.trim().toLowerCase();
+  return (
+    <section className="card mt-10 p-6 md:p-7" aria-labelledby="delete-h">
+      <h2 id="delete-h" className="display text-xl">Delete this event</h2>
+      <p className="mt-1 max-w-[40rem] text-sm leading-relaxed text-muted">
+        This removes the event for everyone on it: its days, vendors, emails, quotes, guests and uploaded files. Vendors
+        you have already written to are not told. It cannot be undone.
+      </p>
+      <form
+        className="mt-4 flex flex-wrap items-end gap-3"
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!matches) return;
+          setBusy(true);
+          setError(null);
+          void remove({ weddingId, confirmName: typed })
+            .then(() => navigate("/", { replace: true }))
+            .catch((err: unknown) => {
+              setError(err instanceof Error ? err.message : "That couldn't be deleted. Try again.");
+              setBusy(false);
+            });
+        }}
+      >
+        <div className="min-w-[16rem] flex-1">
+          <label className="mb-1.5 block text-sm text-muted" htmlFor="delete-name">Type <span className="font-medium text-ink">{name}</span> to confirm</label>
+          <input id="delete-name" className="input" value={typed} onChange={(e) => setTyped(e.target.value)} autoComplete="off" />
+        </div>
+        <button type="submit" className="btn bg-bad text-paper hover:opacity-90" disabled={!matches || busy}>
+          {busy ? "Deleting…" : "Delete event"}
+        </button>
+      </form>
+      {error && <p role="alert" className="mt-3 text-sm text-bad">{error}</p>}
+    </section>
   );
 }
 

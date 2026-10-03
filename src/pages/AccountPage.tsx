@@ -10,6 +10,10 @@ import { MASKED_EMAIL, setHideEmails, useHideEmails, usePrivacy } from "../lib/p
 export function AccountPage() {
   const me = useQuery(api.users.me);
   const setName = useMutation(api.users.setName);
+  const deleteAccount = useMutation(api.users.deleteAccount);
+  const [confirm, setConfirm] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const { signOut } = useAuthActions();
   const privacy = usePrivacy();
   const hide = useHideEmails();
@@ -108,6 +112,40 @@ export function AccountPage() {
             <span className={`absolute top-1 h-5 w-5 rounded-full bg-paper shadow transition-all ${hide ? "left-6" : "left-1"}`} />
           </button>
         </div>
+      </section>
+
+      <section className="card mt-5 p-6 md:p-7" aria-labelledby="delete-account-h">
+        <h2 id="delete-account-h" className="display text-xl">Delete your account</h2>
+        <p className="mt-1 max-w-[40rem] text-sm leading-relaxed text-muted">
+          This deletes your account and every event you own on your own, with their vendors, emails, guests and files.
+          Events you share with another owner, or were invited to, stay for the others and you are removed from them. It
+          cannot be undone.
+        </p>
+        <form
+          className="mt-4 flex flex-wrap items-end gap-3"
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (confirm.trim().toUpperCase() !== "DELETE") return;
+            setDeleting(true);
+            setDeleteError(null);
+            void deleteAccount({ confirm })
+              // The session went with the account, so start again from a clean page.
+              .then(() => window.location.assign("/"))
+              .catch((err: unknown) => {
+                setDeleteError(err instanceof Error ? err.message : "That couldn't be deleted. Try again.");
+                setDeleting(false);
+              });
+          }}
+        >
+          <div className="min-w-[12rem]">
+            <label className="label" htmlFor="delete-account-confirm">Type DELETE to confirm</label>
+            <input id="delete-account-confirm" className="input" value={confirm} onChange={(e) => setConfirm(e.target.value)} autoComplete="off" />
+          </div>
+          <button type="submit" className="btn bg-bad text-paper hover:opacity-90" disabled={confirm.trim().toUpperCase() !== "DELETE" || deleting}>
+            {deleting ? "Deleting…" : "Delete my account"}
+          </button>
+        </form>
+        {deleteError && <p role="alert" className="mt-3 text-sm text-bad">{deleteError}</p>}
       </section>
     </main>
   );
