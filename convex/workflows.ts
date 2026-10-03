@@ -89,7 +89,7 @@ export const researchWorkflow = workflow.define({
         let detail: VendorDetail | null = null;
         try {
           detail = await step.runAction(
-            internal.firecrawl.researchVendorDetail,
+            internal.webCache.vendorDetail,
             { url: candidate.url, need: plan.category, city: plan.city, currency: wedding?.currency },
             { retry: { maxAttempts: 2, initialBackoffMs: 1000, base: 2 } },
           );
@@ -105,7 +105,7 @@ export const researchWorkflow = workflow.define({
         let review: VendorReview = { highlights: [], ms: 0 };
         try {
           review = await step.runAction(
-            internal.firecrawl.lookupReviews,
+            internal.webCache.vendorReviews,
             { businessName, need: plan.category, city: plan.city, ownWebsite: detail?.url ?? candidate.url },
             { retry: false },
           );

@@ -21,6 +21,13 @@ const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
 export const MODEL_FAST = process.env.OPENAI_MODEL_FAST ?? "gpt-5.6-luna";
 export const MODEL_SMART = process.env.OPENAI_MODEL_SMART ?? "gpt-5.6-terra";
 
+/**
+ * A ceiling on any one answer from the model, counting its reasoning as well as what it
+ * writes. Nothing here needs anywhere near this; it exists so a call that goes wrong
+ * cannot run on and cost many times what a normal one does.
+ */
+export const MAX_OUTPUT_TOKENS = 12_000;
+
 const PAGE_CHARS = 12_000;
 const nn = <T>(x: T | null | undefined): T | undefined => (x === null ? undefined : x);
 
@@ -80,6 +87,7 @@ export const summariseStyle = internalAction({
     if (!sources.length) return null;
     const { text } = await generateText({
       model: openai(MODEL_FAST),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
       messages: [
         {
           role: "user",
@@ -130,6 +138,7 @@ export const planSearch = internalAction({
     const area = (args.area ?? wedding.area)?.trim().slice(0, 120) || undefined;
     const { object } = await generateObject({
       model: openai(MODEL_FAST),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
       schema: z.object({
         queries: z.array(z.string()).min(1).max(3),
         category: z.string(),
@@ -217,6 +226,7 @@ export const buildCards = internalAction({
     for (const page of args.pages.slice(0, 5)) {
       const { object } = await generateObject({
         model: openai(MODEL_FAST),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
         schema: cardSchema,
         prompt:
           `Read this web page and extract a vendor card for a host looking for: ${slot.title} (${slot.category}) ` +
@@ -335,6 +345,7 @@ export const rankVendors = internalAction({
 
     const { object } = await generateObject({
       model: openai(MODEL_SMART),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
       schema: rankingSchema,
       prompt:
         `Rank these ${vendors.length} vendors for a host's "${slot.title}" (${slot.category}) slot, budget ` +
@@ -406,6 +417,7 @@ export const draftInquiries = internalAction({
       });
       const { object } = await generateObject({
         model: openai(MODEL_SMART),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
         schema: z.object({ subject: z.string().max(70), bodyText: z.string() }),
         prompt:
           "Write a warm, specific first inquiry email from the hosts to a vendor, about the occasion described below. Plain text only, no markdown, " +
@@ -447,6 +459,7 @@ export const draftFollowUp = internalAction({
     const { thread, vendor, slot, wedding, lastOutbound } = context;
     const { object } = await generateObject({
       model: openai(MODEL_FAST),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
       schema: z.object({ subject: z.string().max(70), bodyText: z.string() }),
       prompt:
         `Write a short, friendly follow-up email (3-5 sentences, plain text) from ${hostsLabel(wedding)} ` +
@@ -532,6 +545,7 @@ export const decideVendorReply = internalAction({
     const dietary = await ctx.runQuery(internal.guests.dietarySummary, { weddingId: args.weddingId });
     const { object } = await generateObject({
       model: openai(MODEL_SMART),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
       schema: vendorDecisionSchema,
       prompt:
         `You handle email with the vendors for ${anOccasion(wedding)} on behalf of ${hostsLabel(wedding)}. ` +
@@ -568,6 +582,7 @@ export const writeVendorReply = internalAction({
     const dietary = await ctx.runQuery(internal.guests.dietarySummary, { weddingId: args.weddingId });
     const { object } = await generateObject({
       model: openai(MODEL_SMART),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
       schema: z.object({ bodyText: z.string() }),
       prompt:
         `You handle email with the vendors for ${anOccasion(wedding)} on behalf of ${hostsLabel(wedding)}. ` +
@@ -620,6 +635,7 @@ export const writeAgentEmail = internalAction({
         : PURPOSES[args.purpose]();
     const { object } = await generateObject({
       model: openai(MODEL_SMART),
+      maxOutputTokens: MAX_OUTPUT_TOKENS,
       schema: z.object({ bodyText: z.string() }),
       prompt:
         `You handle email with the vendors for ${anOccasion(wedding)} on behalf of ${hostsLabel(wedding)}. ` +
@@ -691,6 +707,7 @@ async function readVendorReply(args: {
     `\nFrom: ${args.vendorName}\nSubject: ${args.subject}\n\n${truncate(args.body, PAGE_CHARS)}`;
   const { object } = await generateObject({
     model: openai(MODEL_SMART),
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
     schema: replySchema,
     messages: [
       {
@@ -840,6 +857,7 @@ async function readRsvp(
 ): Promise<RsvpReading> {
   const { object } = await generateObject({
     model: openai(MODEL_FAST),
+    maxOutputTokens: MAX_OUTPUT_TOKENS,
     schema: rsvpSchema,
     prompt:
       `A guest replied to an RSVP email. Guest: ${guest.name}, invited for ${guest.partySize}. ` +
@@ -1089,6 +1107,7 @@ export const answerQuestion = internalAction({
 
       const { object } = await generateObject({
         model: openai(MODEL_SMART),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
         schema: assistantSchema,
         prompt:
           `You are PlusOne, a calm and competent event planning assistant talking to the hosts whose plan is below. ` +
@@ -1181,6 +1200,7 @@ export const checkContract = internalAction({
 
       const { object } = await generateObject({
         model: openai(MODEL_SMART),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
         schema: contractSchema,
         messages: [
           {

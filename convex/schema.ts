@@ -334,7 +334,7 @@ export const importFields = {
 export default defineSchema({
   ...authTables,
 
-  weddings: defineTable(weddingFields).index("by_inboxId", ["inboxId"]),
+  weddings: defineTable(weddingFields).index("by_inboxId", ["inboxId"]).index("by_demo", ["demo"]),
 
   /**
    * A wedding being set up but not yet created, one per user, so onboarding can be
@@ -374,7 +374,8 @@ export default defineSchema({
 
   researchRuns: defineTable(researchRunFields)
     .index("by_slotId", ["slotId"])
-    .index("by_weddingId", ["weddingId"]),
+    .index("by_weddingId", ["weddingId"])
+    .index("by_status_and_startedAt", ["status", "startedAt"]),
 
   threads: defineTable(threadFields)
     .index("by_weddingId", ["weddingId"])

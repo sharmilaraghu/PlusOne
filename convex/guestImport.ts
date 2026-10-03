@@ -7,7 +7,7 @@ import { v } from "convex/values";
 import { z } from "zod";
 import { internal } from "./_generated/api";
 import { internalAction } from "./_generated/server";
-import { MODEL_SMART } from "./openai";
+import { MAX_OUTPUT_TOKENS, MODEL_SMART } from "./openai";
 import { truncate } from "./lib/text";
 
 const openai = createOpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -92,6 +92,7 @@ export const read = internalAction({
         "\"Olivia Carter + guest\" is one row with a party size of 2. Keep the order of the list.";
       const { object } = await generateObject({
         model: openai(MODEL_SMART),
+        maxOutputTokens: MAX_OUTPUT_TOKENS,
         schema: guestSchema,
         messages: [
           {
