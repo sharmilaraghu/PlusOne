@@ -16,14 +16,6 @@ export function LandingPage() {
   return (
     <div className="lp">
       <a href="#main" className="lp-skip">Skip to content</a>
-      {/* This site is PlusOne for weddings. Anyone planning something else should know there is a PlusOne for that too. */}
-      <a href="https://scrupulous-hound-784.convex.site" className="judge-bar">
-        <span className="judge-bar__tag">New</span>
-        <span className="judge-bar__text">
-          Planning something other than a wedding? There's now a PlusOne for every occasion. See it.
-        </span>
-        <span className="judge-bar__go" aria-hidden="true">→</span>
-      </a>
       <section className="hero" aria-labelledby="hero-title">
         {/* The day itself, drifting behind the promise. Paused for reduced motion. */}
         <div className="hero__reel" aria-hidden="true">
@@ -52,7 +44,7 @@ export function LandingPage() {
             PlusOne finds your vendors, emails them from your own wedding inbox, reads every reply and keeps your budget honest.
           </p>
           <Link to="/signin?new=1" className="pill pill--wine hero__primary">Start planning</Link>
-          <Link to="/guest" className="pill pill--outline hero__secondary">Try it as a guest</Link>
+          <Link to="/demo" className="pill pill--outline hero__secondary">See the demo</Link>
           <span className="hero__band" aria-hidden="true" />
           <AppPreview />
         </main>
@@ -155,15 +147,15 @@ export function LandingPage() {
       <footer className="foot">
         <div className="wrap foot__inner">
           <p className="brand brand--static">Plus<em>One</em></p>
-          <p>Built for the Convex All Gas Hackathon with Convex, OpenAI, Firecrawl and AgentMail.</p>
+          <p>
+            <Link to="/how-it-works" className="lp-footer__link">How it works</Link>
+            <span aria-hidden="true"> · </span>
+            <Link to="/privacy" className="lp-footer__link">Privacy</Link>
+            <span aria-hidden="true"> · </span>
+            <a href="https://scrupulous-hound-784.convex.site" className="lp-footer__link">Planning another kind of event?</a>
+          </p>
         </div>
       </footer>
-
-          <footer className="lp-footer">
-        <Link to="/privacy" className="lp-footer__link">Privacy</Link>
-        <span aria-hidden="true">·</span>
-        <Link to="/how-it-works" className="lp-footer__link">How it works</Link>
-      </footer>
-</div>
+    </div>
   );
 }

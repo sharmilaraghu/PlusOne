@@ -113,7 +113,7 @@ export function WeddingLayout() {
           ))}
         </nav>
 
-        {/* New here — a couple, a guest or a judge — should see the tour before anything else. */}
+        {/* Anyone new, signed up or in the demo, should see the tour before anything else. */}
         <div className="px-3 pb-4 md:px-5">
           <button
             type="button"
@@ -141,7 +141,7 @@ export function WeddingLayout() {
         {wedding.demo && (
           <div className="page mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[14px] bg-accent-soft/70 px-4 py-3 text-sm">
             <p className="min-w-0">
-              <span className="display text-base">A sample wedding.</span>{" "}
+              <span className="display text-base">This is a demo.</span>{" "}
               <span className="text-muted">
                 Click anything. The vendors are made up, so emails to them are simulated rather than sent.
               </span>

@@ -327,28 +327,6 @@
   .ap-notif p { font-size: 0.92rem; }
 }
 
-/* The bar above everything else: there is also a PlusOne for other occasions. */
-.judge-bar {
-  display: flex; align-items: center; justify-content: center; gap: 12px;
-  padding: 10px 20px; background: var(--wine); color: #fbf8f3;
-  font-size: 14px; line-height: 1.35; text-decoration: none; text-align: center;
-  transition: background .2s ease;
-}
-.judge-bar:hover { background: color-mix(in oklab, var(--wine) 88%, black); }
-.judge-bar:focus-visible { outline: 2px solid #fbf8f3; outline-offset: -4px; }
-.judge-bar__tag {
-  flex-shrink: 0; border-radius: 999px; padding: 2px 10px;
-  background: rgba(251, 248, 243, .16); font-size: 12px; letter-spacing: .02em;
-}
-.judge-bar__text { text-decoration: underline; text-decoration-color: rgba(251, 248, 243, .45); text-underline-offset: 3px; }
-.judge-bar__go { transition: transform .2s ease; }
-.judge-bar:hover .judge-bar__go { transform: translateX(3px); }
-@media (max-width: 560px) {
-  .judge-bar { justify-content: flex-start; text-align: left; font-size: 13px; }
-  .judge-bar__tag { display: none; }
-}
-@media (prefers-reduced-motion: reduce) { .judge-bar, .judge-bar__go { transition: none; } }
-
 /* A quiet last line: the policy has to be reachable from the page itself. */
 .lp-footer { display: flex; justify-content: center; gap: 10px; padding: 28px 20px 40px; font-size: 13px; color: var(--ink-soft, #6b6b6b); }
 .lp-footer__link { color: inherit; text-underline-offset: 3px; }

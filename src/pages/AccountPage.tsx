@@ -66,7 +66,7 @@ export function AccountPage() {
         <h2 id="signin-h" className="display text-xl">How you sign in</h2>
         {isGuest ? (
           <p className="mt-1 text-sm text-muted">
-            You're looking around as a guest, so there's nothing to sign in with. Plan your own wedding and you can
+            You're in the demo, so there's nothing to sign in with. Plan your own wedding and you can
             create an account then.
           </p>
         ) : (

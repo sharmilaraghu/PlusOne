@@ -55,7 +55,7 @@ export function PrivacyPage() {
         <section>
           <h2 className="display text-xl">Contact</h2>
           <p className="mt-2 text-muted">
-            PlusOne is a small project built for the Convex All Gas Hackathon. Questions, requests and complaints all go
+            Questions, requests and complaints all go
             to the address on the{" "}
             <a href="https://github.com/sharmilaraghu/PlusOne" className="text-accent underline underline-offset-2">
               project's GitHub page

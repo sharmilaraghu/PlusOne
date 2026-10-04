@@ -98,11 +98,6 @@ export function HomePage() {
           <h1 className="mt-4 text-[2.4rem] leading-tight">
             Your <em>weddings</em>
           </h1>
-          <p className="mt-3 max-w-[44rem] rounded-[14px] bg-accent-soft px-4 py-3 text-sm text-ink">
-            Planning something other than a wedding? There's now a PlusOne for every occasion: birthdays,
-            anniversaries, team events and more.{" "}
-            <a href="https://scrupulous-hound-784.convex.site" className="text-accent underline underline-offset-2">See the new PlusOne</a>
-          </p>
           <p className="mt-1.5 text-sm text-muted">
             {mine.length === 1 ? "One celebration on the go." : `${mine.length} celebrations on the go.`}
           </p>
