@@ -194,6 +194,8 @@
 .split { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: clamp(40px, 6vw, 96px); align-items: center; }
 .split--reverse .sec__head { order: 2; }
 .traditions { margin: 24px 0 0; font-size: 0.95rem; color: #55604f; letter-spacing: 0.01em; }
+.traditions--aside { margin-top: 10px; }
+.traditions--aside a { text-decoration: underline; }
 
 .daylist { list-style: none; margin: 0; padding: 10px; background: #fbfaf8; border-radius: 18px; box-shadow: 0 18px 40px -24px rgba(40, 60, 40, 0.35); position: relative; }
 .day { display: grid; grid-template-columns: 6.5rem 1fr; grid-template-rows: auto auto; column-gap: 16px; padding: 18px 16px; }

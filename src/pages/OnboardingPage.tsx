@@ -20,6 +20,7 @@ import { DEFAULT_BUDGET, niceStep, splitByWeights } from "../../convex/lib/templ
 import { Icon } from "../components/ui/Icon";
 import { CountrySelect } from "../components/ui/CountrySelect";
 import type { Id } from "../../convex/_generated/dataModel";
+import { WEDDING_SITE } from "../lib/sites";
 
 /** Named, so the couple can see where they are and how much is left. */
 const STEPS = ["The hosts", "The days", "Your guests", "The budget", "Who you need", "The feel"];
@@ -60,10 +61,10 @@ const BLANK_FORM = {
   city: "",
   area: "",
   country: "",
-  eventType: "wedding" as EventType,
-  template: "western" as CultureTemplate,
+  eventType: "birthday" as EventType,
+  template: "custom" as CultureTemplate,
   currency: "USD",
-  totalBudget: 40000,
+  totalBudget: DEFAULT_BUDGET.birthday,
   inspirationUrl: "",
   inspirationNotes: "",
   stylePalette: "",
@@ -410,7 +411,7 @@ export function OnboardingPage() {
             <fieldset className="sm:col-span-2">
               <legend className="label">What are you planning?</legend>
               <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-                {EVENT_TYPES.map((t) => (
+                {EVENT_TYPES.filter((t) => t.id !== "wedding").map((t) => (
                   <li key={t.id}>
                     <button
                       type="button"
@@ -426,6 +427,11 @@ export function OnboardingPage() {
                   </li>
                 ))}
               </ul>
+              <p className="mt-3 text-sm text-quiet">
+                Planning a wedding?{" "}
+                <a href={WEDDING_SITE} className="text-accent underline underline-offset-2">PlusOne for weddings</a>{" "}
+                is built just for that.
+              </p>
             </fieldset>
             <Field label="Your name" id="pa"><input id="pa" className="input" value={form.partnerA} onChange={(e) => set("partnerA", e.target.value)} placeholder="Anita" /></Field>
             <Field label="Your co-host" id="pb" hint="Optional. A partner, a friend, whoever is planning this with you."><input id="pb" className="input" value={form.partnerB} onChange={(e) => set("partnerB", e.target.value)} placeholder="Sam" /></Field>

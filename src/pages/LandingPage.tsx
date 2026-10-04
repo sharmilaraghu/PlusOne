@@ -2,6 +2,7 @@ import { Link } from "react-router-dom";
 import { AppPreview } from "../components/landing/AppPreview";
 import { Icon } from "../components/landing/Icon";
 import { steps } from "../components/landing/howItWorks";
+import { WEDDING_SITE } from "../lib/sites";
 import "../landing.css";
 
 const days = [
@@ -73,7 +74,10 @@ export function LandingPage() {
           <div className="sec__head">
             <h2 id="days-title" className="h2">Every part of the occasion, <em>in one place</em></h2>
             <p className="sec__lede">One evening or a whole weekend. PlusOne lays out each part with its own guests, budget and vendors.</p>
-            <p className="traditions">Weddings · Birthdays · Anniversaries · Baby showers · Team events · Parties</p>
+            <p className="traditions">Birthdays · Anniversaries · Baby showers · Graduations · Team events · Parties</p>
+            <p className="traditions traditions--aside">
+              Planning a wedding? <a href={WEDDING_SITE} className="lp-footer__link">PlusOne for weddings</a> is built just for that.
+            </p>
           </div>
           <ul className="daylist" aria-label="Example weekend">
             {days.map((d) => (
@@ -151,6 +155,8 @@ export function LandingPage() {
             <Link to="/how-it-works" className="lp-footer__link">How it works</Link>
             <span aria-hidden="true"> · </span>
             <Link to="/privacy" className="lp-footer__link">Privacy</Link>
+            <span aria-hidden="true"> · </span>
+            <a href={WEDDING_SITE} className="lp-footer__link">Planning a wedding?</a>
           </p>
         </div>
       </footer>
