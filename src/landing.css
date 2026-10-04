@@ -334,3 +334,6 @@
 .lp-footer__link { color: inherit; text-underline-offset: 3px; }
 .lp-footer__link:hover { color: var(--accent); }
 
+.hero__signin-text { white-space: nowrap; }
+@media (max-width: 420px) { .hero__nav .brand-for { font-size: 0.34em; margin-left: 0.4em; letter-spacing: 0.1em; } }
+@media (max-width: 380px) { .hero__nav .brand { font-size: 1.4rem; } }

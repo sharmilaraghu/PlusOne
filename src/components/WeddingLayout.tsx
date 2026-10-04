@@ -66,7 +66,7 @@ export function WeddingLayout() {
       <aside className="border-b border-line bg-cream md:sticky md:top-0 md:flex md:h-screen md:flex-col md:overflow-y-auto md:border-b-0 md:border-r">
         <div className="flex items-center justify-between px-5 py-5 md:block">
           <Link to="/" className="display text-2xl tracking-tight text-accent" aria-label="PlusOne home">
-            Plus<em>One</em>
+            Plus<em>One</em><span className="brand-for">for All</span>
           </Link>
           <UserChip to="/account" className="mx-3 max-w-[10rem] transition hover:border-accent md:mx-0 md:mt-4 md:flex md:max-w-none" />
           <button onClick={() => void signOut()} className="btn-quiet btn-sm gap-1.5 md:hidden">

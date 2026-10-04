@@ -19,12 +19,14 @@ import { WeddingLayout } from "./components/WeddingLayout";
 import { GuestPage } from "./pages/GuestPage";
 import { AccountPage } from "./pages/AccountPage";
 import { UpdatePrompt } from "./components/UpdatePrompt";
+import { WeddingPointer } from "./components/WeddingPointer";
 import { PrivacyPage } from "./pages/PrivacyPage";
 
 export default function App() {
   return (
     <>
       <UpdatePrompt />
+      <WeddingPointer />
       <Routes>
         <Route path="/how-it-works" element={<HowItWorksPage />} />
         <Route path="/join/:token" element={<JoinPage />} />

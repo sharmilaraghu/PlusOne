@@ -206,7 +206,7 @@ function Header({ onSignOut }: { onSignOut: () => void }) {
   return (
     <header className="flex shrink-0 items-center justify-between gap-4 px-5 py-6 md:px-8">
       <Link to="/" className="display text-2xl tracking-tight text-accent" aria-label="PlusOne home">
-        Plus<em>One</em>
+        Plus<em>One</em><span className="brand-for">for All</span>
       </Link>
       <div className="flex min-w-0 items-center gap-2">
       <UserChip to="/account" className="hidden max-w-[15rem] sm:inline-flex" />

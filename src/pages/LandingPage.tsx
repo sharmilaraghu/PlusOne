@@ -26,8 +26,8 @@ export function LandingPage() {
           <span className="hero__reel-veil" />
         </div>
         <header className="hero__nav">
-          <Link to="/" className="brand" aria-label="PlusOne home">
-            Plus<em>One</em>
+          <Link to="/" className="brand" aria-label="PlusOne for All home">
+            Plus<em>One</em><span className="brand-for">for All</span>
           </Link>
           <Link to="/signin" className="pill pill--outline hero__signin">Sign in</Link>
           <Link to="/signin" className="hero__signin-text">Sign in</Link>
@@ -150,7 +150,7 @@ export function LandingPage() {
 
       <footer className="foot">
         <div className="wrap foot__inner">
-          <p className="brand brand--static">Plus<em>One</em></p>
+          <p className="brand brand--static">Plus<em>One</em><span className="brand-for">for All</span></p>
           <p>
             <Link to="/how-it-works" className="lp-footer__link">How it works</Link>
             <span aria-hidden="true"> · </span>

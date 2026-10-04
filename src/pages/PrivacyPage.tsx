@@ -8,7 +8,7 @@ export function PrivacyPage() {
   return (
     <main id="main" className="mx-auto w-full max-w-[44rem] px-5 py-12 md:px-8">
       <Link to="/" className="display text-2xl tracking-tight text-accent" aria-label="PlusOne home">
-        Plus<em>One</em>
+        Plus<em>One</em><span className="brand-for">for All</span>
       </Link>
       <h1 className="mt-6 text-[2.2rem] leading-tight">Privacy</h1>
       <p className="mt-2 text-sm text-muted">Last updated 20 September 2026.</p>

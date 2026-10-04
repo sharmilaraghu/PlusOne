@@ -98,3 +98,16 @@ a { text-underline-offset: 0.2em; }
 @media (prefers-reduced-motion: reduce) {
   .rise, .plate-img { animation: none; }
 }
+
+/* The small "for All" beside the wordmark: this PlusOne plans every occasion but weddings. */
+.brand-for {
+  margin-left: 0.55em;
+  font-family: var(--font-sans, "Work Sans", sans-serif);
+  font-size: 0.42em;
+  font-style: normal;
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  opacity: 0.8;
+}
